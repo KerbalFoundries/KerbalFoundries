@@ -133,6 +133,11 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsEditor)
             {
+                foreach (ModuleAnimateGeneric ma in this.part.FindModulesImplementing<ModuleAnimateGeneric>())
+                {
+
+                    ma.Actions["ToggleAction"].active = false;
+                }
                 print("Starting SpringRate is:");
                 print(SpringRate);
                 if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
@@ -296,8 +301,8 @@ namespace KerbalFoundries
                     sidefric.stiffness = sidestiff;
 
                     thiswheelCollider.suspensionDistance = Rideheight;
-                    Events["deploy"].active = false;
-                    Events["retract"].active = true;                            //make sure gui starts in deployed state
+                    //Events["deploy"].active = false;
+                    //Events["retract"].active = true;                            //make sure gui starts in deployed state
                 }
 
                 else if (deployed == false)
@@ -379,16 +384,16 @@ namespace KerbalFoundries
     
 
 
-        [KSPAction("Toggle Deployed")]
+        [KSPAction("Toggle Modes")]
         public void AGToggleDeployed(KSPActionParam param)
         {
             if (deployed)
             {
-                retract();
+                retract(param);
             }
             else
             {
-                deploy();
+                deploy(param);
             }
         }//End Deploy toggle
        
@@ -419,66 +424,63 @@ namespace KerbalFoundries
 
         }
 
-        [KSPEvent(guiActive = true, guiName = "Repulsor", active = true)]
-        public void retract()
+        [KSPAction("Repulsor Mode")]
+        public void retract(KSPActionParam param)
         {
             print(thisTransform);
             // note: this loop will find "us" too. Intended
-            foreach (RepulsorWheel rp in this.vessel.FindPartModulesImplementing<RepulsorWheel>())
+            if (deployed == true)
             {
-                if (rp.deployed == true) //I couldn't get the line above to work correctly. It only activated the symetry partner of the part I activated from
+                //print(string.Format("{1} Repulsor attached to {0}", this.part.ConstructID, this.part.Events["retract"].active ? "Retracting" : "Deploying"));
+                PlayAnimation();
+
+                // was this intended? Once deployed and 
+                // retracted, Repulsor will never be deployable again
+                //Events["deploy"].active = true;
+                //Events["retract"].active = false;
+                deployed = false;
+
+                foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
-                    print(string.Format("{1} Repulsor attached to {0}", rp.part.ConstructID, rp.Events["retract"].active ? "Retracting" : "Deploying"));
-                    rp.PlayAnimation();
+                    wc.suspensionDistance = Rideheight * 1.75f;
+                    WheelFrictionCurve sidefric = wc.sidewaysFriction;
+                    sidefric.asymptoteValue = 0.001f;
+                    sidefric.extremumValue = 0.001f;
+                    sidefric.stiffness = 0f;
+                    wc.sidewaysFriction = sidefric;
 
-                    // was this intended? Once deployed and 
-                    // retracted, Repulsor will never be deployable again
-                    rp.Events["deploy"].active = true;
-                    rp.Events["retract"].active = false;
-                    rp.deployed = false;
+                    WheelFrictionCurve forwardfric = wc.forwardFriction;
+                    forwardfric.asymptoteValue = 0.001f;
+                    forwardfric.extremumValue = 0.001f;
+                    forwardfric.stiffness = 0f;
+                    wc.forwardFriction = forwardfric;
 
-                    foreach (WheelCollider wc in rp.GetComponentsInChildren<WheelCollider>())
-                    {
-                        wc.suspensionDistance = rp.Rideheight * 1.75f;
-                        WheelFrictionCurve sidefric = wc.sidewaysFriction;
-                        sidefric.asymptoteValue = 0.001f;
-                        sidefric.extremumValue = 0.001f;
-                        sidefric.stiffness = 0f;
-                        wc.sidewaysFriction = sidefric;
-
-                        WheelFrictionCurve forwardfric = wc.forwardFriction;
-                        forwardfric.asymptoteValue = 0.001f;
-                        forwardfric.extremumValue = 0.001f;
-                        forwardfric.stiffness = 0f;
-                        wc.forwardFriction = forwardfric;
-
-                    }
                 }
             }
 
+
         }//end Deploy All
 
-        [KSPEvent(guiActive = true, guiName = "Wheel", active = true)]
-        public void deploy()
+        [KSPAction("Wheel Mode")]
+        public void deploy(KSPActionParam param)
         {
             print(thisTransform);
             // note: this loop will find "us" too. Intended
-            foreach (RepulsorWheel rp in this.vessel.FindPartModulesImplementing<RepulsorWheel>())
-            {
-                if (rp.deployed == false)
+
+                if (deployed == false)
                 {
-                    print(string.Format("{1} Repulsor attached to {0}", rp.part.ConstructID, rp.Events["deploy"].active ? "Deploying" : "Retracting"));
-                    rp.PlayAnimation();
+                    //print(string.Format("{1} Repulsor attached to {0}", this.part.ConstructID, this.part.Events["deploy"].active ? "Deploying" : "Retracting"));
+                    PlayAnimation();
 
 
-                    rp.Events["deploy"].active = false;
-                    rp.Events["retract"].active = true;
-                    rp.deployed = true;
+                    //Events["deploy"].active = false;
+                    //Events["retract"].active = true;
+                    deployed = true;
 
-                    foreach (WheelCollider wc in rp.GetComponentsInChildren<WheelCollider>())
+                    foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                     {
                         //   wc.suspensionDistance = Rideheight;
-                        wc.suspensionDistance = rp.Rideheight;
+                        wc.suspensionDistance = Rideheight;
                         WheelFrictionCurve forwardfric = wc.forwardFriction;
                         forwardfric.asymptoteValue = forasymValue;
                         forwardfric.extremumValue = forextremValue;
@@ -498,7 +500,7 @@ namespace KerbalFoundries
                     }
 
                 }
-            }
+
 
         }//end Deploy All
     }//end class
