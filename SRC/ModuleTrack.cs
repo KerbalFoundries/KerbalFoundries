@@ -14,6 +14,7 @@ namespace KerbalFoundries
         public float motorTorque;
         public float numberOfWheels = 1; //if it's 0 at the start it send things into and NaN fit.
         public float trackRPM = 0;
+        public float averageTrackRPM;
         [KSPField]
         public float trackLength = 100;
         [KSPField]
@@ -52,7 +53,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                torque /= 100;
+                //torque /= 100;
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
@@ -84,40 +85,44 @@ namespace KerbalFoundries
         public override void OnUpdate()
         {
 //User input
-            if (this.vessel.ctrlState.wheelThrottle > 0)
-            {
-                motorTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed) * directionCorrector * torque; //calculate foce = how fast are we going, which direction is the part facing, scale for torque setting
-            }
-            if (this.vessel.ctrlState.wheelThrottle < 0)
-            {
-                motorTorque = -torqueCurve.Evaluate((float)this.vessel.srfSpeed) * directionCorrector * torque;
-            }
-            if (this.vessel.ctrlState.wheelSteer > 0)
-            {
-                motorTorque -= steeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
-            }
+            float electricCharge;
+            float chargeRequest;
+            motorTorque = (torqueCurve.Evaluate((float)this.vessel.srfSpeed) * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringCurve.Evaluate((float)this.vessel.srfSpeed) * this.vessel.ctrlState.wheelSteer);
+            chargeRequest = Math.Abs(motorTorque * 0.004f);
 
-            if (this.vessel.ctrlState.wheelSteer < 0)
-            {
-                motorTorque += steeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
-            }
-//end user input
-//Apply to WheelColliders
+            electricCharge = part.RequestResource("ElectricCharge", chargeRequest);
+
+            float freeWheelRPM = 0;
             foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
             {
+                if (electricCharge == 0)
+                {
+                    motorTorque = 0;
+                }
                 wc.motorTorque = motorTorque;
                 wc.brakeTorque = brakeTorque;
-                if(wc.isGrounded) //only use colliders that are grounded for average RPM calculation. Those off the floor spinng freely mess it up!
+
+                if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation.
                 {
                     numberOfWheels++;
                     trackRPM += wc.rpm;
                 }
+                else if (wc.suspensionDistance != 0) //the sprockets could be doing anything. Don't count them.
+                {
+                    freeWheelRPM += wc.rpm;
+                }
             }
-            trackRPM /= numberOfWheels;
-
-            degreesPerTick = (trackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
-
-            float distanceTravelled = (float)((trackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
+            if (numberOfWheels > 1)
+            {
+                averageTrackRPM = trackRPM / numberOfWheels;
+            }
+            else
+            {
+                averageTrackRPM = freeWheelRPM / 4;
+            }
+            degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
+            trackRPM = 0;
+            float distanceTravelled = (float)((averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
             Material trackMaterial = trackSurface.renderer.material;    //set things up for changing the texture offset on the track
             Vector2 textureOffset = trackMaterial.mainTextureOffset;
             textureOffset = textureOffset + new Vector2(-distanceTravelled/trackLength, 0); //tracklength is use to fine tune the speed of movement.
@@ -125,7 +130,6 @@ namespace KerbalFoundries
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
             motorTorque = 0; //reset motortorque
             numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
-            trackRPM = 0;
         } //end OnUpdate
 //Action groups
         [KSPAction("Brakes", KSPActionGroup.Brakes)]
