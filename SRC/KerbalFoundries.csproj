@@ -45,7 +45,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlphaModuleTrack.cs" />
     <Compile Include="AlphaSteering.cs" />
+    <Compile Include="AlphaTrackWheel.cs" />
     <Compile Include="ClassTest.cs" />
     <Compile Include="HeavyCrawler.cs" />
     <Compile Include="ModuleTrack.cs" />

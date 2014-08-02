@@ -6,10 +6,10 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-    [KSPModule("ModuleTrack")]
-    public class ModuleTrack : PartModule
+    [KSPModule("AlphaModuleTrack")]
+    public class AlphaModuleTrack : PartModule
     {
-//variable setup 
+        //variable setup 
         public int directionCorrector;
         public float motorTorque;
         public float numberOfWheels = 1; //if it's 0 at the start it send things into and NaN fit.
@@ -36,16 +36,16 @@ namespace KerbalFoundries
         public float raycastError;
 
         public float degreesPerTick;
-//tweakables
+        //tweakables
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Torque %"), UI_FloatRange(minValue = 20, maxValue = 100f, stepIncrement = 25f)]
         public float torque = 100;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
         public float springRate;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.025f)]
         public float damperRate;        //this is what's tweaked by the line above
-//end twekables
-        
-//end variable setup
+        //end twekables
+
+        //end variable setup
 
         public override void OnStart(PartModule.StartState start)  //when started
         {
@@ -94,13 +94,13 @@ namespace KerbalFoundries
                     boundsDestroyed = true;
                 }
             }
-       }//end OnStart
+        }//end OnStart
 
 
 
         public override void OnUpdate()
         {
-//User input
+            //User input
             float electricCharge;
             float chargeRequest;
             motorTorque = (torqueCurve.Evaluate((float)this.vessel.srfSpeed) * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringCurve.Evaluate((float)this.vessel.srfSpeed) * this.vessel.ctrlState.wheelSteer);
@@ -141,13 +141,13 @@ namespace KerbalFoundries
             float distanceTravelled = (float)((averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
             Material trackMaterial = trackSurface.renderer.material;    //set things up for changing the texture offset on the track
             Vector2 textureOffset = trackMaterial.mainTextureOffset;
-            textureOffset = textureOffset + new Vector2(-distanceTravelled/trackLength, 0); //tracklength is use to fine tune the speed of movement.
+            textureOffset = textureOffset + new Vector2(-distanceTravelled / trackLength, 0); //tracklength is use to fine tune the speed of movement.
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
             motorTorque = 0; //reset motortorque
             numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
         } //end OnUpdate
-//Action groups
+        //Action groups
         [KSPAction("Brakes", KSPActionGroup.Brakes)]
         public void brakes(KSPActionParam param)
         {
@@ -162,6 +162,6 @@ namespace KerbalFoundries
                 brakesApplied = false;
             }
         }
-//end action groups
+        //end action groups
     }//end class
 }//end namespace
