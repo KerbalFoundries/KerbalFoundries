@@ -45,35 +45,31 @@ namespace KerbalFoundries
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>()) 
                 {
                     print("getComponents");
-                    b.enabled = true;
                     userspring = b.suspensionSpring;
-
+                     
                     if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
                     {
-
                         SpringRate = userspring.spring;                                    //pass to springrate to be used in the GUI
                         DamperRate = userspring.damper;
                         Rideheight = b.suspensionDistance;
-
                     }
                     else //set the values from those stored in persistance
                     {
-
                         userspring.spring = SpringRate;
                         userspring.damper = DamperRate;
                         b.suspensionSpring = userspring;
                         b.suspensionDistance = Rideheight;
-
-
-                        if (Rideheight>0) //is the deployed flag set? set the rideheight appropriately
-                        {
-                            b.enabled = true;
-                        }
-                        else if(Rideheight<.1f)
-                        {
-                            b.enabled = false;                 //set retracted if the deployed flag is not set
-                        }
                     }
+
+                    if (Rideheight>0) //is the deployed flag set? set the rideheight appropriately
+                    {
+                        b.enabled = true;
+                    }
+                    else if(Rideheight<.5f)
+                    {
+                        b.enabled = false;                 //set retracted if the deployed flag is not set
+                    }
+                    
                 }
             }
 
@@ -90,14 +86,13 @@ namespace KerbalFoundries
         {
             if ( Rideheight>0)
             {
-                //deployed = false;
-                print("Retracting"); 
+                Rideheight -= 0.5f;
+                print("Retracting");  
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
-                    Rideheight -= 0.001f;
+                    
                     wc.suspensionDistance = Rideheight;
-                    wc.enabled = false;
-                    if (Rideheight < 0.1f)
+                    if (Rideheight < 0.5f)
                     {
                         wc.enabled = false;
                     }
@@ -110,17 +105,15 @@ namespace KerbalFoundries
         {
             if (Rideheight<8)
             {
-                //deployed = true;
+                Rideheight += 0.5f;
                 print("Extending");
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
-                    Rideheight += 0.001f;
+                    
                     wc.suspensionDistance = Rideheight;
                     wc.enabled = true;
-
                 }
             }
         }//end Deploy
-
     }//end class
 } //end namespace
