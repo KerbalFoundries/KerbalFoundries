@@ -76,9 +76,18 @@ namespace KerbalFoundries
 
         }//end start
 
-        public override void OnFixedUpdate()
+        public override void OnUpdate()
         {
-
+            foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
+            {
+                wc.suspensionDistance = Rideheight;
+                if (Rideheight < 0.5f)
+                {
+                    wc.enabled = false;
+                }
+                else
+                    wc.enabled = true;
+            }
         }
 
         [KSPAction("Retract")]
@@ -88,31 +97,16 @@ namespace KerbalFoundries
             {
                 Rideheight -= 0.5f;
                 print("Retracting");  
-                foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
-                {
-                    
-                    wc.suspensionDistance = Rideheight;
-                    if (Rideheight < 0.5f)
-                    {
-                        wc.enabled = false;
-                    }
-                }
             }
         }//End Retract
 
         [KSPAction("Extend")]
-        public void deploy(KSPActionParam param)
+        public void extend(KSPActionParam param)
         {
             if (Rideheight<8)
             {
                 Rideheight += 0.5f;
                 print("Extending");
-                foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
-                {
-                    
-                    wc.suspensionDistance = Rideheight;
-                    wc.enabled = true;
-                }
             }
         }//end Deploy
     }//end class
