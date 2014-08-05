@@ -126,18 +126,26 @@ namespace KerbalFoundries
             float forwardTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
             float steeringTorque;
             float brakeSteeringTorque;
+
+            Vector3 roverForward = this.vessel.GetTransform().rotation * new Vector3(0, 1, 0);
+            Vector3 roverUp = this.vessel.GetTransform().rotation * new Vector3(0, 0, 1);
+            Vector3 travelVector = this.vessel.GetSrfVelocity();
+            float travelDirection = Vector3.Dot((roverForward+roverUp), travelVector);
+
             if (!steeringDisabled)
             {
                 steeringTorque = steeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
-                brakeSteering = brakeSteeringCurve.Evaluate((float)this.vessel.srfSpeed);
+                brakeSteering = brakeSteeringCurve.Evaluate(travelDirection);
             }
             else
             {
                 steeringTorque = 0;
                 brakeSteering = 0;
             }
+
+
             motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer);
-            brakeSteeringTorque = Mathf.Clamp(brakeSteering * directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150);
+            brakeSteeringTorque = Mathf.Clamp(brakeSteering * directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150); //if the calculated value is negative, disregards
             chargeRequest = Math.Abs(motorTorque * 0.002f);
 
             electricCharge = part.RequestResource("ElectricCharge", chargeRequest);
@@ -157,7 +165,7 @@ namespace KerbalFoundries
                     numberOfWheels++;
                     trackRPM += wc.rpm;
                 }
-                else if (wc.suspensionDistance != 0) //the sprockets could be doing anything. Don't count them.
+                else if (wc.suspensionDistance != 0) //the sprocket colliders could be doing anything. Don't count them.
                 {
                     freeWheelRPM += wc.rpm;
                 }
@@ -179,13 +187,21 @@ namespace KerbalFoundries
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
             print("frame");
-            print(motorTorque);
+
+            //print(roverForward);
+            print((float)brakeSteeringCurve.Evaluate(travelDirection));
+            print(travelDirection);
+            //print(this.vessel.srf_velocity.z);
+            //print(this.vessel.GetFwdVector());
+            //            print(this.vessel.angularVelocity.z);
+            //print(motorTorque);
             //print(brakeTorque);
-            print(brakeSteeringTorque);
+            //print(brakeSteeringTorque);
             motorTorque = 0; //reset motortorque
             numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
         } //end OnUpdate
-        //Action groups
+
+//Action groups
         [KSPAction("Brakes", KSPActionGroup.Brakes)]
         public void brakes(KSPActionParam param)
         {

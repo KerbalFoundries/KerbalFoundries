@@ -47,11 +47,16 @@ namespace KerbalFoundries
         public float myAdjustedPosition;
         [KSPField(isPersistant = true, guiActive = true, guiName = "Steering Ratio", guiFormat = "F1")]
         public float steeringRatio;
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Steering Ratio.Abs", guiFormat = "F1")]
+        public float steeringRatioAbsolute;
         [KSPField]
         public float angle=.5f;
-        [KSPField]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Steering Angle", guiFormat = "F1")]
         public float steeringAngle;
-        
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Crab Angle", guiFormat = "F1")]
+        public float crabAngle;
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Rotation Angle", guiFormat = "F1")]
+        public float rotationAngle;
 
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
@@ -117,7 +122,8 @@ namespace KerbalFoundries
                 offset = (frontWheel + rearWheel) / 2; //here is the problem
 
                 myAdjustedPosition = myPosition - offset; //change the value based on our calculated offset 
-                steeringRatio = myAdjustedPosition / midToFore; // this sets how much this wheel steers as a proportion of rear/front wheel steering angle 
+                steeringRatio = myAdjustedPosition / midToFore; // this sets how much this wheel steers as a proportion of rear/front wheel steering angle
+                steeringRatioAbsolute = Math.Abs(steeringRatio);
                 //if (steeringRatio < 0) //this just changes all values to positive
                 //{
                   //  steeringRatio /= -1; //if it's negative
@@ -134,25 +140,31 @@ namespace KerbalFoundries
             bool right = Input.GetKey(KeyCode.D);
             bool crabLeft = Input.GetKey(KeyCode.J);
             bool crabRight = Input.GetKey(KeyCode.L);
+            
             if (left && steeringAngle >= -90)
             {
-                smoothSteering.Rotate(Vector3.up, -(angle*steeringRatio));
+                //smoothSteering.Rotate(Vector3.up, -(angle*steeringRatio));
                 steeringAngle -= angle;
             }
             if (right && steeringAngle <= 90)
             {
-                smoothSteering.Rotate(Vector3.up, (angle*steeringRatio));
+                //smoothSteering.Rotate(Vector3.up, (angle*steeringRatio));
                 steeringAngle += angle;
             }
             if (crabLeft)
             {
-                smoothSteering.transform.Rotate(Vector3.up, -angle);
+                crabAngle -= angle;
+                //smoothSteering.transform.Rotate(Vector3.up, -angle);
             }
             if (crabRight)
             {
-                smoothSteering.transform.Rotate(Vector3.up, angle);
+                crabAngle += angle;
+                //smoothSteering.transform.Rotate(Vector3.up, angle);
             }
-
+            rotationAngle = crabAngle + (((steeringAngle * (float)Math.Cos(Mathf.Deg2Rad * crabAngle)) *steeringRatio) + ((steeringAngle * (float)Math.Sin(Mathf.Deg2Rad * crabAngle) * 0.2f) )* steeringRatioAbsolute);
+            Vector3 tempVector = smoothSteering.transform.localEulerAngles;
+            tempVector.y = rotationAngle;
+            smoothSteering.transform.localEulerAngles = tempVector;
         } //end OnFixedUpdate 
 
     }//end class

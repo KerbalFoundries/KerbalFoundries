@@ -133,18 +133,26 @@ namespace KerbalFoundries
             float forwardTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
             float steeringTorque;
             float brakeSteeringTorque;
+
+            Vector3 roverForward = this.vessel.ReferenceTransform.forward;
+            Vector3 roverUp = this.vessel.ReferenceTransform.up;
+            Vector3 travelVector = this.vessel.GetSrfVelocity();
+            float travelDirection = Vector3.Dot((roverForward + roverUp), travelVector);
+
             if (!steeringDisabled)
             {
                 steeringTorque = steeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
-                brakeSteering = brakeSteeringCurve.Evaluate((float)this.vessel.srfSpeed);
+                brakeSteering = brakeSteeringCurve.Evaluate(travelDirection);
             }
             else
             {
                 steeringTorque = 0;
                 brakeSteering = 0;
             }
+
+
             motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer);
-            brakeSteeringTorque = Mathf.Clamp(brakeSteering *directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150);
+            brakeSteeringTorque = Mathf.Clamp(brakeSteering * directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150); //if the calculated value is negative, disregards
             chargeRequest = Math.Abs(motorTorque * 0.002f);
 
             electricCharge = part.RequestResource("ElectricCharge", chargeRequest);
@@ -187,7 +195,9 @@ namespace KerbalFoundries
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
             print("frame");
 
-            //print(this.vessel.srf_velocity.y);
+            //print(roverForward);
+            print((float) brakeSteeringCurve.Evaluate(travelDirection));
+            print(travelDirection);
             //print(this.vessel.srf_velocity.z);
             //print(this.vessel.GetFwdVector());
 //            print(this.vessel.angularVelocity.z);
