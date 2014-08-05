@@ -25,12 +25,13 @@ namespace KerbalFoundries
         public Transform wheel;
         public AlphaModuleTrack track;
         public Vector3 initialTraverse;
+        public float lastTempTraverse;
         //end variables
 
         //OnStart
         public override void OnStart(PartModule.StartState state)
         {
-            print("TrackWheel Called"); 
+            print("TrackWheel Called");
             if (HighLogic.LoadedSceneIsEditor)
             {
 
@@ -63,6 +64,7 @@ namespace KerbalFoundries
                 track = this.part.GetComponentInChildren<AlphaModuleTrack>();
 
                 initialTraverse = susTrav.transform.localPosition;
+                lastTempTraverse = initialTraverse.y; //sets it to a default value for the sprockets
             }
             //end find named objects
             base.OnStart(state);
@@ -79,9 +81,14 @@ namespace KerbalFoundries
             if (grounded && !isSprocket) //is it on the ground
             {
                 tempTraverse.y -= (-wheelCollider.transform.InverseTransformPoint(hit.point).y + track.raycastError) - wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
+                lastTempTraverse = tempTraverse.y;
             }
-            else tempTraverse.y -= wheelCollider.suspensionDistance; //movement defaults back to zero when not grounded
+            else
+            {
+                tempTraverse.y = lastTempTraverse;
+            } //movement defaults back to zero when not grounded
             susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
+
             //end suspension mvoement
         }//end OnUpdate
     }//end modele

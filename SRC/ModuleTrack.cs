@@ -1,4 +1,11 @@
-﻿using System;
+﻿/*
+ * KSP [0.23.5] Anti-Grav Repulsor plugin by Lo-Fi
+ * Much inspiration taken from BahamutoD, snjo and the guys from RBI fgor the original track code.
+ * 
+ */
+
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,12 +29,16 @@ namespace KerbalFoundries
         [KSPField]
         public FloatCurve steeringCurve = new FloatCurve();
         [KSPField]
+        public FloatCurve brakeSteeringCurve = new FloatCurve();
+        [KSPField]
         public float brakingTorque;
         public float brakeTorque;
+        public float brakeSteering;
+
 
         public GameObject trackSurface;
 
-        public Transform bounds;
+        //public Transform bounds;
         public bool boundsDestroyed;
         [KSPField(isPersistant = true)]
         public bool brakesApplied;
@@ -37,12 +48,14 @@ namespace KerbalFoundries
 
         public float degreesPerTick;
 //tweakables
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Torque %"), UI_FloatRange(minValue = 20, maxValue = 100f, stepIncrement = 25f)]
-        public float torque = 100;
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .1f)]
+        public float torque = 1;
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
         public float springRate;        //this is what's tweaked by the line above
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.025f)]
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring Damping"), UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.025f)]
         public float damperRate;        //this is what's tweaked by the line above
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
+        public bool steeringDisabled;
 //end twekables
         
 //end variable setup
@@ -53,12 +66,11 @@ namespace KerbalFoundries
             base.OnStart(start);
             if (HighLogic.LoadedSceneIsEditor)
             {
-
+                
             }
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                bounds = transform.Search("Bounds");
                 //torque /= 100;
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
@@ -70,6 +82,19 @@ namespace KerbalFoundries
                     wc.enabled = true;
                 }
 
+                float dot = Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up); // up is forward
+                if (dot < 0) // below 0 means the engine is on the left side of the craft
+                {
+                    directionCorrector = -1;
+                    print("left");
+                }
+                else
+                {
+                    directionCorrector = 1;
+                    print("right");
+                }
+
+/*
                 if (this.part.orgPos.x < 0)
                 {
                     directionCorrector = 1;
@@ -78,7 +103,7 @@ namespace KerbalFoundries
                 {
                     directionCorrector = -1;
                 }
-
+*/
                 foreach (SkinnedMeshRenderer potentialTrackOrWheel in this.part.GetComponentsInChildren<SkinnedMeshRenderer>())
                 {
                     trackSurface = potentialTrackOrWheel.gameObject;
@@ -90,8 +115,10 @@ namespace KerbalFoundries
                 }
                 if (boundsDestroyed == false)
                 {
+                    Transform bounds = transform.Search("Bounds");
                     GameObject.Destroy(bounds.gameObject);
                     boundsDestroyed = true;
+                    print("destroying Bounds");
                 }
             }
        }//end OnStart
@@ -103,8 +130,22 @@ namespace KerbalFoundries
 //User input
             float electricCharge;
             float chargeRequest;
-            motorTorque = (torqueCurve.Evaluate((float)this.vessel.srfSpeed) * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringCurve.Evaluate((float)this.vessel.srfSpeed) * this.vessel.ctrlState.wheelSteer);
-            chargeRequest = Math.Abs(motorTorque * 0.004f);
+            float forwardTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
+            float steeringTorque;
+            float brakeSteeringTorque;
+            if (!steeringDisabled)
+            {
+                steeringTorque = steeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
+                brakeSteering = brakeSteeringCurve.Evaluate((float)this.vessel.srfSpeed);
+            }
+            else
+            {
+                steeringTorque = 0;
+                brakeSteering = 0;
+            }
+            motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer);
+            brakeSteeringTorque = Mathf.Clamp(brakeSteering *directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150);
+            chargeRequest = Math.Abs(motorTorque * 0.002f);
 
             electricCharge = part.RequestResource("ElectricCharge", chargeRequest);
 
@@ -116,14 +157,14 @@ namespace KerbalFoundries
                     motorTorque = 0;
                 }
                 wc.motorTorque = motorTorque;
-                wc.brakeTorque = brakeTorque;
+                wc.brakeTorque = brakeTorque + brakeSteeringTorque;
 
                 if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation.
                 {
                     numberOfWheels++;
                     trackRPM += wc.rpm;
                 }
-                else if (wc.suspensionDistance != 0) //the sprockets could be doing anything. Don't count them.
+                else if (wc.suspensionDistance != 0) //the sprocket colliders could be doing anything. Don't count them.
                 {
                     freeWheelRPM += wc.rpm;
                 }
@@ -141,9 +182,18 @@ namespace KerbalFoundries
             float distanceTravelled = (float)((averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
             Material trackMaterial = trackSurface.renderer.material;    //set things up for changing the texture offset on the track
             Vector2 textureOffset = trackMaterial.mainTextureOffset;
-            textureOffset = textureOffset + new Vector2(-distanceTravelled/trackLength, 0); //tracklength is use to fine tune the speed of movement.
+            textureOffset = textureOffset + new Vector2(-distanceTravelled/trackLength, 0); //tracklength is used to fine tune the speed of movement.
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
+            print("frame");
+
+            //print(this.vessel.srf_velocity.y);
+            //print(this.vessel.srf_velocity.z);
+            //print(this.vessel.GetFwdVector());
+//            print(this.vessel.angularVelocity.z);
+            //print(motorTorque);
+            //print(brakeTorque);
+            //print(brakeSteeringTorque);
             motorTorque = 0; //reset motortorque
             numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
         } //end OnUpdate
@@ -153,7 +203,7 @@ namespace KerbalFoundries
         {
             if (param.type == KSPActionType.Activate)
             {
-                brakeTorque = brakingTorque;
+                brakeTorque = brakingTorque * ((torque/2)+.5f);
                 brakesApplied = true;
             }
             else
