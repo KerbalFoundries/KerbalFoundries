@@ -64,9 +64,12 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                //torque /= 100;
+                if(torque >2) //check if the torque value is using the old numbering system
+                {
+                    torque /= 100;
+                }
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
-                foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
+                foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>()) //set colliders to values chosen in editor and activate
                 {
                     JointSpring userSpring = wc.suspensionSpring;
                     userSpring.spring = springRate;
@@ -87,30 +90,20 @@ namespace KerbalFoundries
                     print("right");
                 }
 
-                /*
-                                if (this.part.orgPos.x < 0)
-                                {
-                                    directionCorrector = 1;
-                                }
-                                else
-                                {
-                                    directionCorrector = -1;
-                                }
-                */
-                foreach (SkinnedMeshRenderer potentialTrackOrWheel in this.part.GetComponentsInChildren<SkinnedMeshRenderer>())
+                foreach (SkinnedMeshRenderer Track in this.part.GetComponentsInChildren<SkinnedMeshRenderer>()) //this is the track
                 {
-                    trackSurface = potentialTrackOrWheel.gameObject;
+                    trackSurface = Track.gameObject;
                 }
 
                 if (brakesApplied)
                 {
-                    brakeTorque = brakingTorque;
+                    brakeTorque = brakingTorque; //were the brakes left applied
                 }
-                if (boundsDestroyed == false)
+                if (boundsDestroyed == false) //has teh bounds object already been destroyed?
                 {
                     Transform bounds = transform.Search("Bounds");
                     GameObject.Destroy(bounds.gameObject);
-                    boundsDestroyed = true;
+                    boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
                     print("destroying Bounds");
                 }
             }
@@ -123,19 +116,19 @@ namespace KerbalFoundries
             //User input
             float electricCharge;
             float chargeRequest;
-            float forwardTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
+            float forwardTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed) * torque; //this is used a lot, so may as well calculate once
             float steeringTorque;
             float brakeSteeringTorque;
 
-            Vector3 roverForward = this.vessel.GetTransform().rotation * new Vector3(0, 1, 0);
-            Vector3 roverUp = this.vessel.GetTransform().rotation * new Vector3(0, 0, 1);
+            Vector3 roverForward = this.vessel.GetTransform().rotation * new Vector3(0, 1, 0); //these two lines catch travel direction. Command pod could be mounted vertical or horizontal :/
+            Vector3 roverUp = this.vessel.GetTransform().rotation * new Vector3(0, 0, 1); //changed to a unit vector
             Vector3 travelVector = this.vessel.GetSrfVelocity();
-            float travelDirection = Vector3.Dot((roverForward+roverUp), travelVector);
+            float travelDirection = Vector3.Dot((roverForward+roverUp), travelVector); //compare travel drection with the product of up and forward. See above
 
             if (!steeringDisabled)
             {
-                steeringTorque = steeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque;
-                brakeSteering = brakeSteeringCurve.Evaluate(travelDirection);
+                steeringTorque = steeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque; //low speed steering mode. Differential motor torque
+                brakeSteering = brakeSteeringCurve.Evaluate(travelDirection); //high speed steering. Brake on inside track because Unity seems to weight reverse motor torque less at high speed.
             }
             else
             {
@@ -144,11 +137,11 @@ namespace KerbalFoundries
             }
 
 
-            motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer);
-            brakeSteeringTorque = Mathf.Clamp(brakeSteering * directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150); //if the calculated value is negative, disregards
-            chargeRequest = Math.Abs(motorTorque * 0.002f);
+            motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
+            brakeSteeringTorque = Mathf.Clamp(brakeSteering * directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150); //if the calculated value is negative, disregard: Only brake on inside track.
+            chargeRequest = Math.Abs(motorTorque * 0.002f); //calculate the requeste charge
 
-            electricCharge = part.RequestResource("ElectricCharge", chargeRequest);
+            electricCharge = part.RequestResource("ElectricCharge", chargeRequest); //ask the vessel for requested charge
 
             float freeWheelRPM = 0;
             foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
@@ -186,18 +179,6 @@ namespace KerbalFoundries
             textureOffset = textureOffset + new Vector2(-distanceTravelled / trackLength, 0); //tracklength is used to fine tune the speed of movement.
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
-            print("frame");
-
-            //print(roverForward);
-            print((float)brakeSteeringCurve.Evaluate(travelDirection));
-            print(travelDirection);
-            //print(this.vessel.srf_velocity.z);
-            //print(this.vessel.GetFwdVector());
-            //            print(this.vessel.angularVelocity.z);
-            //print(motorTorque);
-            //print(brakeTorque);
-            //print(brakeSteeringTorque);
-            motorTorque = 0; //reset motortorque
             numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
         } //end OnUpdate
 
