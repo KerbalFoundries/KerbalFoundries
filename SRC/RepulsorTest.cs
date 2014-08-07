@@ -25,8 +25,8 @@ namespace KerbalFoundries
         public float SpringRate;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.025f)]
         public float DamperRate;        //this is what's tweaked by the line above
-        //[KSPField(isPersistant = true)]
-        //public bool deployed = true;
+        [KSPField(isPersistant = true)]
+        public bool boundsDestroyed = false;
 
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
@@ -36,17 +36,11 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsEditor)
             {
-
-            }
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                this.part.force_activate(); //force the part active or OnFixedUpate is not called
-                
-                foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>()) 
+                foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
-                    print("getComponents");
+                    print("Editor");
                     userspring = b.suspensionSpring;
-                     
+
                     if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
                     {
                         SpringRate = userspring.spring;                                    //pass to springrate to be used in the GUI
@@ -60,6 +54,19 @@ namespace KerbalFoundries
                         b.suspensionSpring = userspring;
                         b.suspensionDistance = Rideheight;
                     }
+                }
+            }
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                this.part.force_activate(); //force the part active or OnFixedUpate is not called
+                
+                foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>()) 
+                {
+                    userspring = b.suspensionSpring;
+                    userspring.spring = SpringRate;
+                    userspring.damper = DamperRate;
+                    b.suspensionSpring = userspring;
+                    b.suspensionDistance = Rideheight;
 
                     if (Rideheight>0) //is the deployed flag set? set the rideheight appropriately
                     {
@@ -71,6 +78,14 @@ namespace KerbalFoundries
                     }
                     
                 }
+            }
+
+            if (boundsDestroyed == false) //has teh bounds object already been destroyed?
+            {
+                Transform bounds = transform.Search("Bounds");
+                GameObject.Destroy(bounds.gameObject);
+                boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
+                print("destroying Bounds");
             }
 
 
