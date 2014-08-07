@@ -86,7 +86,9 @@ namespace KerbalFoundries
                     wc.enabled = false;
                 }
                 else
+                {
                     wc.enabled = true;
+                }
             }
         }
 
