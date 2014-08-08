@@ -40,7 +40,7 @@ namespace KerbalFoundries
 
         public float degreesPerTick;
         //tweakables
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .1f)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
         public float torque = 1;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
         public float springRate;        //this is what's tweaked by the line above
@@ -98,11 +98,11 @@ namespace KerbalFoundries
                 {
                     brakeTorque = brakingTorque; //were the brakes left applied
                 }
-                if (boundsDestroyed == false) //has teh bounds object already been destroyed?
+                Transform bounds = transform.Search("Bounds");
+                if (bounds != null)
                 {
-                    Transform bounds = transform.Search("Bounds");
                     GameObject.Destroy(bounds.gameObject);
-                    boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
+                    //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
                     print("destroying Bounds");
                 }
             }
@@ -170,6 +170,11 @@ namespace KerbalFoundries
             {
                 averageTrackRPM = freeWheelRPM / 4;
             }
+        }//end OnFixedUpdate
+
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
             degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
             trackRPM = 0;
             float distanceTravelled = (float)((averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
@@ -196,6 +201,29 @@ namespace KerbalFoundries
                 brakesApplied = false;
             }
         }
+        [KSPAction("Increase Torque")]
+        public void increase(KSPActionParam param)
+        {
+            if (torque < 2)
+            {
+                torque += 0.25f;
+            }
+
+        }//End increase
+
+        [KSPAction("Decrease Toqrque")]
+        public void decrease(KSPActionParam param)
+        {
+            if (torque > 0)
+            {
+                torque -= 0.25f;
+            }
+        }//end decrease
+        [KSPAction("Toggle Steering")]
+        public void toggleSteering(KSPActionParam param)
+        {
+            steeringDisabled = !steeringDisabled;
+        }//end toggle steering
         //end action groups
     }//end class
 }//end namespace

@@ -113,11 +113,11 @@ namespace KerbalFoundries
                 {
                     brakeTorque = brakingTorque;
                 }
-                if (boundsDestroyed == false)
+                Transform bounds = transform.Search("Bounds");
+                if (bounds != null)
                 {
-                    Transform bounds = transform.Search("Bounds");
                     GameObject.Destroy(bounds.gameObject);
-                    boundsDestroyed = true;
+                    //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
                     print("destroying Bounds");
                 }
             }
@@ -200,7 +200,7 @@ namespace KerbalFoundries
             textureOffset = textureOffset + new Vector2(-distanceTravelled / trackLength, 0); //tracklength is used to fine tune the speed of movement.
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
-        }
+        }//end onUpdate
 
 //Action groups
         [KSPAction("Brakes", KSPActionGroup.Brakes)]
