@@ -25,8 +25,10 @@ namespace KerbalFoundries
         public float SpringRate;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.025f)]
         public float DamperRate;        //this is what's tweaked by the line above
-        [KSPField(isPersistant = true)]
-        public bool boundsDestroyed = false;
+        [KSPField]
+        public bool deployed;
+        [KSPField]
+        public bool lowEnergy;
 
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
@@ -80,11 +82,11 @@ namespace KerbalFoundries
                 }
             }
 
-            if (boundsDestroyed == false) //has teh bounds object already been destroyed?
+            Transform bounds = transform.Search("Bounds");
+            if (bounds != null)
             {
-                Transform bounds = transform.Search("Bounds");
                 GameObject.Destroy(bounds.gameObject);
-                boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
+                //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
                 print("destroying Bounds");
             }
 
@@ -99,10 +101,27 @@ namespace KerbalFoundries
                 if (Rideheight < 0.5f)
                 {
                     wc.enabled = false;
+                    deployed = false;
                 }
                 else
                 {
                     wc.enabled = true;
+                    deployed = true;
+                }
+            }
+
+            if (deployed)
+            {
+                float electricCharge = part.RequestResource("ElectricCharge", .05f);
+                if (electricCharge != .05f)
+                {
+                    print("retracting due to low electricity");
+                    lowEnergy = true;
+                    Rideheight = 0;
+                }
+                else
+                {
+                    lowEnergy = false;
                 }
             }
         }
@@ -110,11 +129,12 @@ namespace KerbalFoundries
         [KSPAction("Retract")]
         public void retract(KSPActionParam param)
         {
-            if ( Rideheight>0)
+            if (Rideheight > 0)
             {
                 Rideheight -= 0.5f;
-                print("Retracting");  
+                print("Retracting");
             }
+
         }//End Retract
 
         [KSPAction("Extend")]
