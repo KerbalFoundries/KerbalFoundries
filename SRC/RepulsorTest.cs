@@ -30,6 +30,7 @@ namespace KerbalFoundries
         [KSPField]
         public bool lowEnergy;
 
+        public float chargeConsumptionRate = 1f;
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
         {
@@ -112,8 +113,8 @@ namespace KerbalFoundries
 
             if (deployed)
             {
-                float electricCharge = part.RequestResource("ElectricCharge", .05f);
-                if (electricCharge != .05f)
+                float electricCharge = part.RequestResource("ElectricCharge", chargeConsumptionRate);
+                if (electricCharge != chargeConsumptionRate)
                 {
                     print("retracting due to low electricity");
                     lowEnergy = true;

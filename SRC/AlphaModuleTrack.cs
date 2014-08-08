@@ -28,7 +28,6 @@ namespace KerbalFoundries
         public float brakeTorque;
         public float brakeSteering;
 
-
         public GameObject trackSurface;
 
         //public Transform bounds;
@@ -111,7 +110,7 @@ namespace KerbalFoundries
 
 
 
-        public override void OnUpdate()
+        public override void OnFixedUpdate()
         {
             //User input
             float electricCharge;
@@ -139,7 +138,7 @@ namespace KerbalFoundries
 
             motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
             brakeSteeringTorque = Mathf.Clamp(brakeSteering * directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150); //if the calculated value is negative, disregard: Only brake on inside track.
-            chargeRequest = Math.Abs(motorTorque * 0.002f); //calculate the requeste charge
+            chargeRequest = Math.Abs(motorTorque * 0.001f); //calculate the requeste charge
 
             electricCharge = part.RequestResource("ElectricCharge", chargeRequest); //ask the vessel for requested charge
 

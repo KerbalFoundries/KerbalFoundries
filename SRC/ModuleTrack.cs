@@ -48,7 +48,7 @@ namespace KerbalFoundries
 
         public float degreesPerTick;
 //tweakables
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .1f)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
         public float torque = 1;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
         public float springRate;        //this is what's tweaked by the line above
@@ -125,7 +125,7 @@ namespace KerbalFoundries
 
 
 
-        public override void OnUpdate()
+        public override void OnFixedUpdate()
         {
 //User input
             float electricCharge;
@@ -153,7 +153,7 @@ namespace KerbalFoundries
 
             motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer);
             brakeSteeringTorque = Mathf.Clamp(brakeSteering * directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150); //if the calculated value is negative, disregards
-            chargeRequest = Math.Abs(motorTorque * 0.002f);
+            chargeRequest = Math.Abs(motorTorque * 0.001f);
 
             electricCharge = part.RequestResource("ElectricCharge", chargeRequest);
 
@@ -185,28 +185,23 @@ namespace KerbalFoundries
             {
                 averageTrackRPM = freeWheelRPM / 4;
             }
+            motorTorque = 0; //reset motortorque
+            numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
+        } //end OnUpdate
+//OnUpdate
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
             degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
             trackRPM = 0;
             float distanceTravelled = (float)((averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
             Material trackMaterial = trackSurface.renderer.material;    //set things up for changing the texture offset on the track
             Vector2 textureOffset = trackMaterial.mainTextureOffset;
-            textureOffset = textureOffset + new Vector2(-distanceTravelled/trackLength, 0); //tracklength is used to fine tune the speed of movement.
+            textureOffset = textureOffset + new Vector2(-distanceTravelled / trackLength, 0); //tracklength is used to fine tune the speed of movement.
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
-            print("frame");
+        }
 
-            //print(roverForward);
-            print((float) brakeSteeringCurve.Evaluate(travelDirection));
-            print(travelDirection);
-            //print(this.vessel.srf_velocity.z);
-            //print(this.vessel.GetFwdVector());
-//            print(this.vessel.angularVelocity.z);
-            //print(motorTorque);
-            //print(brakeTorque);
-            //print(brakeSteeringTorque);
-            motorTorque = 0; //reset motortorque
-            numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
-        } //end OnUpdate
 //Action groups
         [KSPAction("Brakes", KSPActionGroup.Brakes)]
         public void brakes(KSPActionParam param)
@@ -222,6 +217,30 @@ namespace KerbalFoundries
                 brakesApplied = false;
             }
         }
+
+        [KSPAction("Increase Torque")]
+        public void increase(KSPActionParam param)
+        {
+            if (torque < 2)
+            {
+                torque += 0.25f;
+            }
+
+        }//End increase
+
+        [KSPAction("Decrease Toqrque")]
+        public void decrease(KSPActionParam param)
+        {
+            if (torque > 0)
+            {
+                torque -= 0.25f;
+            }
+        }//end decrease
+        [KSPAction("Toggle Steering")]
+        public void toggleSteering(KSPActionParam param)
+        {
+            steeringDisabled = !steeringDisabled;
+        }//end toggle steering
 //end action groups
     }//end class
 }//end namespace
