@@ -28,9 +28,9 @@ namespace KerbalFoundries
         [KSPField]
         public bool deployed;
         [KSPField]
-        public bool lowEnergy;
+        public bool lowEnergy; 
 
-        public float chargeConsumptionRate = 1f;
+        public float chargeConsumptionRate = 0.05f;
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
         {
