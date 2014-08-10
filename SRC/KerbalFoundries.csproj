@@ -52,6 +52,7 @@
     <Compile Include="HeavyCrawler.cs" />
     <Compile Include="LandingGearWheel.cs" />
     <Compile Include="ModuleLandingGear2.cs" />
+    <Compile Include="ModuleMainGear.cs" />
     <Compile Include="ModuleTrack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepulsorAlpha.cs" />
