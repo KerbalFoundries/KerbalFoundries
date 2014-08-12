@@ -17,6 +17,7 @@ namespace KerbalFoundries
         public string susTravName;
         [KSPField]
         public bool isSuspension;
+
         public WheelCollider wheelCollider;
         public Transform susTrav;
         public Transform wheel;
@@ -46,6 +47,7 @@ namespace KerbalFoundries
                     wheel = tr;
                 }
             }
+
             print("LandingGearWheel Called");
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -84,8 +86,10 @@ namespace KerbalFoundries
             {
                 tempTraverse.y = lastTempTraverse;
             } //movement defaults back to zero when not grounded
-            print(tempTraverse.y);
+            //print(tempTraverse.y);
             susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
+            float degreesPerTick = (wheelCollider.rpm / 60) * Time.deltaTime * 360;
+            wheel.transform.Rotate(Vector3.right, degreesPerTick / wheelCollider.radius); //rotate wheel
         }
     }
 }
