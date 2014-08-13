@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlphaModuleTrack.cs" />
+    <Compile Include="AlphaRepulsor.cs" />
     <Compile Include="AlphaSteering.cs" />
     <Compile Include="AlphaTrackWheel.cs" />
     <Compile Include="ClassTest.cs" />

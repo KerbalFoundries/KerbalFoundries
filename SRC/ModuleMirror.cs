@@ -15,16 +15,18 @@ namespace KerbalFoundries
         public string right = "right";
         public string left = "left";
         public string swap = "swap";
+        [KSPField(isPersistant=true)]
+        public string cloneSide;
+        [KSPField(isPersistant = true)]
+        public string flightSide;
 
+        public ModuleMirror clone;
+        
 
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
 
-            //if (this.part.isMirrored)
-            //{
-                //print("this part is mirrored");
-            //}
             foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
             {
                 if (tr.name.Equals("Left", StringComparison.Ordinal))
@@ -40,85 +42,106 @@ namespace KerbalFoundries
                 }
             }
 
-            if (HighLogic.LoadedSceneIsEditor)
+            if (HighLogic.LoadedSceneIsFlight)
             {
-                part.OnEditorAttach += onEditorAttach;
-                part.OnEditorDetach += onEditorDetach;
-                
-                if(part.isClone)
+                SetSide(flightSide);
+                print("Loaded scene is flight");
+            }
+
+            print("Loaded scene is editor");
+            print(flightSide);
+
+            FindClone();
+
+            if (flightSide == "") //check to see if we have a value in persistence
+            {
+                print("No flightSide value in persistence. Sertting default");
+                //print(this.part.isClone);
+                LeftSide();
+            }
+            else //flightSide has a value, so set it.
+            {
+                print("Setting value from persistence");
+                if (flightSide == left)
                 {
-                    onEditorAttach();
+                    LeftSide();
+                }
+                if (flightSide == right)
+                {
+                    RightSide();
                 }
 
-                print("isClone");
-                print(this.part.isClone); 
- 
-                if (!part.isClone)
-                {
-                    SetSide(right);
-                }
-            }//end editor
+            }
+            
+            if (clone != null)
+            {
+                print("Part is clone");
+                //FindClone(); //make sure we have the clone. No harm in checking again
+                SetSide(clone.cloneSide);
+            }
+   
+
+            
+
+        
         }//end OnStart
-        public virtual void onEditorAttach()
+
+        [KSPEvent(guiName = "Left", guiActive = false, guiActiveEditor = true)]
+        public void LeftSide() //sets this side to left and clone to right
         {
-            print("onEditorAttach called");
-            //print(part.transform.forward);
-            //print(part.GetReferenceTransform());
-            float dot = Vector3.Dot(this.part.transform.forward, part.GetReferenceTransform().up); // up is forward
-            if (dot < 0) // below 0 means the engine is on the left side of the craft
+            FindClone();
+            SetSide(left);
+            
+            if (clone)
             {
-                //print("part is left");
-                SetSide(left);
-            }
-            else
-            {
-                //print("part is right");
-                SetSide(right);
+                clone.SetSide(right);
             }
         }
-        public virtual void onEditorDetach()
+        [KSPEvent(guiName = "Right", guiActive = false, guiActiveEditor = true)]
+        public void RightSide()
         {
-            print("onEditorDetach called");
-            //print(part.transform.forward);
-            //print(part.GetReferenceTransform());
-            float dot = Vector3.Dot(this.part.transform.forward, part.GetReferenceTransform().up); // up is forward
-            if (dot < 0) // below 0 means the engine is on the left side of the craft
+            FindClone();
+            SetSide(right);
+            
+            if (clone)
             {
-                //print("part is left");
-                SetSide(left); 
-            }
-            else
-            {
-                //print("part is right");
-                SetSide(right);
+                clone.SetSide(left);
             }
         }
-        public void SetSide(string side)
+
+        public void SetSide(string side) //accepts the string value
         {
             if (side == left)
             {
                 rightObject.gameObject.SetActive(false);
-                leftObject.gameObject.SetActive(true); 
+                leftObject.gameObject.SetActive(true);
+                cloneSide = right;
+                flightSide = side;
+                Events["LeftSide"].active = false;
+                Events["RightSide"].active = true;
             }
             if (side == right)
             {
                 rightObject.gameObject.SetActive(true);
                 leftObject.gameObject.SetActive(false);
+                cloneSide = left;
+                flightSide = side;
+                Events["LeftSide"].active = true;
+                Events["RightSide"].active = false;
             }
-            if (side == swap)
-            {
-                rightObject.gameObject.SetActive(true);
-                leftObject.gameObject.SetActive(false);
-            }
+
         }
 
-        public override void OnUpdate()
+        public void FindClone()
         {
-            base.OnUpdate();
-            
-            bool swap = Input.GetKey(KeyCode.Hash);
-            
+            foreach (Part potentialMaster in this.part.symmetryCounterparts) //search for parts that might be my symmetry counterpart
+            {
+                if (potentialMaster != null) //or we'll get a null-ref
+                {
+                    clone = potentialMaster.Modules.OfType<ModuleMirror>().FirstOrDefault();
+                    //print("found my clone");
+                }
+            }
         }
-
     }//end class
 }//end namespace

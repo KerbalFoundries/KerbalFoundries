@@ -13,8 +13,8 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-    [KSPModule("RepulsorTest")]
-    public class RepulsorTest : PartModule
+    [KSPModule("AlphaRepulsor")]
+    public class AlphaRepulsor : PartModule
     {
 
         public JointSpring userspring;
@@ -28,7 +28,7 @@ namespace KerbalFoundries
         [KSPField]
         public bool deployed;
         [KSPField]
-        public bool lowEnergy; 
+        public bool lowEnergy;
 
         public float chargeConsumptionRate = 0.05f;
         //begin start
@@ -37,7 +37,7 @@ namespace KerbalFoundries
             // degub only: print("onstart");
             base.OnStart(start);
 
-            if (HighLogic.LoadedSceneIsEditor)
+            if (HighLogic.LoadedSceneIsEditor) 
             {
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
@@ -62,8 +62,8 @@ namespace KerbalFoundries
             if (HighLogic.LoadedSceneIsFlight)
             {
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
-                
-                foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>()) 
+
+                foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     userspring = b.suspensionSpring;
                     userspring.spring = SpringRate;
@@ -71,15 +71,15 @@ namespace KerbalFoundries
                     b.suspensionSpring = userspring;
                     b.suspensionDistance = Rideheight;
 
-                    if (Rideheight>0) //is the deployed flag set? set the rideheight appropriately
+                    if (Rideheight > 0) //is the deployed flag set? set the rideheight appropriately
                     {
                         b.enabled = true;
                     }
-                    else if(Rideheight<.5f)
+                    else if (Rideheight < .5f)
                     {
                         b.enabled = false;                 //set retracted if the deployed flag is not set
                     }
-                    
+
                 }
             }
 
@@ -94,7 +94,7 @@ namespace KerbalFoundries
 
         }//end start
 
-        public override void OnFixedUpdate()
+        public override void OnUpdate()
         {
             foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
             {
@@ -114,7 +114,7 @@ namespace KerbalFoundries
             if (deployed)
             {
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumptionRate);
-                if (electricCharge != chargeConsumptionRate)
+                if (electricCharge < (chargeConsumptionRate / 2))
                 {
                     print("retracting due to low electricity");
                     lowEnergy = true;
@@ -141,7 +141,7 @@ namespace KerbalFoundries
         [KSPAction("Extend")]
         public void extend(KSPActionParam param)
         {
-            if (Rideheight<8)
+            if (Rideheight < 8)
             {
                 Rideheight += 0.5f;
                 print("Extending");
