@@ -52,6 +52,12 @@ namespace KerbalFoundries
             print(flightSide);
 
             FindClone();
+            if (clone != null)
+            {
+                print("Part is clone");
+                //FindClone(); //make sure we have the clone. No harm in checking again
+                SetSide(clone.cloneSide);
+            }
 
             if (flightSide == "") //check to see if we have a value in persistence
             {
@@ -62,28 +68,10 @@ namespace KerbalFoundries
             else //flightSide has a value, so set it.
             {
                 print("Setting value from persistence");
-                if (flightSide == left)
-                {
-                    LeftSide();
-                }
-                if (flightSide == right)
-                {
-                    RightSide();
-                }
-
+                SetSide(flightSide);
             }
             
-            if (clone != null)
-            {
-                print("Part is clone");
-                //FindClone(); //make sure we have the clone. No harm in checking again
-                SetSide(clone.cloneSide);
-            }
-   
 
-            
-
-        
         }//end OnStart
 
         [KSPEvent(guiName = "Left", guiActive = false, guiActiveEditor = true)]

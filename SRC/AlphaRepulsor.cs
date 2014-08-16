@@ -58,6 +58,7 @@ namespace KerbalFoundries
                         b.suspensionDistance = Rideheight;
                     }
                 }
+                print(PartResourceLibrary.Instance.resourceDefinitions);
             }
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -92,9 +93,9 @@ namespace KerbalFoundries
             }
 
 
-        }//end start
+        }//end start 
 
-        public override void OnUpdate()
+        public override void OnFixedUpdate()
         {
             foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
             {
@@ -114,6 +115,10 @@ namespace KerbalFoundries
             if (deployed)
             {
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumptionRate);
+                var resources = new List<PartResource>();
+                part.GetConnectedResources(PartResourceLibrary.Instance.GetDefinition("ElectricCharge").id, resources);
+                
+                //print(resources);
                 if (electricCharge < (chargeConsumptionRate / 2))
                 {
                     print("retracting due to low electricity");
