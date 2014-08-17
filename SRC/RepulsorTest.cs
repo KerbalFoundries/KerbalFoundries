@@ -115,8 +115,8 @@ namespace KerbalFoundries
             if (deployed)
             {
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumptionRate);
-                var resources = new List<PartResource>();
-                part.GetConnectedResources(PartResourceLibrary.Instance.GetDefinition("ElectricCharge").id, resources);
+                //var resources = new List<PartResource>();
+                //part.GetConnectedResources(PartResourceLibrary.Instance.GetDefinition("ElectricCharge").id, resources);
 
                 //print(resources);
                 if (electricCharge < (chargeConsumptionRate / 2))
