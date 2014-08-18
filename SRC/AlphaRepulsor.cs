@@ -92,7 +92,6 @@ namespace KerbalFoundries
                 print("destroying Bounds");
             }
 
-
         }//end start 
 
         public override void OnFixedUpdate()
