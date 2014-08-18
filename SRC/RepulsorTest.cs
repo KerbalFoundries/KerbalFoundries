@@ -121,7 +121,7 @@ namespace KerbalFoundries
                 //print(resources);
                 if (electricCharge < (chargeConsumptionRate / 2))
                 {
-                    print("retracting due to low electricity");
+                    print("retracting due to low electricity"); 
                     lowEnergy = true;
                     Rideheight = 0;
                 }

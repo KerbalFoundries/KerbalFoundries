@@ -9,7 +9,7 @@ namespace KerbalFoundries
     [KSPModule("TrackWheel")]
     public class TrackWheel : PartModule
     {
-        //start variables
+        //start variables 
         [KSPField]
         public string wheelName;
         [KSPField]
