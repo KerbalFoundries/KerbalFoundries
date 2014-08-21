@@ -30,7 +30,9 @@ namespace KerbalFoundries
         [KSPField]
         public bool lowEnergy;
 
-        public float chargeConsumptionRate = 0.05f;
+        public float repulsorCount = 0;
+
+        public float chargeConsumptionRate = 0.01f;
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
         {
@@ -66,6 +68,7 @@ namespace KerbalFoundries
 
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
+                    repulsorCount += 1;
                     userspring = b.suspensionSpring;
                     userspring.spring = SpringRate;
                     userspring.damper = DamperRate;
@@ -114,12 +117,9 @@ namespace KerbalFoundries
 
             if (deployed)
             {
-                float electricCharge = part.RequestResource("ElectricCharge", chargeConsumptionRate);
-                //var resources = new List<PartResource>();
-                //part.GetConnectedResources(PartResourceLibrary.Instance.GetDefinition("ElectricCharge").id, resources);
-
-                //print(resources);
-                if (electricCharge < (chargeConsumptionRate / 2))
+                part.RequestResource("ElectricCharge", (chargeConsumptionRate * (Rideheight/8) * (1 + SpringRate) * repulsorCount) );
+                float electricCharge = Extensions.GetBattery(this.part);
+                if (electricCharge < 0.1f)
                 {
                     print("retracting due to low electricity"); 
                     lowEnergy = true;

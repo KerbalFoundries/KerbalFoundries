@@ -38,6 +38,7 @@ namespace KerbalFoundries
                 this.part.force_activate();
             }
         }
+
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
@@ -46,7 +47,7 @@ namespace KerbalFoundries
                 batteryRatio = Extensions.GetBattery(this.part);
                 usageAdjustment = (lastRatio - batteryRatio) * reactionSpeed;
                 ratioAdjustment = Mathf.Clamp((targetBatteryRatio - batteryRatio), -0.001f, 0.001f);
-                float tempThrottle = Mathf.Clamp(autoThrottleSetting + ratioAdjustment + usageAdjustment, 0.1f ,1);
+                float tempThrottle = Mathf.Clamp(autoThrottleSetting + ratioAdjustment + usageAdjustment, 0.01f ,1);
                 autoThrottleSetting = tempThrottle;
                 thisEngine.currentThrottle = autoThrottleSetting;
                 lastRatio = batteryRatio;
@@ -76,6 +77,7 @@ namespace KerbalFoundries
                 print("Increasing APU Output");
             }
         }//End Retract
+
         [KSPAction("APU - output")]
         public void DecreaseAPU(KSPActionParam param)
         {
@@ -85,18 +87,21 @@ namespace KerbalFoundries
                 print("Decreasing APU Output");
             }
         }//End Retract
+
         [KSPAction("APU Shutdown")]
         public void ShutdownAPU(KSPActionParam param)
         {
             throttleSetting = 0f;
             print("Shutting down APU");
         }//End Retract
+
         [KSPAction("APU Automatic")]
         public void AutoAPU(KSPActionParam param)
         {
             autoThrottle = true;
             print("APU Automatic");
         }
+
         [KSPAction("APU Manual")]
         public void ManualAPU(KSPActionParam param)
         {
