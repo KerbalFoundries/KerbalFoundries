@@ -119,8 +119,8 @@ namespace KerbalFoundries
             float steeringTorque;
             float brakeSteeringTorque;
 
-            Vector3 roverForward = this.vessel.GetTransform().rotation * new Vector3(0, 1, 0); //these two lines catch travel direction. Command pod could be mounted vertical or horizontal :/
-            Vector3 roverUp = this.vessel.GetTransform().rotation * new Vector3(0, 0, 1); //changed to a unit vector
+            Vector3 roverForward = this.vessel.ReferenceTransform.rotation * new Vector3(0, 1, 0); //these two lines catch travel direction. Command pod could be mounted vertical or horizontal :/
+            Vector3 roverUp = this.vessel.ReferenceTransform.rotation * new Vector3(0, 0, 1); //changed to a unit vector
             Vector3 travelVector = this.vessel.GetSrfVelocity();
             float travelDirection = Vector3.Dot((roverForward+roverUp), travelVector); //compare travel drection with the product of up and forward. See above
 

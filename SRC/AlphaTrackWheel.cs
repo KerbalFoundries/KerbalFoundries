@@ -64,7 +64,7 @@ namespace KerbalFoundries
                 track = this.part.GetComponentInChildren<AlphaModuleTrack>();
 
                 initialTraverse = susTrav.transform.localPosition;
-                lastTempTraverse = initialTraverse.y; //sets it to a default value for the sprockets
+                lastTempTraverse = initialTraverse.y - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets and wheels
             }
             //end find named objects
             base.OnStart(state);

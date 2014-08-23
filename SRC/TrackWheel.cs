@@ -64,7 +64,7 @@ namespace KerbalFoundries
                 track = this.part.GetComponentInChildren<ModuleTrack>();
 
                 initialTraverse = susTrav.transform.localPosition;
-                lastTempTraverse = initialTraverse.y; //sets it to a default value for the sprockets
+                lastTempTraverse = initialTraverse.y - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets
             }
             //end find named objects
             base.OnStart(state);
@@ -77,6 +77,7 @@ namespace KerbalFoundries
             //suspension movement
             WheelHit hit;
             Vector3 tempTraverse = initialTraverse;
+            //tempTraverse.y -= wheelCollider.suspensionDistance;
             bool grounded = wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
             if (grounded && !isSprocket) //is it on the ground
             {
