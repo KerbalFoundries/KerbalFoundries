@@ -22,7 +22,7 @@ namespace KerbalFoundries
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 2.00f, stepIncrement = 0.25f)]
         public float Rideheight;        //this is what's tweaked by the line above
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 6.00f, stepIncrement = 0.2f)]
         public float SpringRate;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 1.00f, stepIncrement = 0.025f)]
         public float DamperRate;        //this is what's tweaked by the line above
@@ -83,16 +83,23 @@ namespace KerbalFoundries
         public float steeringRatio;
         [KSPField]
         public float ackermanCorrection;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Ackerman", guiFormat = "F1")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Ackerman", guiFormat = "F1")]
         public float ackermanAngle;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Position Ratio", guiFormat = "F1")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Position Ratio", guiFormat = "F1")]
         public float positionRatio;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Collider Position", guiFormat = "F1")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Collider Position", guiFormat = "F1")]
         public float colliderPosition;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Position Tangent", guiFormat = "F1")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Position Tangent", guiFormat = "F1")]
         public float positionTangent;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Wheel Position", guiFormat = "F1")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Wheel Position", guiFormat = "F1")]
         public float wheelPosition;
+
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.X", guiFormat = "F6")]
+        public float dotx; //debug only
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
+        public float doty; //debug only
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
+        public float dotz; //debug only
 
         //[KSPField(isPersistant = false, guiActive = true, guiName = "Direct", guiUnits = "deg", guiFormat = "F1")]
         //float tempSmoothSteeringx;
@@ -155,13 +162,17 @@ namespace KerbalFoundries
                 //DampedAntiRollForce = 0.001f;
                 //antiRollForce = 0.001f;
 
-
+                 
 //Start of initial proportional steering routine
 
                 myPosition = this.part.orgPos.y;
                 myPositionx = this.part.orgPos.x;
                 print(myPositionx);
                 myPositionz = this.part.orgPos.z;
+
+                dotx = Vector3.Dot(this.part.transform.right, vessel.ReferenceTransform.up); // up is forward
+                doty = Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up);
+                dotz = Vector3.Dot(this.part.transform.up, vessel.ReferenceTransform.up);
 
                 foreach (SteeringTest st in this.vessel.FindPartModulesImplementing<SteeringTest>())
                 {
@@ -213,6 +224,10 @@ namespace KerbalFoundries
                 myAdjustedPosition = myPosition - offset; //change the value based on our calculated offset 
                 steeringRatio = myAdjustedPosition / midToFore; // this sets how much this wheel steers as a proportion of rear/front wheel steering angle 
                 steeringRatio = Math.Abs(steeringRatio);
+                if (steeringRatio == 0)
+                {
+                    steeringRatio = 1;
+                }
 
                 colliderPosition = wheelCollider.transform.localPosition.x;
                 wheelPosition =  (float)Math.Abs(myPositionx) + Math.Abs(colliderPosition);
@@ -295,7 +310,7 @@ namespace KerbalFoundries
                 JointSpring jjj = hhh.suspensionSpring;
                 jjj.spring = SpringRate;
                 hhh.suspensionSpring = jjj;
-            
+                hhh.enabled = true;
 
             }
 
