@@ -44,7 +44,7 @@ namespace KerbalFoundries
 
         [KSPField(isPersistant = false, guiActive = false, guiName = "Adjuted position", guiFormat = "F6")]
         public float myAdjustedPosition;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Ratio", guiFormat = "F6")]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Steering Ratio", guiFormat = "F6")]
         public float steeringRatio;
         public float smoothSpeed = 40f;
 
@@ -183,11 +183,13 @@ namespace KerbalFoundries
             steeringRatio = myAdjustedPosition / midPoint;
             steeringRatio = Math.Abs(steeringRatio);
 
+            if (steeringRatio == 0 || float.IsNaN(steeringRatio))
+                steeringRatio = 1;
         }
 
         public override void OnFixedUpdate()
         {
-
+            print(steeringRatio);
             // code below deals with proportional steering and smoothing input.
 
             if (steeringFound.transform.localEulerAngles.y > 180.0f) //if greater than 180, we want it to be negative to evaluate properly
