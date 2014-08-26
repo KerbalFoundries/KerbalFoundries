@@ -48,6 +48,12 @@ namespace KerbalFoundries
         public float damperRate;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool steeringDisabled;
+
+        public Vector3 referenceTranformVector;
+        public Transform referenceTransform;
+        public float myPosition;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Reference Direction")]
+        public string referenceDirection;
         //end twekables
 
         //end variable setup
@@ -63,6 +69,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
+                FindDirection();
                 if(torque >2) //check if the torque value is using the old numbering system
                 {
                     torque /= 100;
@@ -77,7 +84,7 @@ namespace KerbalFoundries
                     wc.enabled = true;
                 }
 
-                float dot = Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up); // up is forward
+                float dot = Vector3.Dot(this.part.transform.forward, referenceTranformVector); // up is forward
                 if (dot < 0) // below 0 means the engine is on the left side of the craft
                 {
                     directionCorrector = -1;
@@ -105,10 +112,35 @@ namespace KerbalFoundries
                     //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
                     print("destroying Bounds");
                 }
-            }
+                
+            }//end scene is flight
         }//end OnStart
 
+        public void FindDirection()
+        {
+            float dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.right)); // up is forward
+            float doty = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up));
+            float dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.forward));
 
+            if (dotx > doty && dotx > dotz)
+            {
+                print("root part mounted sideways");
+                myPosition = this.part.orgPos.x;
+                referenceTranformVector = this.vessel.ReferenceTransform.right;
+            }
+            if (doty > dotx && doty > dotz)
+            {
+                print("root part mounted forward");
+                myPosition = this.part.orgPos.y;
+                referenceTranformVector = this.vessel.ReferenceTransform.up;
+            }
+            if (dotz > doty && dotz > dotx)
+            {
+                print("root part mounted up");
+                myPosition = this.part.orgPos.z;
+                referenceTranformVector = this.vessel.ReferenceTransform.forward;
+            }
+        }
 
         public override void OnFixedUpdate()
         {
@@ -119,15 +151,16 @@ namespace KerbalFoundries
             float steeringTorque;
             float brakeSteeringTorque;
 
-            Vector3 roverForward = this.vessel.ReferenceTransform.rotation * new Vector3(0, 1, 0); //these two lines catch travel direction. Command pod could be mounted vertical or horizontal :/
-            Vector3 roverUp = this.vessel.ReferenceTransform.rotation * new Vector3(0, 0, 1); //changed to a unit vector
             Vector3 travelVector = this.vessel.GetSrfVelocity();
-            float travelDirection = Vector3.Dot((roverForward+roverUp), travelVector); //compare travel drection with the product of up and forward. See above
+
+            float travelDirection = Vector3.Dot(this.part.transform.forward, travelVector); //compare travel velocity with the direction the part is pointed.
+            //print(travelDirection);
 
             if (!steeringDisabled)
             {
                 steeringTorque = steeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque; //low speed steering mode. Differential motor torque
                 brakeSteering = brakeSteeringCurve.Evaluate(travelDirection); //high speed steering. Brake on inside track because Unity seems to weight reverse motor torque less at high speed.
+                //print(brakeSteering);
             }
             else
             {
@@ -137,8 +170,8 @@ namespace KerbalFoundries
 
 
             motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
-            brakeSteeringTorque = Mathf.Clamp(brakeSteering * directionCorrector * this.vessel.ctrlState.wheelSteer, 0, 150); //if the calculated value is negative, disregard: Only brake on inside track.
-            chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requeste charge
+            brakeSteeringTorque = Mathf.Clamp(brakeSteering * this.vessel.ctrlState.wheelSteer, 0, 1000); //if the calculated value is negative, disregard: Only brake on inside track. no need to direction correct as we are using the velocity or the part not the vessel.
+            chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
 
             electricCharge = part.RequestResource("ElectricCharge", chargeRequest); //ask the vessel for requested charge
 

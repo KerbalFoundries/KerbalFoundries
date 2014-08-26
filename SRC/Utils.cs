@@ -30,6 +30,8 @@ namespace KerbalFoundries
             var ratio = (float) resources.Sum(r => r.amount) /(float) resources.Sum(r => r.maxAmount);
             return ratio;
         }
+
+
     }
 
 }
@@ -152,3 +154,71 @@ print(Time.deltaTime);
                     }
 */
 
+/*
+maxXMinX = maxXPos - minXPos;
+halfX = maxXMinX / 2;
+offsetX = (maxXPos + minXPos) / 2;
+adjustedPosX = posX - offsetX;
+
+maxYMinY = maxYPos - minYPos;
+halfY = maxYMinY / 2;
+offsetY = (maxYPos + minYPos) / 2;
+adjustedPosY = posY - offsetY;
+
+maxZMinZ = maxZPos - minZPos;
+halfZ = maxZMinZ / 2;
+offsetZ = (maxZPos + minZPos) / 2;
+adjustedPosZ = posZ - offsetZ;
+*/
+
+/*
+                steeringRatioX = adjustedPosX / halfX;
+                steeringRatioY = adjustedPosY / halfY;
+                steeringRatioZ = adjustedPosZ / halfZ;
+
+                steeringRatioX = Math.Abs(steeringRatioX);
+                steeringRatioY = Math.Abs(steeringRatioY);
+                steeringRatioZ = Math.Abs(steeringRatioZ);
+ * */
+
+/*
+if ((st.part.orgPos.x + 1000) >= (maxXPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
+{
+    maxXPos = st.part.orgPos.x; //Store transform y value
+}
+
+if ((st.part.orgPos.x + 1000) <= (minXPos + 1000))
+{
+    minXPos = st.part.orgPos.x; //Store transform y value
+}
+
+if ((st.part.orgPos.y + 1000) >= (maxYPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
+{
+    maxYPos = st.part.orgPos.y; //Store transform y value
+}
+
+if ((st.part.orgPos.y + 1000) <= (minYPos + 1000))
+{
+    minYPos = st.part.orgPos.y; //Store transform y value
+}
+
+if ((st.part.orgPos.z + 1000) >= (maxZPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
+{
+    maxZPos = st.part.orgPos.z; //Store transform y value
+}
+
+if ((st.part.orgPos.z + 1000) <= (minZPos + 1000))
+{
+    minZPos = st.part.orgPos.z; //Store transform y value
+}
+ * */
+
+//find positions
+/*
+maxXPos = this.part.orgPos.x;
+maxYPos = this.part.orgPos.y;
+maxZPos = this.part.orgPos.z;
+minXPos = this.part.orgPos.x;
+minYPos = this.part.orgPos.y;
+minZPos = this.part.orgPos.z;
+ * */

@@ -27,85 +27,45 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 1.00f, stepIncrement = 0.025f)]
         public float DamperRate;        //this is what's tweaked by the line above
 
-        public float TargetPosition;
         //steeringstuff
         public Transform steeringFound;
         public Transform smoothSteering;
-
-        public float smoothSpeed = 40f;
-        [KSPField(isPersistant = true)]
-        public Vector3 thisTransform;
-
-        public float rearWheel;
-        public float frontWheel;
-        public float frontToBack;
-        public float midToFore;
+  
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Min", guiFormat = "F6")]
+        public float minPos;
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Max", guiFormat = "F6")]
+        public float maxPos;
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Min to Max", guiFormat = "F6")]
+        public float minToMax;
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Mid", guiFormat = "F6")]
+        public float midPoint;
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Offset", guiFormat = "F6")]
         public float offset;
-        public float myPositionx; //debug only
-        public float myPositionz; //debug only
-        public float myPosition;
+
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Adjuted position", guiFormat = "F6")]
         public float myAdjustedPosition;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Ratio", guiFormat = "F6")]
         public float steeringRatio;
+        public float smoothSpeed = 40f;
 
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "XPos", guiFormat = "F6")]
-        public float maxXPos;
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "YPos", guiFormat = "F6")]
-        public float maxYPos;
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "ZPos", guiFormat = "F6")]
-        public float maxZPos;
-
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "XPos", guiFormat = "F6")]
-        public float minXPos;
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "YPos", guiFormat = "F6")]
-        public float minYPos;
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "ZPos", guiFormat = "F6")]
-        public float minZPos;
-
-        public float maxXMinX; //max positional values front to back
-        public float maxYMinY;
-        public float maxZMinZ;
-
-        public float halfX;     //mid point between above values
-        public float halfY;
-        public float halfZ;
-
-        public float offsetX;   //calculated positional offset
-        public float offsetY;
-        public float offsetZ;
-
-        public float adjustedPosX;  //normalised position within vessel
-        public float adjustedPosY;
-        public float adjustedPosZ;
-
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Pos X", guiFormat = "F2")]
-        public float posX;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Pos Y", guiFormat = "F2")]
-        public float posY;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Pos Z", guiFormat = "F2")]
-        public float posZ;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "X ratio", guiFormat = "F6")]
-        public float steeringRatioX = .001f;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Y ratio", guiFormat = "F6")]
-        public float steeringRatioY = .001f;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Z ratio", guiFormat = "F6")]
-        public float steeringRatioZ = .001f;
-
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.X", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.X", guiFormat = "F6")]
         public float dotx; //debug only
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.Y", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
         public float doty; //debug only
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.Z", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
         public float dotz; //debug only
 
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "Direct", guiUnits = "deg", guiFormat = "F1")]
-        //float tempSmoothSteeringx;
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "divided", guiUnits = "deg", guiFormat = "F1")]
         float steeringAngleSmoothed;
-        //[KSPField(isPersistant = false, guiActive = true, guiName = "Normalised", guiUnits = "deg", guiFormat = "F1")]
         float steeringAngle;
-
-
         Vector3 steeringVector;
+
+        public Vector3 referenceTranform;
+        public float myPosition;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Reference Direction")]
+        public string referenceDirection;
+        public string right = "right";
+        public string forward = "forward";
+        public string up = "up";
 
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
@@ -113,16 +73,9 @@ namespace KerbalFoundries
             thiswheelCollider = part.gameObject.GetComponentInChildren<WheelCollider>();   //find the 'wheelCollider' gameobject named by KSP convention.
             mywc = thiswheelCollider.GetComponent<WheelCollider>();
             userspring = mywc.suspensionSpring;
-
-            //currentSpring = mywc.suspensionSpring.spring;
-            // degub only: print("onstart");
             base.OnStart(start);
             steeringFound = transform.Search("steering");
-            //print(steeringFound);
             smoothSteering = transform.Search("smoothSteering");
-
-            //arrow = transform.Search("Arrow"); DEBUG ONLY
-
             //grab initial Euler angles for our steering object
             Vector3 passback = new Vector3(smoothSteering.transform.localEulerAngles.x, smoothSteering.transform.localEulerAngles.y, smoothSteering.transform.localEulerAngles.z);
 
@@ -141,7 +94,6 @@ namespace KerbalFoundries
                     SpringRate = mywc.suspensionSpring.spring;              //pass to springrate to be used in the GUI
                     DamperRate = mywc.suspensionSpring.damper;
                     Rideheight = mywc.suspensionDistance;
-                    TargetPosition = mywc.suspensionSpring.targetPosition;
                 }
             }
 
@@ -151,15 +103,6 @@ namespace KerbalFoundries
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 //Start of initial proportional steering routine
 
-                myPosition = this.part.orgPos.y;
-                myPositionx = this.part.orgPos.x;
-
-                myPositionz = this.part.orgPos.z;
-
-                posX = this.part.orgPos.x;
-                posY = this.part.orgPos.y;
-                posZ = this.part.orgPos.z;
-                
                 if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
                 {
                     SpringRate = userspring.spring;                                    //pass to springrate to be used in the GUI
@@ -173,89 +116,87 @@ namespace KerbalFoundries
                     mywc.suspensionSpring = userspring;
 
                 }
-
-                
-                //find positions
-
-                maxXPos = this.part.orgPos.x;
-                maxYPos = this.part.orgPos.y;
-                maxZPos = this.part.orgPos.z;
-                minXPos = this.part.orgPos.x;
-                minYPos = this.part.orgPos.y;
-                minZPos = this.part.orgPos.z;
-
-                foreach (AlphaSteering st in this.vessel.FindPartModulesImplementing<AlphaSteering>()) //scan vessel to find fore or rearmost wheel. 
-                {
-                    if ((st.part.orgPos.x + 1000) >= (maxXPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
-                    {
-                        maxXPos = st.part.orgPos.x; //Store transform y value
-                    }
-
-                    if ((st.part.orgPos.x + 1000) <= (minXPos + 1000))
-                    {
-                        minXPos = st.part.orgPos.x; //Store transform y value
-                    }
-
-                    if ((st.part.orgPos.y + 1000) >= (maxYPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
-                    {
-                        maxYPos = st.part.orgPos.y; //Store transform y value
-                    }
-
-                    if ((st.part.orgPos.y + 1000) <= (minYPos + 1000))
-                    {
-                        minYPos = st.part.orgPos.y; //Store transform y value
-                    }
-
-                    if ((st.part.orgPos.z + 1000) >= (maxZPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
-                    {
-                        maxZPos = st.part.orgPos.z; //Store transform y value
-                    }
-
-                    if ((st.part.orgPos.z + 1000) <= (minZPos + 1000))
-                    {
-                        minZPos = st.part.orgPos.z; //Store transform y value
-                    }
-                }
-
-                maxXMinX = maxXPos - minXPos;
-                halfX = maxXMinX / 2;
-                offsetX = (maxXPos + minXPos) / 2;
-                adjustedPosX = posX - offsetX;
-
-                maxYMinY = maxYPos - minYPos;
-                halfY = maxYMinY / 2;
-                offsetY = (maxYPos + minYPos) / 2;
-                adjustedPosY = posY - offsetY;
-
-                maxZMinZ = maxZPos - minZPos;
-                halfZ = maxZMinZ / 2;
-                offsetZ = (maxZPos + minZPos) / 2;
-                adjustedPosZ = posZ - offsetZ;
-
-                steeringRatioX = adjustedPosX / halfX;
-                steeringRatioY = adjustedPosY / halfY;
-                steeringRatioZ = adjustedPosZ / halfZ;
-
-                steeringRatioX = Math.Abs(steeringRatioX);
-                steeringRatioY = Math.Abs(steeringRatioY);
-                steeringRatioZ = Math.Abs(steeringRatioZ);
+                FindDirection();
+                SetupRatios();
             }//end isInFlight
         }//end start
 
+        public void FindDirection()
+        {
+            dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.right)); // up is forward
+            doty = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up));
+            dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.forward));
+
+            if (dotx > doty && dotx > dotz)
+            {
+                print("root part mounted sideways");
+                myPosition = this.part.orgPos.x;
+                referenceTranform = this.vessel.ReferenceTransform.right;
+                referenceDirection = right;
+            }
+            if (doty > dotx && doty > dotz)
+            {
+                print("root part mounted forward");
+                myPosition = this.part.orgPos.y;
+                referenceTranform = this.vessel.ReferenceTransform.up;
+                referenceDirection = forward;
+            }
+            if (dotz > doty && dotz > dotx)
+            {
+                print("root part mounted up");
+                myPosition = this.part.orgPos.z;
+                referenceTranform = this.vessel.ReferenceTransform.forward;
+                referenceDirection = up;
+            }
+        }
+
+        public void SetupRatios()
+        {
+            maxPos = myPosition;
+            minPos = myPosition;
+
+            foreach (AlphaSteering st in this.vessel.FindPartModulesImplementing<AlphaSteering>()) //scan vessel to find fore or rearmost wheel. 
+            {
+                float otherPosition = myPosition;
+                if (referenceDirection == right)
+
+                    otherPosition = st.part.orgPos.x;
+                if (referenceDirection == forward)
+
+                    otherPosition = st.part.orgPos.y;
+
+                if (referenceDirection == up)
+                    otherPosition = st.part.orgPos.z;
+
+                if ((otherPosition + 1000) >= (maxPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
+                    maxPos = otherPosition; //Store transform y value
+
+                if ((otherPosition + 1000) <= (minPos + 1000))
+                    minPos = otherPosition; //Store transform y value
+            }
+
+            minToMax = maxPos - minPos;
+            midPoint = minToMax / 2;
+            offset = (maxPos + minPos) / 2;
+            myAdjustedPosition = myPosition - offset;
+
+            steeringRatio = myAdjustedPosition / midPoint;
+            steeringRatio = Math.Abs(steeringRatio);
+
+        }
+
         public override void OnFixedUpdate()
         {
-            dotx = Math.Abs(Vector3.Dot(this.part.transform.right, vessel.ReferenceTransform.up)); // up is forward
-            doty = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up));
-            dotz = Math.Abs(Vector3.Dot(this.part.transform.up, vessel.ReferenceTransform.up));
+
             // code below deals with proportional steering and smoothing input.
 
             if (steeringFound.transform.localEulerAngles.y > 180.0f) //if greater than 180, we want it to be negative to evaluate properly
             {
-                steeringAngle = (steeringFound.transform.localEulerAngles.y - 360.0f) * ((steeringRatioX * dotx) + (steeringRatioY * doty) + (steeringRatioZ * dotz)); //multiply by the ratio 0-1 we generate below.
+                steeringAngle = (steeringFound.transform.localEulerAngles.y - 360.0f) *steeringRatio; //multiply by the ratio 0-1 we generate below.
             }
             else
             {
-                steeringAngle = steeringFound.transform.localEulerAngles.y * ((steeringRatioX * dotx) + (steeringRatioY * doty) + (steeringRatioZ * dotz));
+                steeringAngle = steeringFound.transform.localEulerAngles.y *steeringRatio;
             }
             //next line does smoothing of input
             steeringAngleSmoothed = Mathf.Lerp(steeringAngle, steeringAngleSmoothed, Time.deltaTime * 40f);
