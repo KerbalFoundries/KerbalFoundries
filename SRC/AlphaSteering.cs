@@ -183,13 +183,13 @@ namespace KerbalFoundries
             steeringRatio = myAdjustedPosition / midPoint;
             steeringRatio = Math.Abs(steeringRatio);
 
-            if (steeringRatio == 0 || float.IsNaN(steeringRatio))
+            if (steeringRatio == 0 || float.IsNaN(steeringRatio)) //check is we managed to evaluate to zero or infinity somehow.
                 steeringRatio = 1;
         }
 
         public override void OnFixedUpdate()
         {
-            print(steeringRatio);
+            
             // code below deals with proportional steering and smoothing input.
 
             if (steeringFound.transform.localEulerAngles.y > 180.0f) //if greater than 180, we want it to be negative to evaluate properly
