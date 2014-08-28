@@ -17,6 +17,8 @@ namespace KerbalFoundries
         [KSPField]
         public string sustravName;
         [KSPField]
+        public bool useDirectionCorrector = false;
+        [KSPField]
         public bool isSprocket;
         [KSPField]
         public bool isIdler;
@@ -26,6 +28,8 @@ namespace KerbalFoundries
         public AlphaModuleTrack track;
         public Vector3 initialTraverse;
         public float lastTempTraverse;
+
+        public int directionCorrector = 1;
         //end variables
 
         //OnStart
@@ -65,6 +69,10 @@ namespace KerbalFoundries
 
                 initialTraverse = susTrav.transform.localPosition;
                 lastTempTraverse = initialTraverse.y - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets and wheels
+                if (useDirectionCorrector)
+                    directionCorrector = track.directionCorrector;
+                else directionCorrector = 1;
+                print(directionCorrector);
             }
             //end find named objects
             base.OnStart(state);
@@ -73,7 +81,7 @@ namespace KerbalFoundries
         public override void OnUpdate()
         {
             base.OnUpdate();
-            wheel.transform.Rotate(Vector3.right, track.degreesPerTick / wheelCollider.radius); //rotate wheel
+            wheel.transform.Rotate(Vector3.right, track.degreesPerTick / wheelCollider.radius * directionCorrector); //rotate wheel
             //suspension movement
             WheelHit hit;
             Vector3 tempTraverse = initialTraverse;

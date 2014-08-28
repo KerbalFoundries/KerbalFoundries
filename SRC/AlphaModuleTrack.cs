@@ -54,6 +54,11 @@ namespace KerbalFoundries
         public float myPosition;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Reference Direction")]
         public string referenceDirection;
+
+        [KSPField]
+        public float buoyancy;
+        [KSPField]
+        public string buoyancyName;
         //end twekables
 
         //end variable setup
@@ -112,7 +117,9 @@ namespace KerbalFoundries
                     //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
                     print("destroying Bounds");
                 }
-                
+
+                SetupBouyancy();
+
             }//end scene is flight
         }//end OnStart
 
@@ -140,6 +147,12 @@ namespace KerbalFoundries
                 myPosition = this.part.orgPos.z;
                 referenceTranformVector = this.vessel.ReferenceTransform.forward;
             }
+        }
+
+        public void SetupBouyancy()
+        {
+            this.part.buoyancy = buoyancy;
+            this.part.CenterOfBuoyancy = transform.Search(buoyancyName).up;
         }
 
         public override void OnFixedUpdate()

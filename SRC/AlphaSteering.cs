@@ -67,6 +67,8 @@ namespace KerbalFoundries
         public string forward = "forward";
         public string up = "up";
 
+
+
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
         {
@@ -187,9 +189,13 @@ namespace KerbalFoundries
                 steeringRatio = 1;
         }
 
+
+
         public override void OnFixedUpdate()
         {
-            
+            if (this.part.Splashed)
+            {
+            }
             // code below deals with proportional steering and smoothing input.
 
             if (steeringFound.transform.localEulerAngles.y > 180.0f) //if greater than 180, we want it to be negative to evaluate properly
