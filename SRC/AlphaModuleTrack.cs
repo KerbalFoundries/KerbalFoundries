@@ -27,6 +27,8 @@ namespace KerbalFoundries
         public float brakingTorque;
         public float brakeTorque;
         public float brakeSteering;
+        [KSPField]
+        public float rollingResistance;
 
         public GameObject trackSurface;
 
@@ -56,9 +58,15 @@ namespace KerbalFoundries
         public string referenceDirection;
 
         [KSPField]
-        public float buoyancy;
+        public float propellerForce;
+
+        public float wheelCount;
+
         [KSPField]
-        public string buoyancyName;
+        public float rollingResistanceMultiplier;
+
+        public float calculatedRollingResistance;
+
         //end twekables
 
         //end variable setup
@@ -79,9 +87,11 @@ namespace KerbalFoundries
                 {
                     torque /= 100;
                 }
+                wheelCount = 0;
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>()) //set colliders to values chosen in editor and activate
                 {
+                    wheelCount ++;
                     JointSpring userSpring = wc.suspensionSpring;
                     userSpring.spring = springRate;
                     userSpring.damper = damperRate;
@@ -117,9 +127,6 @@ namespace KerbalFoundries
                     //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
                     print("destroying Bounds");
                 }
-
-                SetupBouyancy();
-
             }//end scene is flight
         }//end OnStart
 
@@ -149,11 +156,7 @@ namespace KerbalFoundries
             }
         }
 
-        public void SetupBouyancy()
-        {
-            this.part.buoyancy = buoyancy;
-            this.part.CenterOfBuoyancy = transform.Search(buoyancyName).up;
-        }
+
 
         public override void OnFixedUpdate()
         {
@@ -196,9 +199,9 @@ namespace KerbalFoundries
                     motorTorque = 0;
                 }
                 wc.motorTorque = motorTorque;
-                wc.brakeTorque = brakeTorque + brakeSteeringTorque;
+                wc.brakeTorque = brakeTorque + brakeSteeringTorque + calculatedRollingResistance;
 
-                if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation.
+                if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
                 {
                     numberOfWheels++;
                     trackRPM += wc.rpm;
@@ -214,7 +217,7 @@ namespace KerbalFoundries
             }
             else
             {
-                averageTrackRPM = freeWheelRPM / 4;
+                averageTrackRPM = freeWheelRPM / wheelCount;
             }
         }//end OnFixedUpdate
 
@@ -230,6 +233,16 @@ namespace KerbalFoundries
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
             numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
+
+            if (this.part.Splashed)
+            {
+                float forwardPropellorForce = directionCorrector * propellerForce * this.vessel.ctrlState.wheelThrottle;
+                float turningPropellorForce = (propellerForce / 3) * this.vessel.ctrlState.wheelSteer;
+                part.rigidbody.AddForce(this.part.GetReferenceTransform().forward * (forwardPropellorForce - turningPropellorForce));
+                //print(this.part.GetReferenceTransform().forward * directionCorrector * -this.vessel.ctrlState.wheelThrottle * propellerForce);
+                calculatedRollingResistance = rollingResistance + rollingResistanceMultiplier;
+            }
+            else calculatedRollingResistance = rollingResistance;
         } //end OnUpdate
 
 //Action groups

@@ -17,7 +17,7 @@ namespace KerbalFoundries
         [KSPField]
         public string sustravName;
         [KSPField]
-        public bool useDirectionCorrector = false;
+        public bool useDirectionCorrector = false; //make sure it's set to false if not specified in the config
         [KSPField]
         public bool isSprocket;
         [KSPField]
@@ -28,6 +28,8 @@ namespace KerbalFoundries
         public AlphaModuleTrack track;
         public Vector3 initialTraverse;
         public float lastTempTraverse;
+        [KSPField]
+        public float rotationCorrection = 1;
 
         public int directionCorrector = 1;
         //end variables
@@ -81,7 +83,7 @@ namespace KerbalFoundries
         public override void OnUpdate()
         {
             base.OnUpdate();
-            wheel.transform.Rotate(Vector3.right, track.degreesPerTick / wheelCollider.radius * directionCorrector); //rotate wheel
+            wheel.transform.Rotate(Vector3.right, track.degreesPerTick / wheelCollider.radius * directionCorrector * rotationCorrection); //rotate wheel
             //suspension movement
             WheelHit hit;
             Vector3 tempTraverse = initialTraverse;
