@@ -201,6 +201,8 @@ namespace KerbalFoundries
                 wc.motorTorque = motorTorque;
                 wc.brakeTorque = brakeTorque + brakeSteeringTorque + calculatedRollingResistance;
 
+                trackRPM = 0;
+
                 if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
                 {
                     numberOfWheels++;
@@ -219,13 +221,13 @@ namespace KerbalFoundries
             {
                 averageTrackRPM = freeWheelRPM / wheelCount;
             }
+            
         }//end OnFixedUpdate
 
         public override void OnUpdate()
         {
             base.OnUpdate();
             degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
-            trackRPM = 0;
             float distanceTravelled = (float)((averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
             Material trackMaterial = trackSurface.renderer.material;    //set things up for changing the texture offset on the track
             Vector2 textureOffset = trackMaterial.mainTextureOffset;
@@ -234,15 +236,8 @@ namespace KerbalFoundries
             trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
             numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
 
-            if (this.part.Splashed)
-            {
-                float forwardPropellorForce = directionCorrector * propellerForce * this.vessel.ctrlState.wheelThrottle;
-                float turningPropellorForce = (propellerForce / 3) * this.vessel.ctrlState.wheelSteer;
-                part.rigidbody.AddForce(this.part.GetReferenceTransform().forward * (forwardPropellorForce - turningPropellorForce));
-                //print(this.part.GetReferenceTransform().forward * directionCorrector * -this.vessel.ctrlState.wheelThrottle * propellerForce);
-                calculatedRollingResistance = rollingResistance + rollingResistanceMultiplier;
-            }
-            else calculatedRollingResistance = rollingResistance;
+
+            calculatedRollingResistance = rollingResistance;
         } //end OnUpdate
 
 //Action groups

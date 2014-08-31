@@ -9,14 +9,6 @@ namespace KerbalFoundries
     [KSPModule("ModuleTrack")]
     public class ModuleTrack : PartModule
     {
-        //variable setup 
-        public int directionCorrector;
-        public float motorTorque;
-        public float numberOfWheels = 1; //if it's 0 at the start it send things into and NaN fit.
-        public float trackRPM = 0;
-        public float averageTrackRPM;
-        [KSPField]
-        public float trackLength = 100;
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
         [KSPField]
@@ -25,20 +17,31 @@ namespace KerbalFoundries
         public FloatCurve brakeSteeringCurve = new FloatCurve();
         [KSPField]
         public float brakingTorque;
-        public float brakeTorque;
-        public float brakeSteering;
-
-        public GameObject trackSurface;
-
-        //public Transform bounds;
-        public bool boundsDestroyed;
+        [KSPField]
+        public float rollingResistanceMultiplier;
+        [KSPField]
+        public float rollingResistance;
+        [KSPField]
+        public float raycastError;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "RPM", guiFormat = "F1")]
+        public float averageTrackRPM;
+        [KSPField]
+        public float maxRPM = 350;
         [KSPField(isPersistant = true)]
         public bool brakesApplied;
 
-        [KSPField]
-        public float raycastError;
-
+        ModuleWheelMaster master;
+        public float brakeTorque;
+        
+        public float brakeSteering;
         public float degreesPerTick;
+        public float motorTorque;
+        public float numberOfWheels = 1; //if it's 0 at the start it send things into and NaN fit.
+        public float trackRPM = 0;
+        
+        public float wheelCount;
+        public float calculatedRollingResistance;
+
         //tweakables
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
         public float torque = 1;
@@ -49,34 +52,27 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool steeringDisabled;
 
-        public Vector3 referenceTranformVector;
-        public Transform referenceTransform;
-        public float myPosition;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Reference Direction")]
-        public string referenceDirection;
-        //end twekables
-
-        //end variable setup
-
         public override void OnStart(PartModule.StartState start)  //when started
         {
             print("ModuleTrack called");
             base.OnStart(start);
             if (HighLogic.LoadedSceneIsEditor)
             {
-
+                //Do nothing in editor
             }
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                FindDirection();
+                master = this.part.GetComponentInChildren<ModuleWheelMaster>();
                 if (torque > 2) //check if the torque value is using the old numbering system
                 {
                     torque /= 100;
                 }
+                wheelCount = 0;
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>()) //set colliders to values chosen in editor and activate
                 {
+                    wheelCount++;
                     JointSpring userSpring = wc.suspensionSpring;
                     userSpring.spring = springRate;
                     userSpring.damper = damperRate;
@@ -84,63 +80,13 @@ namespace KerbalFoundries
                     wc.enabled = true;
                 }
 
-                float dot = Vector3.Dot(this.part.transform.forward, referenceTranformVector); // up is forward
-                if (dot < 0) // below 0 means the engine is on the left side of the craft
-                {
-                    directionCorrector = -1;
-                    print("left");
-                }
-                else
-                {
-                    directionCorrector = 1;
-                    print("right");
-                }
-
-                foreach (SkinnedMeshRenderer Track in this.part.GetComponentsInChildren<SkinnedMeshRenderer>()) //this is the track
-                {
-                    trackSurface = Track.gameObject;
-                }
-
                 if (brakesApplied)
                 {
                     brakeTorque = brakingTorque; //were the brakes left applied
                 }
-                Transform bounds = transform.Search("Bounds");
-                if (bounds != null)
-                {
-                    GameObject.Destroy(bounds.gameObject);
-                    //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
-                    print("destroying Bounds");
-                }
 
             }//end scene is flight
         }//end OnStart
-
-        public void FindDirection()
-        {
-            float dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.right)); // up is forward
-            float doty = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up));
-            float dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.forward));
-
-            if (dotx > doty && dotx > dotz)
-            {
-                print("root part mounted sideways");
-                myPosition = this.part.orgPos.x;
-                referenceTranformVector = this.vessel.ReferenceTransform.right;
-            }
-            if (doty > dotx && doty > dotz)
-            {
-                print("root part mounted forward");
-                myPosition = this.part.orgPos.y;
-                referenceTranformVector = this.vessel.ReferenceTransform.up;
-            }
-            if (dotz > doty && dotz > dotx)
-            {
-                print("root part mounted up");
-                myPosition = this.part.orgPos.z;
-                referenceTranformVector = this.vessel.ReferenceTransform.forward;
-            }
-        }
 
         public override void OnFixedUpdate()
         {
@@ -169,7 +115,7 @@ namespace KerbalFoundries
             }
 
 
-            motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
+            motorTorque = (forwardTorque * master.directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
             brakeSteeringTorque = Mathf.Clamp(brakeSteering * this.vessel.ctrlState.wheelSteer, 0, 1000); //if the calculated value is negative, disregard: Only brake on inside track. no need to direction correct as we are using the velocity or the part not the vessel.
             chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
 
@@ -178,14 +124,14 @@ namespace KerbalFoundries
             float freeWheelRPM = 0;
             foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
             {
-                if (electricCharge == 0)
+                if (electricCharge == 0 || Math.Abs (averageTrackRPM) >= maxRPM)
                 {
                     motorTorque = 0;
                 }
                 wc.motorTorque = motorTorque;
-                wc.brakeTorque = brakeTorque + brakeSteeringTorque;
+                wc.brakeTorque = brakeTorque + brakeSteeringTorque + rollingResistance;
 
-                if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation.
+                if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
                 {
                     numberOfWheels++;
                     trackRPM += wc.rpm;
@@ -197,26 +143,22 @@ namespace KerbalFoundries
             }
             if (numberOfWheels > 1)
             {
-                averageTrackRPM = trackRPM / numberOfWheels;
+                averageTrackRPM = trackRPM / numberOfWheels; 
             }
             else
             {
-                averageTrackRPM = freeWheelRPM / 4;
+                averageTrackRPM = freeWheelRPM / wheelCount;
             }
+            trackRPM = 0;
+
         }//end OnFixedUpdate
 
         public override void OnUpdate()
         {
             base.OnUpdate();
             degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
-            trackRPM = 0;
-            float distanceTravelled = (float)((averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
-            Material trackMaterial = trackSurface.renderer.material;    //set things up for changing the texture offset on the track
-            Vector2 textureOffset = trackMaterial.mainTextureOffset;
-            textureOffset = textureOffset + new Vector2(-distanceTravelled / trackLength, 0); //tracklength is used to fine tune the speed of movement.
-            trackMaterial.SetTextureOffset("_MainTex", textureOffset);
-            trackMaterial.SetTextureOffset("_BumpMap", textureOffset);
             numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
+            
         } //end OnUpdate
 
         //Action groups

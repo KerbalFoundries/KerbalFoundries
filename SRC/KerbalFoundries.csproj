@@ -52,13 +52,14 @@
     <Compile Include="AlphaSteering.cs" />
     <Compile Include="AlphaTrackWheel.cs" />
     <Compile Include="APUController.cs" />
-    <Compile Include="ClassTest.cs" />
     <Compile Include="HeavyCrawler.cs" />
     <Compile Include="LandingGearWheel.cs" />
     <Compile Include="ModuleLandingGear2.cs" />
     <Compile Include="ModuleMainGear.cs" />
-    <Compile Include="ModuleRover.cs" />
+    <Compile Include="ModulePropeller.cs" />
     <Compile Include="ModuleTrack.cs" />
+    <Compile Include="ModuleTrackSurface.cs" />
+    <Compile Include="ModuleWheelMaster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepulsorAlpha.cs" />
     <Compile Include="RepulsorTest.cs" />
@@ -67,7 +68,6 @@
     <Compile Include="SpeederBike.cs" />
     <Compile Include="SteeringTest.cs" />
     <Compile Include="TrackWheel.cs" />
-    <Compile Include="TweakTest.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="WheelTweaks.cs" />
   </ItemGroup>
