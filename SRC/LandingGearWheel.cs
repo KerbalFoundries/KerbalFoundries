@@ -23,12 +23,16 @@ namespace KerbalFoundries
         public float rotationY = 0;
         [KSPField]
         public float rotationZ = 0;
+        [KSPField]
+        public string susTravAxis = "Y";
 
-        public WheelCollider wheelCollider;
-        public Transform susTrav;
-        public Transform wheel;
-        public Vector3 initialTraverse;
-        public float lastTempTraverse;
+        int susTravIndex = 1;
+
+        WheelCollider wheelCollider;
+        Transform susTrav;
+        Transform wheel;
+        Vector3 initialTraverse;
+        float lastTempTraverse;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -65,7 +69,10 @@ namespace KerbalFoundries
                 this.part.force_activate();
 
                 initialTraverse = susTrav.transform.localPosition;
-                lastTempTraverse = initialTraverse[1] - wheelCollider.suspensionDistance - 0.035f; //sets it to a default value for the sprockets
+                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance - 0.035f; //sets it to a default value for the sprockets
+
+                susTravIndex = Extensions.SetAxisIndex(susTravAxis);
+
             }
             //end find named objects
             base.OnStart(state);
@@ -79,12 +86,12 @@ namespace KerbalFoundries
             bool grounded = wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
             if (grounded) //is it on the ground
             {
-                tempTraverse[1] -= (-wheelCollider.transform.InverseTransformPoint(hit.point).y) - wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
-                lastTempTraverse = tempTraverse[1];
+                tempTraverse[susTravIndex] -= (-wheelCollider.transform.InverseTransformPoint(hit.point).y) - wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
+                lastTempTraverse = tempTraverse[susTravIndex];
             }
             else
             {
-                tempTraverse[1] = lastTempTraverse;
+                tempTraverse[susTravIndex] = lastTempTraverse;
             } //movement defaults back to zero when not grounded
             //print(tempTraverse.y);
             susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object

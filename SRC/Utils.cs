@@ -31,6 +31,18 @@ namespace KerbalFoundries
             return ratio;
         }
 
+        public static int SetAxisIndex(string axisString)
+        {
+            int index = 1; //default to Y
+            if (axisString == "x" || axisString == "X")
+                index = 0;
+            else if (axisString == "y" || axisString == "Y")
+                index = 1;
+            else if (axisString == "z" || axisString == "Z")
+                index = 2;
+            return index;
+        }
+
 
     }
 

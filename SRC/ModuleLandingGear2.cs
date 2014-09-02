@@ -14,7 +14,7 @@ namespace KerbalFoundries
         public bool steeringDisabled;
         [KSPField(isPersistant = true)]
         public bool brakesApplied;
-
+        [KSPField(isPersistant = true)]
         public float brakeTorque;
         [KSPField]
         public float brakingTorque;
