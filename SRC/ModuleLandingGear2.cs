@@ -103,10 +103,9 @@ namespace KerbalFoundries
         [KSPAction("Gear", KSPActionGroup.Gear)]
         public void brakes(KSPActionParam param)
         {
-            if (param.type == KSPActionType.Activate)
-            {
+
                 PlayAnimation();
-            }
+
         }
 
         [KSPAction("Brakes", KSPActionGroup.Brakes)]

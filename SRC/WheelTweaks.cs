@@ -35,7 +35,7 @@ namespace KerbalFoundries
             thiswheelCollider = part.gameObject.GetComponentInChildren<WheelCollider>();   //find the 'wheelCollider' gameobject named by KSP convention.
             mywc = thiswheelCollider.GetComponent<WheelCollider>();
             userspring = mywc.suspensionSpring;
-            // degub only: print("onstart");
+            // degub only: print("onstart"); 
             base.OnStart(start);
 
 

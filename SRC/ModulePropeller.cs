@@ -17,6 +17,7 @@ namespace KerbalFoundries
 
         public override void OnStart(PartModule.StartState state)
         {
+            print("ModulePropeller called");
             base.OnStart(state);
             if (HighLogic.LoadedSceneIsFlight) 
             {
