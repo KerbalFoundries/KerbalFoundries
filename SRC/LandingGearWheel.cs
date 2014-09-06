@@ -34,30 +34,10 @@ namespace KerbalFoundries
         Vector3 initialTraverse;
         float lastTempTraverse;
 
+        Vector3 wheelRotation;
+
         public override void OnStart(PartModule.StartState state)
         {
-            foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
-            {
-                if (wc.name.Equals(colliderName, StringComparison.Ordinal))
-                {
-                    wheelCollider = wc;
-                }
-            }
-            foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
-            {
-                if (tr.name.Equals(susTravName, StringComparison.Ordinal))
-                {
-                    susTrav = tr;
-                }
-            }
-            foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
-            {
-                if (tr.name.Equals(wheelName, StringComparison.Ordinal))
-                {
-                    wheel = tr;
-                }
-            }
-
             print("LandingGearWheel Called");
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -68,10 +48,34 @@ namespace KerbalFoundries
                 //find names onjects in part
                 this.part.force_activate();
 
+                foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
+                {
+                    if (wc.name.Equals(colliderName, StringComparison.Ordinal))
+                    {
+                        wheelCollider = wc;
+                    }
+                }
+                foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
+                {
+                    if (tr.name.Equals(susTravName, StringComparison.Ordinal))
+                    {
+                        susTrav = tr;
+                    }
+                }
+                foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
+                {
+                    if (tr.name.Equals(wheelName, StringComparison.Ordinal))
+                    {
+                        wheel = tr;
+                    }
+                }
+
+                susTravIndex = Extensions.SetAxisIndex(susTravAxis);
+
                 initialTraverse = susTrav.transform.localPosition;
                 lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance - 0.035f; //sets it to a default value for the sprockets
 
-                susTravIndex = Extensions.SetAxisIndex(susTravAxis);
+                wheelRotation = new Vector3(rotationX, rotationY, rotationZ);
 
             }
             //end find named objects
@@ -97,7 +101,7 @@ namespace KerbalFoundries
             susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
             float degreesPerTick = (wheelCollider.rpm / 60) * Time.deltaTime * 360;
           
-            wheel.transform.Rotate(new Vector3(rotationX,rotationY,rotationZ), degreesPerTick / wheelCollider.radius); //rotate wheel
+            wheel.transform.Rotate(wheelRotation, degreesPerTick / wheelCollider.radius); //rotate wheel
         }
     }
 }

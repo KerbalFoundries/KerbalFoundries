@@ -60,6 +60,7 @@
     <Compile Include="ModuleTrack.cs" />
     <Compile Include="ModuleTrackSurface.cs" />
     <Compile Include="ModuleWheelMaster.cs" />
+    <Compile Include="ModuleWheels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepulsorAlpha.cs" />
     <Compile Include="RepulsorTest.cs" />

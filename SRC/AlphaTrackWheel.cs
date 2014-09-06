@@ -31,6 +31,17 @@ namespace KerbalFoundries
         [KSPField]
         public float rotationCorrection = 1;
 
+        [KSPField]
+        public float rotationX = 1;
+        [KSPField]
+        public float rotationY = 0;
+        [KSPField]
+        public float rotationZ = 0;
+        [KSPField]
+        public string susTravAxis = "Y";
+
+        int susTravIndex = 1;
+
         public int directionCorrector = 1;
         //end variables
 
@@ -46,6 +57,10 @@ namespace KerbalFoundries
             {
                 //find names onjects in part
                 this.part.force_activate();
+
+                susTravIndex = Extensions.SetAxisIndex(susTravAxis);
+
+
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     if (wc.name.Equals(colliderName, StringComparison.Ordinal))
@@ -70,7 +85,7 @@ namespace KerbalFoundries
                 track = this.part.GetComponentInChildren<AlphaModuleTrack>();
 
                 initialTraverse = susTrav.transform.localPosition;
-                lastTempTraverse = initialTraverse.y - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets and wheels
+                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets and wheels
                 if (useDirectionCorrector)
                     directionCorrector = track.directionCorrector;
                 else directionCorrector = 1;
@@ -83,19 +98,19 @@ namespace KerbalFoundries
         public override void OnUpdate()
         {
             base.OnUpdate();
-            wheel.transform.Rotate(Vector3.right, track.degreesPerTick / wheelCollider.radius * directionCorrector * rotationCorrection); //rotate wheel
+            wheel.transform.Rotate(new Vector3 (rotationX,rotationY,rotationZ), track.degreesPerTick / wheelCollider.radius * directionCorrector * rotationCorrection); //rotate wheel
             //suspension movement
             WheelHit hit;
             Vector3 tempTraverse = initialTraverse;
             bool grounded = wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
             if (grounded && !isSprocket) //is it on the ground
             {
-                tempTraverse.y -= (-wheelCollider.transform.InverseTransformPoint(hit.point).y + track.raycastError) - wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
-                lastTempTraverse = tempTraverse.y;
+                tempTraverse[susTravIndex] -= (-wheelCollider.transform.InverseTransformPoint(hit.point).y + track.raycastError) - wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
+                lastTempTraverse = tempTraverse[susTravIndex];
             }
             else
             {
-                tempTraverse.y = lastTempTraverse;
+                tempTraverse[susTravIndex] = lastTempTraverse;
             } //movement defaults back to zero when not grounded
             susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
 
