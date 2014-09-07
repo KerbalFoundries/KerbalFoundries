@@ -67,6 +67,7 @@
     <Compile Include="RepulsorWheel.cs" />
     <Compile Include="SmoothSteering.cs" />
     <Compile Include="SpeederBike.cs" />
+    <Compile Include="StandardWheel.cs" />
     <Compile Include="SteeringTest.cs" />
     <Compile Include="TrackWheel.cs" />
     <Compile Include="Utils.cs" />
