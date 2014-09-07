@@ -151,7 +151,7 @@ namespace KerbalFoundries
                 }
                 
                 wc.steerAngle = steeringAngleSmoothed;
-                print(wc.steerAngle);
+                //print(wc.steerAngle);
             }
             if (numberOfWheels > 1)
             {
@@ -198,7 +198,7 @@ namespace KerbalFoundries
 
         }//End increase
 
-        [KSPAction("Decrease Toqrque")]
+        [KSPAction("Decrease Torque")]
         public void decrease(KSPActionParam param)
         {
             if (torque > 0)
@@ -213,4 +213,4 @@ namespace KerbalFoundries
         }//end toggle steering
         //end action groups
     }//end class
-}//end namespace
+}//end namespaces

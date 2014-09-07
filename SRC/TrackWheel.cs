@@ -21,11 +21,11 @@ namespace KerbalFoundries
         [KSPField]
         public bool useDirectionCorrector = false; //make sure it's set to false if not specified in the config
         [KSPField]
-        public bool isSprocket;
+        public bool isSprocket = false;
         [KSPField]
-        public bool isIdler;
+        public bool isIdler = false;
         [KSPField]
-        public bool hasSteering;
+        public bool hasSteering = false;
         [KSPField]
         public float smoothSpeed = 40;
 
@@ -37,10 +37,7 @@ namespace KerbalFoundries
         ModuleWheelMaster master;
         Vector3 initialTraverse;
         Vector3 initialSteeringAngles;
-
-        Vector3 currentAngles;
-
-        float smoothSteeringAngle;
+     
         
         float lastTempTraverse;
         [KSPField]
@@ -117,10 +114,12 @@ namespace KerbalFoundries
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis);
 
                 initialTraverse = susTrav.transform.localPosition;
-                initialSteeringAngles = trackSteering.transform.localEulerAngles;
-                print(initialSteeringAngles);
-                
-                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets and wheels
+                if (hasSteering)
+                {
+                    initialSteeringAngles = trackSteering.transform.localEulerAngles;
+                    print(initialSteeringAngles);
+                }
+
 
                 if (useDirectionCorrector)
                     directionCorrector = master.directionCorrector;
@@ -129,7 +128,7 @@ namespace KerbalFoundries
 
                 wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
             }
-            currentAngles = initialSteeringAngles;
+            
             //end find named objects
             base.OnStart(state);
         }//end OnStart
@@ -142,7 +141,7 @@ namespace KerbalFoundries
             WheelHit hit;
             Vector3 tempTraverse = initialTraverse;
             bool grounded = wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
-            if (grounded && !isSprocket) //is it on the ground
+            if (grounded) //is it on the ground
             {
                 tempTraverse[susTravIndex] -= (-wheelCollider.transform.InverseTransformPoint(hit.point).y + track.raycastError) - wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
                 lastTempTraverse = tempTraverse[susTravIndex];
@@ -152,26 +151,13 @@ namespace KerbalFoundries
                 tempTraverse[susTravIndex] = lastTempTraverse;
             } //movement defaults back to zero when not grounded
             susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
-
-           
-            //end suspension mvoement
-        }//end OnUpdate
-
-        public override void OnFixedUpdate()
-        {
-            base.OnFixedUpdate();
             if (hasSteering)
             {
                 Vector3 newSteeringAngle = initialSteeringAngles;
-                newSteeringAngle[steeringIndex] = initialSteeringAngles[steeringIndex] + track.steeringAngleSmoothed;
-
-                currentAngles = Vector3.Lerp(currentAngles, newSteeringAngle, Time.deltaTime);
-
-                //newSteeringAngle[steeringIndex] = Mathf.Lerp(newSteeringAngle[steeringIndex] + track.steeringAngle, trackSteering.transform.localEulerAngles[steeringIndex], Time.deltaTime * smoothSpeed);
-                //print(currentAngles);
+                newSteeringAngle[steeringIndex] += track.steeringAngleSmoothed;
                 trackSteering.transform.localEulerAngles = newSteeringAngle;
             }
-        }
-
+            //end suspension mvoement
+        }//end OnUpdate
     }//end modele
 }//end class
