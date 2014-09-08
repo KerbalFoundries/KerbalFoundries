@@ -34,7 +34,7 @@ namespace KerbalFoundries
         Transform wheel;
         Transform trackSteering;
         ModuleTrack track;
-        ModuleWheelMaster master;
+
         Vector3 initialTraverse;
         Vector3 initialSteeringAngles;
      
@@ -108,7 +108,7 @@ namespace KerbalFoundries
                 }
 
                 track = this.part.GetComponentInChildren<ModuleTrack>();
-                master = this.part.GetComponentInChildren<ModuleWheelMaster>();
+
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis);
@@ -122,13 +122,15 @@ namespace KerbalFoundries
 
 
                 if (useDirectionCorrector)
-                    directionCorrector = master.directionCorrector;
+                    directionCorrector = track.directionCorrector;
                 else directionCorrector = 1;
                 print(directionCorrector);
 
                 wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
             }
-            
+
+            lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance;
+
             //end find named objects
             base.OnStart(state);
         }//end OnStart
@@ -136,12 +138,12 @@ namespace KerbalFoundries
         public override void OnUpdate()
         {
             base.OnUpdate();
-            wheel.transform.Rotate(wheelRotation, track.degreesPerTick / wheelCollider.radius * directionCorrector * rotationCorrection); //rotate wheel
+            wheel.transform.Rotate(wheelRotation, track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
             //suspension movement
             WheelHit hit;
             Vector3 tempTraverse = initialTraverse;
             bool grounded = wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
-            if (grounded) //is it on the ground
+            if (grounded && !isSprocket) //is it on the ground
             {
                 tempTraverse[susTravIndex] -= (-wheelCollider.transform.InverseTransformPoint(hit.point).y + track.raycastError) - wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
                 lastTempTraverse = tempTraverse[susTravIndex];

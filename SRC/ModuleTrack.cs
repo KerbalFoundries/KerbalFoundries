@@ -9,6 +9,43 @@ namespace KerbalFoundries
     [KSPModule("ModuleTrack")]
     public class ModuleTrack : PartModule
     {
+
+        public int directionCorrector;
+        public bool boundsDestroyed;
+        public Vector3 referenceTranformVector;
+        public Transform referenceTransform;
+        public float myPosition;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Reference Direction")]
+        public int referenceDirection;
+        [KSPField(isPersistant = true)]
+        public bool brakesApplied;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Min", guiFormat = "F6")]
+        public float minPos;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Max", guiFormat = "F6")]
+        public float maxPos;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Min to Max", guiFormat = "F6")]
+        public float minToMax;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Mid", guiFormat = "F6")]
+        public float midPoint;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Offset", guiFormat = "F6")]
+        public float offset;
+
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Adjuted position", guiFormat = "F6")]
+        public float myAdjustedPosition;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Ratio", guiFormat = "F6")]
+        public float steeringRatio;
+
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.X", guiFormat = "F6")]
+        public float dotx; //debug only
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
+        public float doty; //debug only
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
+        public float dotz; //debug only
+
+        public string right = "right";
+        public string forward = "forward";
+        public string up = "up";
+
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();
         [KSPField]
@@ -31,16 +68,13 @@ namespace KerbalFoundries
         public float averageTrackRPM;
         [KSPField]
         public float maxRPM = 350;
-        [KSPField(isPersistant = true)]
-        public bool brakesApplied;
 
-        ModuleWheelMaster master;
         public float brakeTorque;
         
         public float brakeSteering;
         public float degreesPerTick;
         public float motorTorque;
-        public float numberOfWheels = 1; //if it's 0 at the start it send things into and NaN fit.
+        public float groundedWheels = 0; //if it's 0 at the start it send things into and NaN fit.
         public float trackRPM = 0;
 
         public float steeringAngle;
@@ -70,7 +104,10 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                master = this.part.GetComponentInChildren<ModuleWheelMaster>();
+                FindDirection();
+                SetupRatios();
+                DestroyBounds();
+
                 if (torque > 2) //check if the torque value is using the old numbering system
                 {
                     torque /= 100;
@@ -113,7 +150,7 @@ namespace KerbalFoundries
             {
                 steeringTorque = torqueSteeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque; //low speed steering mode. Differential motor torque
                 brakeSteering = brakeSteeringCurve.Evaluate(travelDirection); //high speed steering. Brake on inside track because Unity seems to weight reverse motor torque less at high speed.
-                steeringAngle = (steeringCurve.Evaluate((float)this.vessel.srfSpeed)) * -this.vessel.ctrlState.wheelSteer * master.steeringRatio; //low speed steering mode. Differential motor torque
+                steeringAngle = (steeringCurve.Evaluate((float)this.vessel.srfSpeed)) * -this.vessel.ctrlState.wheelSteer * steeringRatio; //low speed steering mode. Differential motor torque
             }
             else
             {
@@ -123,7 +160,7 @@ namespace KerbalFoundries
             }
 
 
-            motorTorque = (forwardTorque * master.directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
+            motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
             brakeSteeringTorque = Mathf.Clamp(brakeSteering * this.vessel.ctrlState.wheelSteer, 0, 1000); //if the calculated value is negative, disregard: Only brake on inside track. no need to direction correct as we are using the velocity or the part not the vessel.
             chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
             steeringAngleSmoothed = Mathf.Lerp(steeringAngleSmoothed, steeringAngle, Time.deltaTime * smoothSpeed);
@@ -142,7 +179,7 @@ namespace KerbalFoundries
 
                 if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
                 {
-                    numberOfWheels++;
+                    groundedWheels++;
                     trackRPM += wc.rpm;
                 }
                 else if (wc.suspensionDistance != 0) //the sprocket colliders could be doing anything. Don't count them.
@@ -153,25 +190,105 @@ namespace KerbalFoundries
                 wc.steerAngle = steeringAngleSmoothed;
                 //print(wc.steerAngle);
             }
-            if (numberOfWheels > 1)
+            if (groundedWheels >= 1)
             {
-                averageTrackRPM = trackRPM / numberOfWheels; 
+                averageTrackRPM = trackRPM / groundedWheels; 
             }
             else
             {
                 averageTrackRPM = freeWheelRPM / wheelCount;
             }
             trackRPM = 0;
+            degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
+            groundedWheels = 0; //reset number of wheels. Setting to zero gives NaN!
 
         }//end OnFixedUpdate
 
         public override void OnUpdate()
         {
             base.OnUpdate(); 
-            degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
-            numberOfWheels = 1; //reset number of wheels. Setting to zero gives NaN!
-            
+
         } //end OnUpdate
+
+        public void FindDirection()
+        {
+            float dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.right)); // up is forward
+            float doty = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up));
+            float dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.forward));
+
+            if (dotx > doty && dotx > dotz)
+            {
+                print("root part mounted sideways");
+                myPosition = this.part.orgPos.x;
+                referenceTranformVector = this.vessel.ReferenceTransform.right;
+                referenceDirection = 0;
+            }
+            if (doty > dotx && doty > dotz)
+            {
+                print("root part mounted forward");
+                myPosition = this.part.orgPos.y;
+                referenceTranformVector = this.vessel.ReferenceTransform.up;
+                referenceDirection = 1;
+            }
+            if (dotz > doty && dotz > dotx)
+            {
+                print("root part mounted up");
+                myPosition = this.part.orgPos.z;
+                referenceTranformVector = this.vessel.ReferenceTransform.forward;
+                referenceDirection = 2;
+            }
+
+            float dot = Vector3.Dot(this.part.transform.forward, referenceTranformVector); // up is forward
+            if (dot < 0) // below 0 means the engine is on the left side of the craft
+            {
+                directionCorrector = -1;
+                print("left");
+            }
+            else
+            {
+                directionCorrector = 1;
+                print("right");
+            }
+        }
+
+        public void SetupRatios()
+        {
+            maxPos = myPosition;
+            minPos = myPosition;
+
+            foreach (ModuleTrack st in this.vessel.FindPartModulesImplementing<ModuleTrack>()) //scan vessel to find fore or rearmost wheel. 
+            {
+                float otherPosition = myPosition;
+                otherPosition = st.part.orgPos[referenceDirection];
+
+                if ((otherPosition + 1000) >= (maxPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
+                    maxPos = otherPosition; //Store transform y value
+
+                if ((otherPosition + 1000) <= (minPos + 1000))
+                    minPos = otherPosition; //Store transform y value
+            }
+
+            minToMax = maxPos - minPos;
+            midPoint = minToMax / 2;
+            offset = (maxPos + minPos) / 2;
+            myAdjustedPosition = myPosition - offset;
+
+            steeringRatio = myAdjustedPosition / midPoint;
+
+            if (steeringRatio == 0 || float.IsNaN(steeringRatio)) //check is we managed to evaluate to zero or infinity somehow.
+                steeringRatio = 1;
+        }
+
+        public void DestroyBounds()
+        {
+            Transform bounds = transform.Search("Bounds");
+            if (bounds != null)
+            {
+                GameObject.Destroy(bounds.gameObject);
+                //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
+                print("destroying Bounds");
+            }
+        }
 
         //Action groups
         [KSPAction("Brakes", KSPActionGroup.Brakes)]

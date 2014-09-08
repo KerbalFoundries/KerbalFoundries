@@ -59,19 +59,11 @@
     <Compile Include="ModulePropeller.cs" />
     <Compile Include="ModuleTrack.cs" />
     <Compile Include="ModuleTrackSurface.cs" />
-    <Compile Include="ModuleWheelMaster.cs" />
-    <Compile Include="ModuleWheels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RepulsorAlpha.cs" />
     <Compile Include="RepulsorTest.cs" />
     <Compile Include="RepulsorWheel.cs" />
-    <Compile Include="SmoothSteering.cs" />
-    <Compile Include="SpeederBike.cs" />
-    <Compile Include="StandardWheel.cs" />
-    <Compile Include="SteeringTest.cs" />
     <Compile Include="TrackWheel.cs" />
     <Compile Include="Utils.cs" />
-    <Compile Include="WheelTweaks.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

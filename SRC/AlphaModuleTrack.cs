@@ -12,7 +12,7 @@ namespace KerbalFoundries
         //variable setup 
         public int directionCorrector;
         public float motorTorque;
-        public float numberOfWheels = 1; //if it's 0 at the start it send things into and NaN fit.
+        public float numberOfWheels = .000001f; //if it's 0 at the start it send things into and NaN fit.
         public float trackRPM = 0;
         public float averageTrackRPM;
         [KSPField]
