@@ -93,6 +93,8 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool steeringDisabled;
 
+        public List<WheelCollider> wcList = new List<WheelCollider>();
+
         public override void OnStart(PartModule.StartState start)  //when started
         {
             print("ModuleTrack called");
@@ -122,6 +124,7 @@ namespace KerbalFoundries
                     userSpring.damper = damperRate;
                     wc.suspensionSpring = userSpring;
                     wc.enabled = true;
+                    wcList.Add(wc);
                 }
 
                 if (brakesApplied)
@@ -168,7 +171,7 @@ namespace KerbalFoundries
             electricCharge = part.RequestResource("ElectricCharge", chargeRequest); //ask the vessel for requested charge
 
             float freeWheelRPM = 0;
-            foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
+            foreach (WheelCollider wc in wcList)
             {
                 if (electricCharge == 0 || Math.Abs (averageTrackRPM) >= maxRPM)
                 {
@@ -189,6 +192,7 @@ namespace KerbalFoundries
                 
                 wc.steerAngle = steeringAngleSmoothed;
                 //print(wc.steerAngle);
+                
             }
             if (groundedWheels >= 1)
             {
