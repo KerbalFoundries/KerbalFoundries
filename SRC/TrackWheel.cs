@@ -25,8 +25,6 @@ namespace KerbalFoundries
         [KSPField]
         public bool isIdler = false;
         [KSPField]
-        public bool hasSteering = false;
-        [KSPField]
         public float smoothSpeed = 40;
 
         WheelCollider wheelCollider;
@@ -114,7 +112,7 @@ namespace KerbalFoundries
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis);
 
                 initialTraverse = susTrav.transform.localPosition;
-                if (hasSteering)
+                if (track.hasSteering)
                 {
                     initialSteeringAngles = trackSteering.transform.localEulerAngles;
                     print(initialSteeringAngles);
@@ -153,7 +151,7 @@ namespace KerbalFoundries
                 tempTraverse[susTravIndex] = lastTempTraverse;
             } //movement defaults back to zero when not grounded
             susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
-            if (hasSteering)
+            if (track.hasSteering)
             {
                 Vector3 newSteeringAngle = initialSteeringAngles;
                 newSteeringAngle[steeringIndex] += track.steeringAngleSmoothed;
