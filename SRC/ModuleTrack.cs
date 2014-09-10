@@ -9,7 +9,7 @@ namespace KerbalFoundries
     [KSPModule("ModuleTrack")]
     public class ModuleTrack : PartModule
     {
-
+        [KSPField(isPersistant = false, guiActive = true, guiName = "DirectionCorrector")]
         public int directionCorrector;
         public bool boundsDestroyed;
         public Vector3 referenceTranformVector;
@@ -19,27 +19,29 @@ namespace KerbalFoundries
         public int referenceDirection;
         [KSPField(isPersistant = true)]
         public bool brakesApplied;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Min", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Min", guiFormat = "F6")]
         public float minPos;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Max", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Max", guiFormat = "F6")]
         public float maxPos;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Min to Max", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Min to Max", guiFormat = "F6")]
         public float minToMax;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Mid", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Mid", guiFormat = "F6")]
         public float midPoint;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Offset", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Offset", guiFormat = "F6")]
         public float offset;
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Adjuted position", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Adjuted position", guiFormat = "F6")]
         public float myAdjustedPosition;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Ratio", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Steering Ratio", guiFormat = "F6")]
         public float steeringRatio;
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.X", guiFormat = "F6")]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.X", guiFormat = "F6")]
         public float dotx; //debug only
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.X Signed", guiFormat = "F6")]
+        public float dotxSigned; //debug only
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
         public float doty; //debug only
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
         public float dotz; //debug only
 
         public string right = "right";
@@ -55,6 +57,8 @@ namespace KerbalFoundries
         [KSPField]
         public FloatCurve brakeSteeringCurve = new FloatCurve();
         [KSPField]
+        public bool hasSteering = false;
+        [KSPField]
         public float brakingTorque;
         [KSPField]
         public float rollingResistanceMultiplier;
@@ -64,13 +68,13 @@ namespace KerbalFoundries
         public float smoothSpeed = 10;
         [KSPField]
         public float raycastError;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "RPM", guiFormat = "F1")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "RPM", guiFormat = "F1")]
         public float averageTrackRPM;
         [KSPField]
         public float maxRPM = 350;
 
         public float brakeTorque;
-        
+        [KSPField(isPersistant = false, guiActive = true, guiName = "BrakeSteering", guiFormat = "F1")]
         public float brakeSteering;
         public float degreesPerTick;
         public float motorTorque;
@@ -192,8 +196,8 @@ namespace KerbalFoundries
                 
                 wc.steerAngle = steeringAngleSmoothed;
                 //print(wc.steerAngle);
-                
             }
+
             if (groundedWheels >= 1)
             {
                 averageTrackRPM = trackRPM / groundedWheels; 
@@ -216,16 +220,19 @@ namespace KerbalFoundries
 
         public void FindDirection()
         {
-            float dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.right)); // up is forward
-            float doty = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.up));
-            float dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, vessel.ReferenceTransform.forward));
+            dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.ReferenceTransform.right)); // up is forward
+            doty = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.ReferenceTransform.up));
+            dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.ReferenceTransform.forward));
 
             if (dotx > doty && dotx > dotz)
             {
-                print("root part mounted sideways");
+                dotxSigned = Vector3.Dot(this.part.transform.forward, this.vessel.ReferenceTransform.right);
+
+                print("root part mounted right");
                 myPosition = this.part.orgPos.x;
                 referenceTranformVector = this.vessel.ReferenceTransform.right;
                 referenceDirection = 0;
+
             }
             if (doty > dotx && doty > dotz)
             {
@@ -241,8 +248,12 @@ namespace KerbalFoundries
                 referenceTranformVector = this.vessel.ReferenceTransform.forward;
                 referenceDirection = 2;
             }
-
+            if (referenceDirection == 0)
+            {
+                referenceTranformVector.x = Math.Abs(referenceTranformVector.x);
+            }
             float dot = Vector3.Dot(this.part.transform.forward, referenceTranformVector); // up is forward
+
             if (dot < 0) // below 0 means the engine is on the left side of the craft
             {
                 directionCorrector = -1;

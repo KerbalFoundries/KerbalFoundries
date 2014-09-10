@@ -64,11 +64,13 @@ namespace KerbalFoundries
         //OnStart
         public override void OnStart(PartModule.StartState state)
         {
+            
             print("TrackWheel Called");
             if (HighLogic.LoadedSceneIsEditor)
             {
 
             }
+            
             if (HighLogic.LoadedSceneIsFlight)
             {
                 //find names onjects in part
@@ -125,9 +127,10 @@ namespace KerbalFoundries
                 print(directionCorrector);
 
                 wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
+                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance;
             }
 
-            lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance;
+            
 
             //end find named objects
             base.OnStart(state);
