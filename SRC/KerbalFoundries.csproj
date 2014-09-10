@@ -64,6 +64,7 @@
     <Compile Include="RepulsorWheel.cs" />
     <Compile Include="TrackWheel.cs" />
     <Compile Include="Utils.cs" />
+    <Compile Include="WaterCollider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

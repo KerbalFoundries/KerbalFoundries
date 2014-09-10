@@ -64,6 +64,11 @@ namespace KerbalFoundries
             }
             if (HighLogic.LoadedSceneIsFlight)
             {
+                if (FlightGlobals.ActiveVessel.rootPart.GetComponentInChildren<ModuleWaterCollider>() == null)
+                {
+                    FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterCollider");
+                }
+
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
 
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
@@ -81,7 +86,7 @@ namespace KerbalFoundries
                     }
                     else if (Rideheight < .5f)
                     {
-                        b.enabled = false;                 //set retracted if the deployed flag is not set
+                        b.enabled = false;                 //set retracted if the deployed flag is not set 
                     }
 
                 }
@@ -121,7 +126,7 @@ namespace KerbalFoundries
                 float electricCharge = Extensions.GetBattery(this.part);
                 if (electricCharge < 0.1f)
                 {
-                    print("retracting due to low electricity"); 
+                    print("Retracting due to low electricity"); 
                     lowEnergy = true;
                     Rideheight = 0;
                 }

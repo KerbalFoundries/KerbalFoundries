@@ -76,8 +76,6 @@ namespace KerbalFoundries
                 //find names onjects in part
                 this.part.force_activate();
 
-                
-
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     if (wc.name.Equals(colliderName, StringComparison.Ordinal))

@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-    [KSPModule("AlphaRepulsor")]
+
     public class AlphaRepulsor : PartModule
     {
 
@@ -30,14 +30,16 @@ namespace KerbalFoundries
         [KSPField]
         public bool lowEnergy;
 
-        public float chargeConsumptionRate = 0.05f;
+        public float repulsorCount = 0;
+
+        public float chargeConsumptionRate = 0.01f;
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
         {
             // degub only: print("onstart");
             base.OnStart(start);
 
-            if (HighLogic.LoadedSceneIsEditor) 
+            if (HighLogic.LoadedSceneIsEditor)
             {
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
@@ -62,10 +64,19 @@ namespace KerbalFoundries
             }
             if (HighLogic.LoadedSceneIsFlight)
             {
+                if (FlightGlobals.ActiveVessel.rootPart.GetComponentInChildren<ModuleWaterCollider>() == null)
+                {
+                    print("Adding WaterCollider");
+                    FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterCollider");
+                }
+                else
+                    print("No idea what happened");
+
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
 
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
+                    repulsorCount += 1;
                     userspring = b.suspensionSpring;
                     userspring.spring = SpringRate;
                     userspring.damper = DamperRate;
@@ -78,7 +89,7 @@ namespace KerbalFoundries
                     }
                     else if (Rideheight < .5f)
                     {
-                        b.enabled = false;                 //set retracted if the deployed flag is not set
+                        b.enabled = false;                 //set retracted if the deployed flag is not set 
                     }
 
                 }
@@ -91,6 +102,7 @@ namespace KerbalFoundries
                 //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
                 print("destroying Bounds");
             }
+
 
         }//end start 
 
@@ -113,14 +125,11 @@ namespace KerbalFoundries
 
             if (deployed)
             {
-                float electricCharge = part.RequestResource("ElectricCharge", chargeConsumptionRate);
-                var resources = new List<PartResource>();
-                //part.GetConnectedResources(PartResourceLibrary.Instance.GetDefinition("ElectricCharge").id, resources);
-                
-                //print(resources);
-                if (electricCharge < (chargeConsumptionRate / 2))
+                part.RequestResource("ElectricCharge", (chargeConsumptionRate * (Rideheight / 8) * (1 + SpringRate) * repulsorCount));
+                float electricCharge = Extensions.GetBattery(this.part);
+                if (electricCharge < 0.1f)
                 {
-                    print("retracting due to low electricity");
+                    print("Retracting due to low electricity");
                     lowEnergy = true;
                     Rideheight = 0;
                 }
