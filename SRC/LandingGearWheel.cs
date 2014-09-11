@@ -73,7 +73,7 @@ namespace KerbalFoundries
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
 
                 initialTraverse = susTrav.transform.localPosition;
-                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance - 0.035f; //sets it to a default value for the sprockets
+                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets
 
                 wheelRotation = new Vector3(rotationX, rotationY, rotationZ);
 

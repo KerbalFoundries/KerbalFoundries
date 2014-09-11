@@ -54,11 +54,12 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
+                this.part.force_activate();
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     wc.enabled = true;
                 }
-                this.part.force_activate();
+                
             }
             Transform bounds = transform.Search("Bounds");
             if (bounds != null)
