@@ -18,23 +18,25 @@ namespace KerbalFoundries
         void Start()
         {
             print("Water hovering enabled");
-            var box = _collider.collider as BoxCollider;
-            box.size = new Vector3(400f, 5f, 400f); // probably should encapsulate other colliders in real code
 
-            var rb = _collider.rigidbody;
-            rb.isKinematic = true;
-
-            _collider.SetActive(true);
-
-            var visible = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            visible.transform.parent = _collider.transform;
-            visible.transform.localScale = box.size;
-            visible.renderer.enabled = true; // enable to see collider
            
             foreach (Part PA in FlightGlobals.ActiveVessel.Parts)
             {
                 if (PA.GetComponentInChildren<RepulsorTest>() != null || PA.GetComponentInChildren<AlphaRepulsor>() != null)
                 {
+                    var box = _collider.collider as BoxCollider;
+                    box.size = new Vector3(400f, 5f, 400f); // probably should encapsulate other colliders in real code
+
+                    var rb = _collider.rigidbody;
+                    rb.isKinematic = true;
+
+                    _collider.SetActive(true);
+
+                    var visible = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    visible.transform.parent = _collider.transform;
+                    visible.transform.localScale = box.size;
+                    visible.renderer.enabled = true; // enable to see collider
+
                     UpdatePosition();
                     this.part.force_activate();
                 }
