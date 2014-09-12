@@ -35,10 +35,10 @@ namespace KerbalFoundries
                     var visible = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     visible.transform.parent = _collider.transform;
                     visible.transform.localScale = box.size;
-                    visible.renderer.enabled = true; // enable to see collider
+                    visible.renderer.enabled = false; // enable to see collider
 
-                    UpdatePosition();
-                    this.part.force_activate();
+                    UpdatePosition(); 
+                    this.part.force_activate(); 
                 }
             }   
 
