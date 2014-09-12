@@ -19,20 +19,20 @@ namespace KerbalFoundries
         public int referenceDirection;
         [KSPField(isPersistant = true)]
         public bool brakesApplied;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Min", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Min", guiFormat = "F6")]
         public float minPos;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Max", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Max", guiFormat = "F6")]
         public float maxPos;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Min to Max", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Min to Max", guiFormat = "F6")]
         public float minToMax;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Mid", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Mid", guiFormat = "F6")]
         public float midPoint;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Offset", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Offset", guiFormat = "F6")]
         public float offset;
 
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Adjuted position", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Adjuted position", guiFormat = "F6")]
         public float myAdjustedPosition;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Steering Ratio", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Ratio", guiFormat = "F6")]
         public float steeringRatio;
 
         [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.X", guiFormat = "F6")]
@@ -43,6 +43,8 @@ namespace KerbalFoundries
         public float doty; //debug only
         [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
         public float dotz; //debug only
+        [KSPField(isPersistant = false, guiActive = true, guiName = "OrgPos", guiFormat = "F6")]
+        public Vector3 orgpos;
 
         public string right = "right";
         public string forward = "forward";
@@ -220,32 +222,32 @@ namespace KerbalFoundries
 
         public void FindDirection()
         {
-            dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.ReferenceTransform.right)); // up is forward
-            doty = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.ReferenceTransform.up));
-            dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.ReferenceTransform.forward));
+            orgpos = this.part.orgPos;
+            dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.rootPart.transform.right)); // up is forward
+            doty = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.rootPart.transform.up));
+            dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.rootPart.transform.forward));
 
             if (dotx > doty && dotx > dotz)
             {
-                dotxSigned = Vector3.Dot(this.part.transform.forward, this.vessel.ReferenceTransform.right);
+                dotxSigned = Vector3.Dot(this.part.transform.forward, this.vessel.rootPart.transform.right);
 
                 print("root part mounted right");
-                myPosition = this.part.orgPos.x;
+                //myPosition = this.part.orgPos.x;
                 referenceTranformVector = this.vessel.ReferenceTransform.right;
                 referenceDirection = 0;
-
             }
             if (doty > dotx && doty > dotz)
             {
                 print("root part mounted forward");
-                myPosition = this.part.orgPos.y;
-                referenceTranformVector = this.vessel.ReferenceTransform.up;
+                //myPosition = this.part.orgPos.y;
+                referenceTranformVector = this.vessel.ReferenceTransform.forward;
                 referenceDirection = 1;
             }
             if (dotz > doty && dotz > dotx)
             {
                 print("root part mounted up");
-                myPosition = this.part.orgPos.z;
-                referenceTranformVector = this.vessel.ReferenceTransform.forward;
+                //myPosition = this.part.orgPos.z;
+                referenceTranformVector = this.vessel.ReferenceTransform.up;
                 referenceDirection = 2;
             }
             if (referenceDirection == 0)
@@ -268,8 +270,9 @@ namespace KerbalFoundries
 
         public void SetupRatios()
         {
-            maxPos = myPosition;
-            minPos = myPosition;
+            myPosition = this.part.orgPos[referenceDirection];
+            maxPos = this.part.orgPos[referenceDirection];
+            minPos = this.part.orgPos[referenceDirection];
 
             foreach (ModuleTrack st in this.vessel.FindPartModulesImplementing<ModuleTrack>()) //scan vessel to find fore or rearmost wheel. 
             {
