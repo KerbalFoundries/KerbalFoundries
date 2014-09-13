@@ -18,10 +18,13 @@ namespace KerbalFoundries
 
         public float myPosition;
 
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Long Direction")]
-        public int LongitudinalRefIndex;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Lat Direction")]
-        public int LatteralRefIndex;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Long Index")]
+        public int rootIndexLong;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Lat Index")]
+        public int rootIndexLat;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Up Index")]
+        public int rootIndexUp;
+
         [KSPField(isPersistant = false, guiActive = true, guiName = "Control Index")]
         public int controlAxisIndex;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Temp")]
@@ -59,7 +62,7 @@ namespace KerbalFoundries
         public Vector3 orgpos;
 
         public uint commandId;
-        public uint lastCOmmandId;
+        public uint lastCommandId;
 
         public string right = "right";
         public string forward = "forward";
@@ -127,24 +130,16 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                //steering ratio setup
-                LongitudinalRefIndex = GetRefAxis(this.part.transform.forward, this.vessel.rootPart.transform);
-                steeringRatio = SetupRatios(LongitudinalRefIndex);
+                // wheel steering ratio setup
+                rootIndexLong = GetRefAxis(this.part.transform.forward, this.vessel.rootPart.transform); //Find the root part axis which matches each wheel axis.
+                rootIndexLat = GetRefAxis(this.part.transform.right, this.vessel.rootPart.transform);
+                rootIndexUp = GetRefAxis(this.part.transform.up, this.vessel.rootPart.transform);
 
-                controlAxisIndex = GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform);
+                steeringRatio = SetupRatios(rootIndexLong); //use the axis which corresponds to the forward axis of the wheel.
 
-                directionCorrector = GetDirection(this.part.transform.forward, this.vessel.ReferenceTransform, 1);
-                SetupAxis();
+                GetControlAxis(); // sets up motor and steering direction direction
 
-                
-
-                LatteralRefIndex = GetRefAxis(this.part.transform.right, this.vessel.rootPart.transform);
-
-                
-
-                steeringTemp = GetDirection(this.vessel.ReferenceTransform.forward, this.vessel.rootPart.transform, LatteralRefIndex);
-
-                DestroyBounds();
+                DestroyBounds(); //destroys the Bounds helper object if it is still in the model.
 
                 if (torque > 2) //check if the torque value is using the old numbering system
                 {
@@ -248,18 +243,25 @@ namespace KerbalFoundries
         {
             base.OnUpdate();
             commandId = this.vessel.referenceTransformId;
-            if (commandId != lastCOmmandId)
+            if (commandId != lastCommandId)
             {
-                SetupAxis();
+                print("Control Axis Changed");
+                GetControlAxis();
             }
-            lastCOmmandId = commandId;
+            lastCommandId = commandId;
         } //end OnUpdate
 
-        public void SetupAxis()
+        public void GetControlAxis()
         {
             controlAxisIndex = GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform);
-            directionCorrector = GetDirection(this.part.transform.forward, this.vessel.ReferenceTransform, controlAxisIndex);
-            steeringTemp = GetDirection(this.vessel.ReferenceTransform.forward, this.vessel.rootPart.transform, LatteralRefIndex);
+            directionCorrector = GetCorrector(this.part.transform.forward, this.vessel.ReferenceTransform, controlAxisIndex);
+            if (controlAxisIndex == rootIndexLat)
+                steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLat);
+            if (controlAxisIndex == rootIndexLong)
+                steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLong);
+            if (controlAxisIndex == rootIndexUp)
+                steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexUp);
+            steeringTemp = steeringCorrector;
         }
 
 
@@ -267,8 +269,11 @@ namespace KerbalFoundries
         {
             //orgpos = this.part.orgPos; //debugguing
             dotx = Math.Abs(Vector3.Dot(refDirection, refTransform.right)); // up is forward
+            print(dotx);
             doty = Math.Abs(Vector3.Dot(refDirection, refTransform.up));
-            dotz = Math.Abs(Vector3.Dot(refDirection, refTransform.forward)); 
+            print(doty);
+            dotz = Math.Abs(Vector3.Dot(refDirection, refTransform.forward));
+            print(dotz);
 
             int orientationIndex = 0;
 
@@ -298,7 +303,7 @@ namespace KerbalFoundries
             return orientationIndex;
         }
 
-        public int GetDirection(Vector3 transformVector, Transform referenceVector, int directionIndex)
+        public int GetCorrector(Vector3 transformVector, Transform referenceVector, int directionIndex)
         {
             int corrector = 1;
             float dot = 0;
@@ -306,6 +311,7 @@ namespace KerbalFoundries
             if (directionIndex == 0)
             {
                 dot = Vector3.Dot(transformVector, referenceVector.right); // up is forward
+                
             }
             if (directionIndex == 1)
             {
@@ -314,8 +320,10 @@ namespace KerbalFoundries
             if (directionIndex == 2)
             {
                 dot = Vector3.Dot(transformVector, referenceVector.forward); // up is forward
-            } 
-            
+            }
+
+            print(dot);
+
             if (dot < 0) // below 0 means the engine is on the left side of the craft
             {
                 corrector = -1;
@@ -354,8 +362,10 @@ namespace KerbalFoundries
 
             ratio = myAdjustedPosition / midPoint;
 
-            if (ratio == 0 || float.IsNaN(steeringRatio)) //check is we managed to evaluate to zero or infinity somehow.
+            if (ratio == 0 || float.IsNaN(ratio)) //check is we managed to evaluate to zero or infinity somehow.
                 ratio = 1;
+            print("ratio");
+            print(ratio);
             return ratio;
         }
 
