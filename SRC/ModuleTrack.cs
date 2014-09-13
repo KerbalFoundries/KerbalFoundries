@@ -11,13 +11,23 @@ namespace KerbalFoundries
     {
         [KSPField(isPersistant = false, guiActive = true, guiName = "DirectionCorrector")]
         public int directionCorrector;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "SteeringCorrector")]
+        public int steeringCorrector = 1;
         public bool boundsDestroyed;
-        public Vector3 referenceTranformVector;
-        public Transform referenceTransform;
+
+
         public float myPosition;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Reference Direction")]
-        public int referenceDirection;
-        [KSPField(isPersistant = true)]
+
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Long Direction")]
+        public int LongitudinalRefIndex;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Lat Direction")]
+        public int LatteralRefIndex;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Control Index")]
+        public int controlAxisIndex;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Temp")]
+        public int steeringTemp;
+
+        [KSPField(isPersistant = true)] 
         public bool brakesApplied;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Min", guiFormat = "F6")]
         public float minPos;
@@ -39,12 +49,17 @@ namespace KerbalFoundries
         public float dotx; //debug only
         [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.X Signed", guiFormat = "F6")]
         public float dotxSigned; //debug only
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Up", guiFormat = "F6")]
+        public float dotUp; //debug only
         [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
         public float doty; //debug only
         [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
         public float dotz; //debug only
         [KSPField(isPersistant = false, guiActive = true, guiName = "OrgPos", guiFormat = "F6")]
         public Vector3 orgpos;
+
+        public uint commandId;
+        public uint lastCOmmandId;
 
         public string right = "right";
         public string forward = "forward";
@@ -112,8 +127,23 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                FindDirection();
-                SetupRatios();
+                //steering ratio setup
+                LongitudinalRefIndex = GetRefAxis(this.part.transform.forward, this.vessel.rootPart.transform);
+                steeringRatio = SetupRatios(LongitudinalRefIndex);
+
+                controlAxisIndex = GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform);
+
+                directionCorrector = GetDirection(this.part.transform.forward, this.vessel.ReferenceTransform, 1);
+                SetupAxis();
+
+                
+
+                LatteralRefIndex = GetRefAxis(this.part.transform.right, this.vessel.rootPart.transform);
+
+                
+
+                steeringTemp = GetDirection(this.vessel.ReferenceTransform.forward, this.vessel.rootPart.transform, LatteralRefIndex);
+
                 DestroyBounds();
 
                 if (torque > 2) //check if the torque value is using the old numbering system
@@ -159,7 +189,7 @@ namespace KerbalFoundries
             {
                 steeringTorque = torqueSteeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque; //low speed steering mode. Differential motor torque
                 brakeSteering = brakeSteeringCurve.Evaluate(travelDirection); //high speed steering. Brake on inside track because Unity seems to weight reverse motor torque less at high speed.
-                steeringAngle = (steeringCurve.Evaluate((float)this.vessel.srfSpeed)) * -this.vessel.ctrlState.wheelSteer * steeringRatio; //low speed steering mode. Differential motor torque
+                steeringAngle = (steeringCurve.Evaluate((float)this.vessel.srfSpeed)) * -this.vessel.ctrlState.wheelSteer * steeringRatio * steeringCorrector; //low speed steering mode. Differential motor torque
             }
             else
             {
@@ -216,68 +246,99 @@ namespace KerbalFoundries
 
         public override void OnUpdate()
         {
-            base.OnUpdate(); 
-
+            base.OnUpdate();
+            commandId = this.vessel.referenceTransformId;
+            if (commandId != lastCOmmandId)
+            {
+                SetupAxis();
+            }
+            lastCOmmandId = commandId;
         } //end OnUpdate
 
-        public void FindDirection()
+        public void SetupAxis()
         {
-            orgpos = this.part.orgPos;
-            dotx = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.rootPart.transform.right)); // up is forward
-            doty = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.rootPart.transform.up));
-            dotz = Math.Abs(Vector3.Dot(this.part.transform.forward, this.vessel.rootPart.transform.forward));
+            controlAxisIndex = GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform);
+            directionCorrector = GetDirection(this.part.transform.forward, this.vessel.ReferenceTransform, controlAxisIndex);
+            steeringTemp = GetDirection(this.vessel.ReferenceTransform.forward, this.vessel.rootPart.transform, LatteralRefIndex);
+        }
+
+
+        public int GetRefAxis(Vector3 refDirection, Transform refTransform)
+        {
+            //orgpos = this.part.orgPos; //debugguing
+            dotx = Math.Abs(Vector3.Dot(refDirection, refTransform.right)); // up is forward
+            doty = Math.Abs(Vector3.Dot(refDirection, refTransform.up));
+            dotz = Math.Abs(Vector3.Dot(refDirection, refTransform.forward)); 
+
+            int orientationIndex = 0;
 
             if (dotx > doty && dotx > dotz)
             {
-                dotxSigned = Vector3.Dot(this.part.transform.forward, this.vessel.rootPart.transform.right);
+                dotxSigned = Vector3.Dot(refDirection, refTransform.right);
 
                 print("root part mounted right");
-                //myPosition = this.part.orgPos.x;
-                referenceTranformVector = this.vessel.ReferenceTransform.right;
-                referenceDirection = 0;
+                orientationIndex = 0;
             }
             if (doty > dotx && doty > dotz)
             {
                 print("root part mounted forward");
-                //myPosition = this.part.orgPos.y;
-                referenceTranformVector = this.vessel.ReferenceTransform.forward;
-                referenceDirection = 1;
+                orientationIndex = 1;
             }
             if (dotz > doty && dotz > dotx)
             {
                 print("root part mounted up");
-                //myPosition = this.part.orgPos.z;
-                referenceTranformVector = this.vessel.ReferenceTransform.up;
-                referenceDirection = 2;
+                orientationIndex = 2;
             }
+            /*
             if (referenceDirection == 0)
             {
                 referenceTranformVector.x = Math.Abs(referenceTranformVector.x);
             }
-            float dot = Vector3.Dot(this.part.transform.forward, referenceTranformVector); // up is forward
+             * */
+            return orientationIndex;
+        }
 
+        public int GetDirection(Vector3 transformVector, Transform referenceVector, int directionIndex)
+        {
+            int corrector = 1;
+            float dot = 0;
+
+            if (directionIndex == 0)
+            {
+                dot = Vector3.Dot(transformVector, referenceVector.right); // up is forward
+            }
+            if (directionIndex == 1)
+            {
+                dot = Vector3.Dot(transformVector, referenceVector.up); // up is forward
+            }
+            if (directionIndex == 2)
+            {
+                dot = Vector3.Dot(transformVector, referenceVector.forward); // up is forward
+            } 
+            
             if (dot < 0) // below 0 means the engine is on the left side of the craft
             {
-                directionCorrector = -1;
+                corrector = -1;
                 print("left");
             }
             else
             {
-                directionCorrector = 1;
+                corrector = 1;
                 print("right");
             }
+            return corrector;
         }
 
-        public void SetupRatios()
+        public float SetupRatios(int refIndex)
         {
-            myPosition = this.part.orgPos[referenceDirection];
-            maxPos = this.part.orgPos[referenceDirection];
-            minPos = this.part.orgPos[referenceDirection];
-
+            myPosition = this.part.orgPos[refIndex];
+            maxPos = this.part.orgPos[refIndex];
+            minPos = this.part.orgPos[refIndex];
+            float ratio = 1;
             foreach (ModuleTrack st in this.vessel.FindPartModulesImplementing<ModuleTrack>()) //scan vessel to find fore or rearmost wheel. 
             {
                 float otherPosition = myPosition;
-                otherPosition = st.part.orgPos[referenceDirection];
+                otherPosition = st.part.orgPos[refIndex];
 
                 if ((otherPosition + 1000) >= (maxPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
                     maxPos = otherPosition; //Store transform y value
@@ -291,11 +352,14 @@ namespace KerbalFoundries
             offset = (maxPos + minPos) / 2;
             myAdjustedPosition = myPosition - offset;
 
-            steeringRatio = myAdjustedPosition / midPoint;
+            ratio = myAdjustedPosition / midPoint;
 
-            if (steeringRatio == 0 || float.IsNaN(steeringRatio)) //check is we managed to evaluate to zero or infinity somehow.
-                steeringRatio = 1;
+            if (ratio == 0 || float.IsNaN(steeringRatio)) //check is we managed to evaluate to zero or infinity somehow.
+                ratio = 1;
+            return ratio;
         }
+
+
 
         public void DestroyBounds()
         {
@@ -346,6 +410,17 @@ namespace KerbalFoundries
         {
             steeringDisabled = !steeringDisabled;
         }//end toggle steering
+        [KSPAction("Invert Steering")]
+        public void InvertSteeringAG(KSPActionParam param)
+        {
+            InvertSteering();
+        }//end toggle steering
         //end action groups
+
+        [KSPEvent(guiName = "Invert Steering")]
+        public void InvertSteering()
+        {
+            steeringCorrector /= -1;
+        }
     }//end class
 }//end namespaces
