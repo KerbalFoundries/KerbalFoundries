@@ -450,8 +450,8 @@ namespace KerbalFoundries
                 {
                     mt.steeringInvert = steeringInvert;
                     mt.torque = torque;
-                    mt.steeringRatio = mt.SetupRatios(mt.rootIndexLong);
                 }
+                mt.steeringRatio = mt.SetupRatios(mt.rootIndexLong);
             }
 
             
