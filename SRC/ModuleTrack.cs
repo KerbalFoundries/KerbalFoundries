@@ -13,6 +13,9 @@ namespace KerbalFoundries
         public int directionCorrector;
         [KSPField(isPersistant = false, guiActive = true, guiName = "SteeringCorrector")]
         public int steeringCorrector = 1;
+        [KSPField(isPersistant = true, guiActive = false, guiName = " Steering Invert")]
+        public float steeringInvert = 1;
+
         public bool boundsDestroyed;
 
 
@@ -27,20 +30,20 @@ namespace KerbalFoundries
 
         [KSPField(isPersistant = false, guiActive = true, guiName = "Control Index")]
         public int controlAxisIndex;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Temp")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Steering Temp")]
         public int steeringTemp;
 
         [KSPField(isPersistant = true)] 
         public bool brakesApplied;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Min", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Min", guiFormat = "F6")]
         public float minPos;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Max", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Max", guiFormat = "F6")]
         public float maxPos;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Min to Max", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Min to Max", guiFormat = "F6")]
         public float minToMax;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Mid", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Mid", guiFormat = "F6")]
         public float midPoint;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Offset", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Offset", guiFormat = "F6")]
         public float offset;
 
         [KSPField(isPersistant = false, guiActive = true, guiName = "Adjuted position", guiFormat = "F6")]
@@ -48,17 +51,17 @@ namespace KerbalFoundries
         [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Ratio", guiFormat = "F6")]
         public float steeringRatio;
 
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.X", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.X", guiFormat = "F6")]
         public float dotx; //debug only
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.X Signed", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.X Signed", guiFormat = "F6")]
         public float dotxSigned; //debug only
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Up", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.Up", guiFormat = "F6")]
         public float dotUp; //debug only
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
         public float doty; //debug only
-        [KSPField(isPersistant = true, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
         public float dotz; //debug only
-        [KSPField(isPersistant = false, guiActive = true, guiName = "OrgPos", guiFormat = "F6")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "OrgPos", guiFormat = "F6")]
         public Vector3 orgpos;
 
         public uint commandId;
@@ -182,9 +185,9 @@ namespace KerbalFoundries
 
             if (!steeringDisabled)
             {
-                steeringTorque = torqueSteeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque; //low speed steering mode. Differential motor torque
-                brakeSteering = brakeSteeringCurve.Evaluate(travelDirection); //high speed steering. Brake on inside track because Unity seems to weight reverse motor torque less at high speed.
-                steeringAngle = (steeringCurve.Evaluate((float)this.vessel.srfSpeed)) * -this.vessel.ctrlState.wheelSteer * steeringRatio * steeringCorrector; //low speed steering mode. Differential motor torque
+                steeringTorque = torqueSteeringCurve.Evaluate((float)this.vessel.srfSpeed) * torque * steeringInvert; //low speed steering mode. Differential motor torque
+                brakeSteering = brakeSteeringCurve.Evaluate(travelDirection) * steeringInvert; //high speed steering. Brake on inside track because Unity seems to weight reverse motor torque less at high speed.
+                steeringAngle = (steeringCurve.Evaluate((float)this.vessel.srfSpeed)) * -this.vessel.ctrlState.wheelSteer * steeringRatio * steeringCorrector * steeringInvert; //low speed steering mode. Differential motor torque
             }
             else
             {
@@ -253,27 +256,27 @@ namespace KerbalFoundries
 
         public void GetControlAxis()
         {
-            controlAxisIndex = GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform);
-            directionCorrector = GetCorrector(this.part.transform.forward, this.vessel.ReferenceTransform, controlAxisIndex);
-            if (controlAxisIndex == rootIndexLat)
+            controlAxisIndex = GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform); //grab current values for the part and the control module, which may ahve changed.
+            directionCorrector = GetCorrector(this.part.transform.forward, this.vessel.ReferenceTransform, controlAxisIndex); // dets the motor direction correction again.
+            if (controlAxisIndex == rootIndexLat)       //uses the precalulated forward (as far as this part is concerned) to determined the orientation of the control module
                 steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLat);
             if (controlAxisIndex == rootIndexLong)
                 steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLong);
             if (controlAxisIndex == rootIndexUp)
                 steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexUp);
-            steeringTemp = steeringCorrector;
+            steeringTemp = steeringCorrector; //This is for debugging
         }
 
 
-        public int GetRefAxis(Vector3 refDirection, Transform refTransform)
-        {
+        public int GetRefAxis(Vector3 refDirection, Transform refTransform) //takes a vector 3 derived from the axis of the parts transform (typically), and the transform of the part to compare to (usually the root part)
+        {                                                                   // uses scalar products to determine which axis is closest to the axis specified in refDirection, return an index value 0 = X, 1 = Y, 2 = Z
             //orgpos = this.part.orgPos; //debugguing
             dotx = Math.Abs(Vector3.Dot(refDirection, refTransform.right)); // up is forward
-            print(dotx);
+            print(dotx); //debugging
             doty = Math.Abs(Vector3.Dot(refDirection, refTransform.up));
-            print(doty);
+            print(doty); //debugging
             dotz = Math.Abs(Vector3.Dot(refDirection, refTransform.forward));
-            print(dotz);
+            print(dotz); //debugging
 
             int orientationIndex = 0;
 
@@ -303,8 +306,8 @@ namespace KerbalFoundries
             return orientationIndex;
         }
 
-        public int GetCorrector(Vector3 transformVector, Transform referenceVector, int directionIndex)
-        {
+        public int GetCorrector(Vector3 transformVector, Transform referenceVector, int directionIndex) // takes a vector (usually from a parts axis) and a transform, plus an index giving which axis to   
+        {                                                                                               // use for the scalar product of the two. Returns a value of -1 or 1, depending on whether the product is positive or negative.
             int corrector = 1;
             float dot = 0;
 
@@ -337,7 +340,7 @@ namespace KerbalFoundries
             return corrector;
         }
 
-        public float SetupRatios(int refIndex)
+        public float SetupRatios(int refIndex)      // Determines how much this wheel should be steering according to its position in the craft. Returns a value -1 to 1.
         {
             myPosition = this.part.orgPos[refIndex];
             maxPos = this.part.orgPos[refIndex];
@@ -362,9 +365,9 @@ namespace KerbalFoundries
 
             ratio = myAdjustedPosition / midPoint;
 
-            if (ratio == 0 || float.IsNaN(ratio)) //check is we managed to evaluate to zero or infinity somehow.
+            if (ratio == 0 || float.IsNaN(ratio)) //check is we managed to evaluate to zero or infinity somehow. Happens with less than three wheels, or all wheels mounted at the same position.
                 ratio = 1;
-            print("ratio");
+            print("ratio"); //Debugging
             print(ratio);
             return ratio;
         }
@@ -426,11 +429,11 @@ namespace KerbalFoundries
             InvertSteering();
         }//end toggle steering
         //end action groups
-
-        [KSPEvent(guiName = "Invert Steering")]
+        
+        [KSPEvent(guiActive = true, guiName = "Invert Steering ", active = true)]
         public void InvertSteering()
         {
-            steeringCorrector /= -1;
+            steeringInvert *= -1;
         }
     }//end class
 }//end namespaces
