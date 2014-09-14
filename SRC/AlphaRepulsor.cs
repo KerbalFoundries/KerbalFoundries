@@ -19,6 +19,8 @@ namespace KerbalFoundries
 
         public JointSpring userspring;
 
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
+        public float groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 8f, stepIncrement = 0.5f)]
         public float Rideheight;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
@@ -83,14 +85,7 @@ namespace KerbalFoundries
                     b.suspensionSpring = userspring;
                     b.suspensionDistance = Rideheight;
 
-                    if (Rideheight > 0) //is the deployed flag set? set the rideheight appropriately
-                    {
-                        b.enabled = true;
-                    }
-                    else if (Rideheight < .5f)
-                    {
-                        b.enabled = false;                 //set retracted if the deployed flag is not set 
-                    }
+                    UpdateCollider();
 
                 }
             }
@@ -108,6 +103,27 @@ namespace KerbalFoundries
 
         public override void OnFixedUpdate()
         {
+
+            if (deployed)
+            {
+                part.RequestResource("ElectricCharge", (chargeConsumptionRate * (Rideheight / 8) * (1 + SpringRate) * repulsorCount));
+                float electricCharge = Extensions.GetBattery(this.part);
+                if (electricCharge < 0.1f)
+                {
+                    print("Retracting due to low electricity");
+                    lowEnergy = true;
+                    Rideheight = 0;
+                    UpdateCollider();
+                }
+                else
+                {
+                    lowEnergy = false;
+                }
+            }
+        }
+
+        public void UpdateCollider()
+        {
             foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
             {
                 wc.suspensionDistance = Rideheight;
@@ -120,22 +136,6 @@ namespace KerbalFoundries
                 {
                     wc.enabled = true;
                     deployed = true;
-                }
-            }
-
-            if (deployed)
-            {
-                part.RequestResource("ElectricCharge", (chargeConsumptionRate * (Rideheight / 8) * (1 + SpringRate) * repulsorCount));
-                float electricCharge = Extensions.GetBattery(this.part);
-                if (electricCharge < 0.1f)
-                {
-                    print("Retracting due to low electricity");
-                    lowEnergy = true;
-                    Rideheight = 0;
-                }
-                else
-                {
-                    lowEnergy = false;
                 }
             }
         }
@@ -160,5 +160,20 @@ namespace KerbalFoundries
                 print("Extending");
             }
         }//end Deploy
+
+        [KSPEvent(guiActive = true, guiName = "Apply Settings", active = true)]
+        public void ApplySettings()
+        {
+            foreach (AlphaRepulsor mt in this.vessel.FindPartModulesImplementing<AlphaRepulsor>())
+            {
+                if (groupNumber != 0 && groupNumber == mt.groupNumber)
+                {
+                    mt.Rideheight = Rideheight;
+                    mt.UpdateCollider();
+                }
+            }
+
+            UpdateCollider();
+        }
     }//end class
 } //end namespace

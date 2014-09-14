@@ -111,6 +111,8 @@ namespace KerbalFoundries
         public float calculatedRollingResistance;
 
         //tweakables
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
+        public float groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
         public float torque = 1;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring strength"), UI_FloatRange(minValue = 0, maxValue = 6.00f, stepIncrement = 0.2f)]
@@ -435,5 +437,6 @@ namespace KerbalFoundries
         {
             steeringInvert *= -1;
         }
+
     }//end class
 }//end namespaces
