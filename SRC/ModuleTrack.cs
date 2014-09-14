@@ -350,14 +350,17 @@ namespace KerbalFoundries
             float ratio = 1;
             foreach (ModuleTrack st in this.vessel.FindPartModulesImplementing<ModuleTrack>()) //scan vessel to find fore or rearmost wheel. 
             {
-                float otherPosition = myPosition;
-                otherPosition = st.part.orgPos[refIndex];
+                if (st.groupNumber == groupNumber && groupNumber != 0)
+                {
+                    float otherPosition = myPosition;
+                    otherPosition = st.part.orgPos[refIndex];
 
-                if ((otherPosition + 1000) >= (maxPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
-                    maxPos = otherPosition; //Store transform y value
+                    if ((otherPosition + 1000) >= (maxPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
+                        maxPos = otherPosition; //Store transform y value
 
-                if ((otherPosition + 1000) <= (minPos + 1000))
-                    minPos = otherPosition; //Store transform y value
+                    if ((otherPosition + 1000) <= (minPos + 1000))
+                        minPos = otherPosition; //Store transform y value
+                }
             }
 
             minToMax = maxPos - minPos;
@@ -436,6 +439,22 @@ namespace KerbalFoundries
         public void InvertSteering()
         {
             steeringInvert *= -1;
+        }
+
+        [KSPEvent(guiActive = true, guiName = "Apply Settings", active = true)]
+        public void ApplySettings()
+        {
+            foreach (ModuleTrack mt in this.vessel.FindPartModulesImplementing<ModuleTrack>())
+            {
+                if (groupNumber != 0 && groupNumber == mt.groupNumber)
+                {
+                    mt.steeringInvert = steeringInvert;
+                    mt.torque = torque;
+                    mt.steeringRatio = mt.SetupRatios(mt.rootIndexLong);
+                }
+            }
+
+            
         }
 
     }//end class
