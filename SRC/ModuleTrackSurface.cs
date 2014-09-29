@@ -17,6 +17,8 @@ namespace KerbalFoundries
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
+            print(Version.versionNumber);
+
             foreach (SkinnedMeshRenderer Track in this.part.GetComponentsInChildren<SkinnedMeshRenderer>()) //this is the track
             {
                 trackSurface = Track.gameObject;

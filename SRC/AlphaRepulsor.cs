@@ -13,12 +13,13 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-
     public class AlphaRepulsor : PartModule
     {
 
         public JointSpring userspring;
 
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
+        public string status = "Nominal";
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
         public float groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 8f, stepIncrement = 0.5f)]
@@ -33,19 +34,20 @@ namespace KerbalFoundries
         public bool lowEnergy;
 
         public float repulsorCount = 0;
-
-        public float chargeConsumptionRate = 0.01f;
+        [KSPField]
+        public float chargeConsumptionRate = 1f;
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
         {
             // degub only: print("onstart");
             base.OnStart(start);
+            print(Version.versionNumber);
 
             if (HighLogic.LoadedSceneIsEditor)
             {
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
-                    print("Editor");
+                    
                     userspring = b.suspensionSpring;
 
                     if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
@@ -106,18 +108,23 @@ namespace KerbalFoundries
 
             if (deployed)
             {
-                part.RequestResource("ElectricCharge", (chargeConsumptionRate * (Rideheight / 8) * (1 + SpringRate) * repulsorCount));
-                float electricCharge = Extensions.GetBattery(this.part);
-                if (electricCharge < 0.1f)
+                float chargeConsumption = (Rideheight / 8) * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate;
+                //print(chargeConsumption);
+                float electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
+                //print(electricCharge);
+                // = Extensions.GetBattery(this.part);
+                if (electricCharge < (chargeConsumption * 0.9f))
                 {
-                    print("Retracting due to low electricity");
+                    print("Retracting due to low Electric Charge");
                     lowEnergy = true;
                     Rideheight = 0;
                     UpdateCollider();
+                    status = "Low Charge";
                 }
                 else
                 {
                     lowEnergy = false;
+                    status = "Nominal";
                 }
             }
         }

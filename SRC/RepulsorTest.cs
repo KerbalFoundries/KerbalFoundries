@@ -38,12 +38,14 @@ namespace KerbalFoundries
         {
             // degub only: print("onstart");
             base.OnStart(start);
+            print(Version.versionNumber);
 
             if (HighLogic.LoadedSceneIsEditor)
             {
+                
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
-                    print("Editor");
+                    
                     userspring = b.suspensionSpring;
 
                     if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!

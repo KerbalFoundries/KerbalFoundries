@@ -16,6 +16,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = false, guiName = " Steering Invert")]
         public float steeringInvert = 1;
 
+
         public bool boundsDestroyed;
 
 
@@ -95,6 +96,8 @@ namespace KerbalFoundries
         public float averageTrackRPM;
         [KSPField]
         public float maxRPM = 350;
+        [KSPField]
+        public float chargeConsumptionRate = 1f;
 
         public float brakeTorque;
         [KSPField(isPersistant = false, guiActive = true, guiName = "BrakeSteering", guiFormat = "F1")]
@@ -121,13 +124,17 @@ namespace KerbalFoundries
         public float damperRate;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool steeringDisabled;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
+        public string status = "Nominal";
 
         public List<WheelCollider> wcList = new List<WheelCollider>();
 
         public override void OnStart(PartModule.StartState start)  //when started
         {
-            print("ModuleTrack called");
+            
             base.OnStart(start);
+            print(Version.versionNumber);
+
             if (HighLogic.LoadedSceneIsEditor)
             {
                 //Do nothing in editor
@@ -154,13 +161,13 @@ namespace KerbalFoundries
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>()) //set colliders to values chosen in editor and activate
                 {
-                    wheelCount++;
-                    JointSpring userSpring = wc.suspensionSpring;
-                    userSpring.spring = springRate;
-                    userSpring.damper = damperRate;
-                    wc.suspensionSpring = userSpring;
-                    wc.enabled = true;
-                    wcList.Add(wc);
+                        wheelCount++;
+                        JointSpring userSpring = wc.suspensionSpring;
+                        userSpring.spring = springRate;
+                        userSpring.damper = damperRate;
+                        wc.suspensionSpring = userSpring;
+                        wc.enabled = true;
+                        wcList.Add(wc);
                 }
 
                 if (brakesApplied)
@@ -175,7 +182,7 @@ namespace KerbalFoundries
         {
             //User input
             float electricCharge;
-            float chargeRequest;
+            
             float forwardTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed) * torque; //this is used a lot, so may as well calculate once
             float steeringTorque;
             float brakeSteeringTorque;
@@ -201,17 +208,29 @@ namespace KerbalFoundries
 
             motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
             brakeSteeringTorque = Mathf.Clamp(brakeSteering * this.vessel.ctrlState.wheelSteer, 0, 1000); //if the calculated value is negative, disregard: Only brake on inside track. no need to direction correct as we are using the velocity or the part not the vessel.
-            chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
+            //chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
             steeringAngleSmoothed = Mathf.Lerp(steeringAngleSmoothed, steeringAngle, Time.deltaTime * smoothSpeed);
 
-            electricCharge = part.RequestResource("ElectricCharge", chargeRequest); //ask the vessel for requested charge
+            float chargeConsumption = Time.deltaTime * chargeConsumptionRate * (Math.Abs(motorTorque) /100);
+            //print(chargeConsumption);
+            electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
 
             float freeWheelRPM = 0;
             foreach (WheelCollider wc in wcList)
             {
-                if (electricCharge == 0 || Math.Abs (averageTrackRPM) >= maxRPM)
+                if (electricCharge != chargeConsumption)
                 {
                     motorTorque = 0;
+                    status = "Low Charge"; 
+                }
+                else if (Math.Abs(averageTrackRPM) >= maxRPM)
+                {
+                    motorTorque = 0;
+                    status = "Rev Limit";
+                }
+                else
+                {
+                    status = "Nominal";
                 }
                 wc.motorTorque = motorTorque;
                 wc.brakeTorque = brakeTorque + brakeSteeringTorque + rollingResistance;

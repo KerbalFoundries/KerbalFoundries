@@ -16,7 +16,7 @@ namespace KerbalFoundries
         public bool autoThrottle = true;
         public float lastRatio = .5f;
         [KSPField]
-        public float reactionSpeed = 5;
+        public float reactionSpeed = 5; 
         [KSPField]
         public float targetBatteryRatio = 0.75f;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Ratio Adjustment", guiFormat = "F8")]
@@ -32,6 +32,8 @@ namespace KerbalFoundries
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
+            print(Version.versionNumber);
+
             FindEngine(); 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -40,7 +42,7 @@ namespace KerbalFoundries
         }
 
         public override void OnFixedUpdate()
-        {
+        { 
             base.OnFixedUpdate();
             if (autoThrottle)
             {
