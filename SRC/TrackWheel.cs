@@ -61,7 +61,7 @@ namespace KerbalFoundries
 
         Vector3 wheelRotation;
 
-        float effectPower;
+        
 
         //OnStart
         public override void OnStart(PartModule.StartState state)
@@ -137,11 +137,6 @@ namespace KerbalFoundries
         }//end OnStart
         //OnUpdate
 
-        public void WheelSound()
-        {
-            part.Effect("WheelEffect", effectPower);
-        }
-
         public override void OnUpdate()
         {
             base.OnUpdate();
@@ -167,9 +162,6 @@ namespace KerbalFoundries
                 trackSteering.transform.localEulerAngles = newSteeringAngle;
             }
 
-            effectPower = Math.Abs(wheelCollider.rpm / track.maxRPM);
-            print(effectPower);
-            WheelSound();
             //end suspension mvoement
         }//end OnUpdate
     }//end modele

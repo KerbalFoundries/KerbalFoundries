@@ -14,11 +14,11 @@ using UnityEngine;
 namespace KerbalFoundries
 {
     [KSPModule("RepulsorTest")]
-    public class RepulsorTest : PartModule
+    public class RepulsorTest : PartModule 
     {
 
         public JointSpring userspring;
-
+         
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 8f, stepIncrement = 0.5f)]
         public float Rideheight;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]

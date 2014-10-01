@@ -104,14 +104,16 @@ namespace KerbalFoundries
         public float brakeSteering;
         public float degreesPerTick;
         public float motorTorque;
-        public float groundedWheels = 0; //if it's 0 at the start it send things into and NaN fit.
+        public int groundedWheels = 0; //if it's 0 at the start it send things into and NaN fit.
         public float trackRPM = 0;
 
         public float steeringAngle;
         public float steeringAngleSmoothed;
         
-        public float wheelCount;
+        public int wheelCount;
         public float calculatedRollingResistance;
+
+        float effectPower;
 
         //tweakables
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
@@ -177,6 +179,11 @@ namespace KerbalFoundries
 
             }//end scene is flight
         }//end OnStart
+
+        public void WheelSound()
+        {
+            part.Effect("WheelEffect", effectPower);
+        }
 
         public override void OnFixedUpdate()
         {
@@ -258,8 +265,8 @@ namespace KerbalFoundries
                 averageTrackRPM = freeWheelRPM / wheelCount;
             }
             trackRPM = 0;
-            degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
-            groundedWheels = 0; //reset number of wheels. Setting to zero gives NaN!
+            degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel mesh
+            groundedWheels = 0; //reset number of wheels.
 
         }//end OnFixedUpdate
 
@@ -273,6 +280,10 @@ namespace KerbalFoundries
                 GetControlAxis();
             }
             lastCommandId = commandId;
+
+            effectPower = Math.Abs(averageTrackRPM / maxRPM);
+            //print(effectPower);
+            WheelSound();
         } //end OnUpdate
 
         public void GetControlAxis()
