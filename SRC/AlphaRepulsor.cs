@@ -33,6 +33,10 @@ namespace KerbalFoundries
         [KSPField]
         public bool lowEnergy;
 
+        float effectPower;
+
+        float effectPowerMax;
+
         public float repulsorCount = 0;
         [KSPField]
         public float chargeConsumptionRate = 1f;
@@ -66,17 +70,9 @@ namespace KerbalFoundries
                 }
                 print(PartResourceLibrary.Instance.resourceDefinitions);
             }
+
             if (HighLogic.LoadedSceneIsFlight)
             {
-                if (FlightGlobals.ActiveVessel.rootPart.GetComponentInChildren<ModuleWaterCollider>() == null)
-                {
-                    print("Adding WaterCollider");
-                    FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterCollider");
-                }
-                else
-                    print("No idea what happened");
-
-                this.part.force_activate(); //force the part active or OnFixedUpate is not called
 
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
@@ -90,26 +86,41 @@ namespace KerbalFoundries
                     UpdateCollider();
 
                 }
+                this.part.force_activate(); //force the part active or OnFixedUpate is not called
+                DestroyBounds();
             }
 
+
+            effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
+            print("max effect power");
+            print(effectPowerMax);
+     
+
+        }//end start 
+        public void DestroyBounds()
+        {
             Transform bounds = transform.Search("Bounds");
             if (bounds != null)
             {
                 GameObject.Destroy(bounds.gameObject);
-                //boundsDestroyed = true; //remove the bounds object to left the wheel colliders take over
+                //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
                 print("destroying Bounds");
             }
+        }
 
-
-        }//end start 
+        public void RepulsorSound()
+        {
+            part.Effect("RepulsorEffect", effectPower);
+        }
 
         public override void OnFixedUpdate()
         {
 
             if (deployed)
             {
-                float chargeConsumption = (Rideheight / 8) * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate;
-                //print(chargeConsumption);
+                float chargeConsumption = (Rideheight / 16) * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate;
+                effectPower = chargeConsumption / effectPowerMax;
+
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
                 //print(electricCharge);
                 // = Extensions.GetBattery(this.part);
@@ -127,6 +138,12 @@ namespace KerbalFoundries
                     status = "Nominal";
                 }
             }
+            else
+            {
+                effectPower = 0;
+            }
+            RepulsorSound();
+            print(effectPower);
         }
 
         public void UpdateCollider()
@@ -134,6 +151,7 @@ namespace KerbalFoundries
             foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
             {
                 wc.suspensionDistance = Rideheight;
+                
                 if (Rideheight < 0.5f)
                 {
                     wc.enabled = false;

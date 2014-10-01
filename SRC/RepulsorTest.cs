@@ -66,10 +66,7 @@ namespace KerbalFoundries
             }
             if (HighLogic.LoadedSceneIsFlight)
             {
-                if (FlightGlobals.ActiveVessel.rootPart.GetComponentInChildren<ModuleWaterCollider>() == null)
-                {
-                    FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterCollider");
-                }
+
 
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
 
@@ -89,7 +86,7 @@ namespace KerbalFoundries
                     else if (Rideheight < .5f)
                     {
                         b.enabled = false;                 //set retracted if the deployed flag is not set 
-                    }
+                    } 
 
                 }
             }

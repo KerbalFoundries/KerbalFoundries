@@ -10,20 +10,28 @@ namespace KerbalFoundries
     {
         GameObject _collider = new GameObject("ModuleWaterCollider.Collider", typeof(BoxCollider), typeof(Rigidbody));
         float triggerDistance = 100f; // avoid moving every frame
-        
+        bool addCollider = false;
 
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = false, guiName = "Floatation depth"), UI_FloatRange(minValue = 0, maxValue = 8.0f, stepIncrement = 0.25f)]
         float colliderHeight = 3.5f;
 
         void Start()
         {
-            print("Water hovering enabled");
-
-           
-            foreach (Part PA in FlightGlobals.ActiveVessel.Parts)
+            
+            if (HighLogic.LoadedSceneIsFlight)
             {
-                if (PA.GetComponentInChildren<RepulsorTest>() != null || PA.GetComponentInChildren<AlphaRepulsor>() != null)
+                addCollider = false;
+
+                foreach (Part PA in FlightGlobals.ActiveVessel.Parts)
                 {
+                    if (PA.GetComponentInChildren<RepulsorTest>() != null || PA.GetComponentInChildren<AlphaRepulsor>() != null)
+                    {
+                        addCollider = true;
+                    }
+                }
+
+                if (addCollider)
+                {
+                    print("Water hovering enabled");
                     var box = _collider.collider as BoxCollider;
                     box.size = new Vector3(400f, 5f, 400f); // probably should encapsulate other colliders in real code
 
@@ -37,11 +45,10 @@ namespace KerbalFoundries
                     visible.transform.localScale = box.size;
                     visible.renderer.enabled = true; // enable to see collider
 
-                    UpdatePosition(); 
-                    this.part.force_activate(); 
+                    UpdatePosition();
+                    this.part.force_activate();
                 }
-            }   
-
+            }
         }
 
         void UpdatePosition()

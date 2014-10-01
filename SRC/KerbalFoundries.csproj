@@ -65,7 +65,7 @@
     <Compile Include="TrackWheel.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Version.cs" />
-    <Compile Include="WaterCollider.cs" />
+    <Compile Include="VesselTools.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
