@@ -166,23 +166,25 @@ namespace KerbalFoundries
         }
 
         [KSPAction("Retract")]
-        public void retract(KSPActionParam param)
+        public void Retract(KSPActionParam param)
         {
             if (Rideheight > 0)
             {
                 Rideheight -= 0.5f;
                 print("Retracting");
+                UpdateCollider();
             }
 
         }//End Retract
 
         [KSPAction("Extend")]
-        public void extend(KSPActionParam param)
+        public void Extend(KSPActionParam param)
         {
             if (Rideheight < 8)
             {
                 Rideheight += 0.5f;
                 print("Extending");
+                UpdateCollider();
             }
         }//end Deploy
 
