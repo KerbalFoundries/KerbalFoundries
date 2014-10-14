@@ -4,146 +4,141 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
+
 namespace KerbalFoundries
 {
     [KSPModule("ModuleTrack")]
     public class ModuleTrack : PartModule
     {
-        [KSPField(isPersistant = false, guiActive = true, guiName = "DirectionCorrector")]
-        public int directionCorrector;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "SteeringCorrector")]
-        public int steeringCorrector = 1;
-        [KSPField(isPersistant = true, guiActive = false, guiName = " Steering Invert")]
-        public float steeringInvert = 1;
-
-
-        public bool boundsDestroyed;
-
-
-        public float myPosition;
-
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Long Index")]
-        public int rootIndexLong;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Lat Index")]
-        public int rootIndexLat;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Up Index")]
-        public int rootIndexUp;
-
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Control Index")]
-        public int controlAxisIndex;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Steering Temp")]
-        public int steeringTemp;
-
-        [KSPField(isPersistant = true)] 
-        public bool brakesApplied;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Min", guiFormat = "F6")]
-        public float minPos;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Max", guiFormat = "F6")]
-        public float maxPos;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Min to Max", guiFormat = "F6")]
-        public float minToMax;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Mid", guiFormat = "F6")]
-        public float midPoint;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Offset", guiFormat = "F6")]
-        public float offset;
-
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Adjuted position", guiFormat = "F6")]
-        public float myAdjustedPosition;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Steering Ratio", guiFormat = "F6")]
-        public float steeringRatio;
-
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.X", guiFormat = "F6")]
-        public float dotx; //debug only
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.X Signed", guiFormat = "F6")]
-        public float dotxSigned; //debug only
-        [KSPField(isPersistant = false, guiActive = false, guiName = "Dot.Up", guiFormat = "F6")]
-        public float dotUp; //debug only
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Y", guiFormat = "F6")]
-        public float doty; //debug only
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Dot.Z", guiFormat = "F6")]
-        public float dotz; //debug only
-        [KSPField(isPersistant = false, guiActive = false, guiName = "OrgPos", guiFormat = "F6")]
-        public Vector3 orgpos;
-
-        public uint commandId;
-        public uint lastCommandId;
-
+        //name definitions
         public string right = "right";
         public string forward = "forward";
         public string up = "up";
 
-        [KSPField]
-        public FloatCurve torqueCurve = new FloatCurve();
-        [KSPField]
-        public FloatCurve steeringCurve = new FloatCurve();
-        [KSPField]
-        public FloatCurve torqueSteeringCurve = new FloatCurve();
-        [KSPField]
-        public FloatCurve brakeSteeringCurve = new FloatCurve();
-        [KSPField]
-        public bool hasSteering = false;
-        [KSPField]
-        public float brakingTorque;
-        [KSPField]
-        public float rollingResistanceMultiplier;
-        [KSPField]
-        public float rollingResistance;
-        [KSPField]
-        public float smoothSpeed = 10;
-        [KSPField]
-        public float raycastError;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "RPM", guiFormat = "F1")]
-        public float averageTrackRPM;
-        [KSPField]
-        public float maxRPM = 350;
-        [KSPField]
-        public float chargeConsumptionRate = 1f;
-
-        public float brakeTorque;
-        [KSPField(isPersistant = false, guiActive = true, guiName = "BrakeSteering", guiFormat = "F1")]
-        public float brakeSteering;
-        public float degreesPerTick;
-        public float motorTorque;
-        public int groundedWheels = 0; //if it's 0 at the start it send things into and NaN fit.
-        public float trackRPM = 0;
-
-        public float steeringAngle;
-        public float steeringAngleSmoothed;
-        
-        public int wheelCount;
-        public float calculatedRollingResistance;
-
-        float effectPower;
-
         //tweakables
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Wheel Settings")]
+        public string settings = "";
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
         public float groupNumber = 1;
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque Ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
         public float torque = 1;
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring strength"), UI_FloatRange(minValue = 0, maxValue = 6.00f, stepIncrement = 0.2f)]
-        public float springRate;        //this is what's tweaked by the line above
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring Strength"), UI_FloatRange(minValue = 0, maxValue = 6.00f, stepIncrement = 0.2f)]
+        public float springRate;        
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring Damping"), UI_FloatRange(minValue = 0, maxValue = 1.0f, stepIncrement = 0.025f)]
-        public float damperRate;        //this is what's tweaked by the line above
+        public float damperRate;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Ride Height %"), UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 5)]
+        public float rideHeight = 100;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool steeringDisabled;
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Start"), UI_Toggle(disabledText = "Deployed", enabledText = "Retracted")]
+        public bool startRetracted;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
         public string status = "Nominal";
 
-        public List<WheelCollider> wcList = new List<WheelCollider>();
+        //config fields
+        [KSPField]
+        public FloatCurve torqueCurve = new FloatCurve();       //torque applied to wheel colliders
+        [KSPField]
+        public FloatCurve steeringCurve = new FloatCurve();     //degrees to turn wheels for rotational steering
+        [KSPField]
+        public FloatCurve torqueSteeringCurve = new FloatCurve();   //toruqe applied to wheelcolliders for low speed tank steering
+        [KSPField]
+        public FloatCurve brakeSteeringCurve = new FloatCurve();    //brake torque applied to wheel colliders for high speed tank steering
+        [KSPField]
+        public bool hasSteering = false;                //this enables wheel (turn based) steering
+        [KSPField]
+        public float brakingTorque;                     //torque to apply for brakes
+        [KSPField]
+        public float rollingResistance;                 //constant brake value aplpied to simulate rolling resistance
+        [KSPField]
+        public float smoothSpeed = 10;                  //steering speed
+        [KSPField]
+        public float raycastError;                      //used to compensate for error in the raycast
+        [KSPField]
+        public float maxRPM = 350;                      //rev limiter. Stop freewheel runaway and sets a speed limit
+        [KSPField]
+        public float chargeConsumptionRate = 1f;        //how fast to consume ElectricCharge
+        [KSPField]
+        public bool hasRetract = false;
+        [KSPField]
+        public bool hasRetractAnimation = false;
 
+        //persistent fields
+        [KSPField(isPersistant = true)]
+        public float steeringInvert = 1;                //will be minus one for inverted
+        [KSPField(isPersistant = true)]
+        public bool brakesApplied;                      //saves the brake state
+        [KSPField(isPersistant = true)]
+        public bool isRetracted = false;
+
+        //global variables
+        int rootIndexLong;      
+        int rootIndexLat;
+        int rootIndexUp;
+        int controlAxisIndex;  
+        uint commandId;
+        uint lastCommandId;
+        float brakeTorque;
+        float brakeSteering;
+        float motorTorque;
+        int groundedWheels = 0; 
+        float trackRPM = 0;
+        float effectPower;
+        float currentRideHeight;
+        float smoothedRideHeight;
+        
+
+        //stuff deliberately made available to other modules:
+        public float steeringAngle;
+        public float steeringAngleSmoothed;
+        public float appliedRideHeight;
+        public int wheelCount;
+        [KSPField(isPersistant = false, guiActive = false, guiName = "RPM", guiFormat = "F1")]
+        public float averageTrackRPM;
+        public int directionCorrector;
+        public int steeringCorrector = 1;
+        public float steeringRatio;
+        public float degreesPerTick;
+
+        public List<WheelCollider> wcList = new List<WheelCollider>();
+        
         public override void OnStart(PartModule.StartState start)  //when started
         {
-            
+             
             base.OnStart(start);
             print(Version.versionNumber);
 
+            if (startRetracted)
+            {
+                isRetracted = true;
+            }
+
+            if (!isRetracted)
+                currentRideHeight = rideHeight; //set up correct values from persistence
+            else
+                currentRideHeight = 0;
+            smoothedRideHeight = currentRideHeight;
+            appliedRideHeight = smoothedRideHeight / 100;
+            print(appliedRideHeight);
+
             if (HighLogic.LoadedSceneIsEditor)
             {
-                //Do nothing in editor
+                if (!hasRetract)
+                {
+                    Extensions.DisableAnimateButton(this.part);
+                    Actions["AGToggleDeployed"].active = false;
+                    Actions["Deploy"].active = false;
+                    Actions["Retract"].active = false;
+                    Fields["startRetracted"].guiActiveEditor = false;
+                } 
             }
 
             if (HighLogic.LoadedSceneIsFlight)
             {
+                startRetracted = false;
+                if (!hasRetract)
+                    Extensions.DisableAnimateButton(this.part);
+
                 // wheel steering ratio setup
                 rootIndexLong = GetRefAxis(this.part.transform.forward, this.vessel.rootPart.transform); //Find the root part axis which matches each wheel axis.
                 rootIndexLat = GetRefAxis(this.part.transform.right, this.vessel.rootPart.transform);
@@ -153,8 +148,6 @@ namespace KerbalFoundries
 
                 GetControlAxis(); // sets up motor and steering direction direction
 
-                DestroyBounds(); //destroys the Bounds helper object if it is still in the model.
-
                 if (torque > 2) //check if the torque value is using the old numbering system
                 {
                     torque /= 100;
@@ -163,21 +156,26 @@ namespace KerbalFoundries
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>()) //set colliders to values chosen in editor and activate
                 {
-                        wheelCount++;
-                        JointSpring userSpring = wc.suspensionSpring;
-                        userSpring.spring = springRate;
-                        userSpring.damper = damperRate;
-                        wc.suspensionSpring = userSpring;
-                        wc.enabled = true;
-                        wcList.Add(wc);
+                    wheelCount++;
+                    JointSpring userSpring = wc.suspensionSpring;
+                    userSpring.spring = springRate;
+                    userSpring.damper = damperRate;
+                    wc.suspensionSpring = userSpring;
+                    wc.suspensionDistance = wc.suspensionDistance * appliedRideHeight;
+                    wcList.Add(wc);
+                    wc.enabled = true;
                 }
 
                 if (brakesApplied)
                 {
-                    brakeTorque = brakingTorque; //were the brakes left applied
+                    brakeTorque = brakingTorque; //were the brakes left applied 
                 }
 
+                if (isRetracted)
+                    UpdateColliders("retract");
+
             }//end scene is flight
+            DestroyBounds(); //destroys the Bounds helper object if it is still in the model.
         }//end OnStart
 
         public void WheelSound()
@@ -212,61 +210,76 @@ namespace KerbalFoundries
                 steeringAngle = 0;
             }
 
-
-            motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
-            brakeSteeringTorque = Mathf.Clamp(brakeSteering * this.vessel.ctrlState.wheelSteer, 0, 1000); //if the calculated value is negative, disregard: Only brake on inside track. no need to direction correct as we are using the velocity or the part not the vessel.
-            //chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
-            steeringAngleSmoothed = Mathf.Lerp(steeringAngleSmoothed, steeringAngle, Time.deltaTime * smoothSpeed);
-
-            float chargeConsumption = Time.deltaTime * chargeConsumptionRate * (Math.Abs(motorTorque) /100);
-            //print(chargeConsumption);
-            electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
-
-            float freeWheelRPM = 0;
-            foreach (WheelCollider wc in wcList)
+            if (!isRetracted)
             {
-                if (electricCharge != chargeConsumption)
+                motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
+                brakeSteeringTorque = Mathf.Clamp(brakeSteering * this.vessel.ctrlState.wheelSteer, 0, 1000); //if the calculated value is negative, disregard: Only brake on inside track. no need to direction correct as we are using the velocity or the part not the vessel.
+                //chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
+                steeringAngleSmoothed = Mathf.Lerp(steeringAngleSmoothed, steeringAngle, Time.deltaTime * smoothSpeed);
+
+                float chargeConsumption = Time.deltaTime * chargeConsumptionRate * (Math.Abs(motorTorque) / 100);
+                //print(chargeConsumption);
+                electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
+                float freeWheelRPM = 0;
+                foreach (WheelCollider wc in wcList)
                 {
-                    motorTorque = 0;
-                    status = "Low Charge"; 
+                    if (electricCharge != chargeConsumption)
+                    {
+                        motorTorque = 0;
+                        status = "Low Charge";
+                    }
+                    else if (Math.Abs(averageTrackRPM) >= maxRPM)
+                    {
+                        motorTorque = 0;
+                        status = "Rev Limit";
+                    }
+                    else
+                    {
+                        status = "Nominal";
+                    }
+                    wc.motorTorque = motorTorque;
+                    wc.brakeTorque = brakeTorque + brakeSteeringTorque + rollingResistance;
+
+                    if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
+                    {
+                        groundedWheels++;
+                        trackRPM += wc.rpm;
+                    }
+                    else if (wc.suspensionDistance != 0) //the sprocket colliders could be doing anything. Don't count them.
+                    {
+                        freeWheelRPM += wc.rpm;
+                    }
+
+                    wc.steerAngle = steeringAngleSmoothed;
                 }
-                else if (Math.Abs(averageTrackRPM) >= maxRPM)
+
+
+                if (groundedWheels >= 1)
                 {
-                    motorTorque = 0;
-                    status = "Rev Limit";
+                    averageTrackRPM = trackRPM / groundedWheels;
                 }
                 else
                 {
-                    status = "Nominal";
+                    averageTrackRPM = freeWheelRPM / wheelCount;
                 }
-                wc.motorTorque = motorTorque;
-                wc.brakeTorque = brakeTorque + brakeSteeringTorque + rollingResistance;
+                trackRPM = 0;
+                degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel mesh
+                groundedWheels = 0; //reset number of wheels.
 
-                if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
-                {
-                    groundedWheels++;
-                    trackRPM += wc.rpm;
-                }
-                else if (wc.suspensionDistance != 0) //the sprocket colliders could be doing anything. Don't count them.
-                {
-                    freeWheelRPM += wc.rpm;
-                }
-                
-                wc.steerAngle = steeringAngleSmoothed;
-                //print(wc.steerAngle);
-            }
-
-            if (groundedWheels >= 1)
-            {
-                averageTrackRPM = trackRPM / groundedWheels; 
             }
             else
             {
-                averageTrackRPM = freeWheelRPM / wheelCount;
+                averageTrackRPM = 0;
+                degreesPerTick = 0;
+            
+                foreach (WheelCollider wc in wcList)
+                {
+                    wc.motorTorque = 0;
+                    wc.brakeTorque = 500;
+                    wc.steerAngle = 0;
+                }
             }
-            trackRPM = 0;
-            degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel mesh
-            groundedWheels = 0; //reset number of wheels.
+            
 
         }//end OnFixedUpdate
 
@@ -283,8 +296,44 @@ namespace KerbalFoundries
 
             effectPower = Math.Abs(averageTrackRPM / maxRPM);
             //print(effectPower);
+            smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime / 2.5f);
+            appliedRideHeight = smoothedRideHeight / 100;
+            //print(smoothedRideHeight); //debugging
             WheelSound();
         } //end OnUpdate
+
+        public void UpdateColliders(string mode)
+        {
+            if (mode == "retract")
+            {
+                currentRideHeight = 0;
+                Events["ApplySettings"].guiActive = false;
+                Events["InvertSteering"].guiActive = false;
+                Fields["rideHeight"].guiActive = false;
+                Fields["torque"].guiActive = false;
+                Fields["springRate"].guiActive = false;
+                Fields["damperRate"].guiActive = false;
+                Fields["steeringDisabled"].guiActive = false;
+                status = "Retracted";
+
+            }
+            else if (mode == "deploy")
+            {
+                currentRideHeight = rideHeight;
+                Events["ApplySettings"].guiActive = true;
+                Events["InvertSteering"].guiActive = true;
+                Fields["rideHeight"].guiActive = true;
+                Fields["torque"].guiActive = true;
+                Fields["springRate"].guiActive = true;
+                Fields["damperRate"].guiActive = true;
+                Fields["steeringDisabled"].guiActive = true;
+                status = "Nominal";
+            }
+            else
+            {
+                //do nothing
+            }
+        }
 
         public void GetControlAxis()
         {
@@ -296,26 +345,23 @@ namespace KerbalFoundries
                 steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLong);
             if (controlAxisIndex == rootIndexUp)
                 steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexUp);
-            steeringTemp = steeringCorrector; //This is for debugging
         }
 
 
         public int GetRefAxis(Vector3 refDirection, Transform refTransform) //takes a vector 3 derived from the axis of the parts transform (typically), and the transform of the part to compare to (usually the root part)
         {                                                                   // uses scalar products to determine which axis is closest to the axis specified in refDirection, return an index value 0 = X, 1 = Y, 2 = Z
             //orgpos = this.part.orgPos; //debugguing
-            dotx = Math.Abs(Vector3.Dot(refDirection, refTransform.right)); // up is forward
+            float dotx = Math.Abs(Vector3.Dot(refDirection, refTransform.right)); // up is forward
             print(dotx); //debugging
-            doty = Math.Abs(Vector3.Dot(refDirection, refTransform.up));
+            float doty = Math.Abs(Vector3.Dot(refDirection, refTransform.up));
             print(doty); //debugging
-            dotz = Math.Abs(Vector3.Dot(refDirection, refTransform.forward));
+            float dotz = Math.Abs(Vector3.Dot(refDirection, refTransform.forward));
             print(dotz); //debugging
 
             int orientationIndex = 0;
 
             if (dotx > doty && dotx > dotz)
             {
-                dotxSigned = Vector3.Dot(refDirection, refTransform.right);
-
                 print("root part mounted right");
                 orientationIndex = 0;
             }
@@ -374,9 +420,9 @@ namespace KerbalFoundries
 
         public float SetupRatios(int refIndex)      // Determines how much this wheel should be steering according to its position in the craft. Returns a value -1 to 1.
         {
-            myPosition = this.part.orgPos[refIndex];
-            maxPos = this.part.orgPos[refIndex];
-            minPos = this.part.orgPos[refIndex];
+            float myPosition = this.part.orgPos[refIndex];
+            float maxPos = this.part.orgPos[refIndex];
+            float minPos = this.part.orgPos[refIndex];
             float ratio = 1;
             foreach (ModuleTrack st in this.vessel.FindPartModulesImplementing<ModuleTrack>()) //scan vessel to find fore or rearmost wheel. 
             {
@@ -393,10 +439,10 @@ namespace KerbalFoundries
                 }
             }
 
-            minToMax = maxPos - minPos;
-            midPoint = minToMax / 2;
-            offset = (maxPos + minPos) / 2;
-            myAdjustedPosition = myPosition - offset;
+            float minToMax = maxPos - minPos;
+            float midPoint = minToMax / 2;
+            float offset = (maxPos + minPos) / 2;
+            float myAdjustedPosition = myPosition - offset;
 
             ratio = myAdjustedPosition / midPoint;
 
@@ -407,7 +453,21 @@ namespace KerbalFoundries
             return ratio;
         }
 
+        public void PlayAnimation()
+        {
+            // note: assumes one ModuleAnimateGeneric (or derived version) for this part
+            // if this isn't the case, needs fixing
+            ModuleAnimateGeneric myAnimation = part.FindModulesImplementing<ModuleAnimateGeneric>().SingleOrDefault();
+            if (!myAnimation)
+            {
+                return; //the Log.Error line fails syntax check with 'The name 'Log' does not appear in the current context.
+            }
+            else
+            {
+                myAnimation.Toggle();
+            }
 
+        }
 
         public void DestroyBounds()
         {
@@ -444,7 +504,6 @@ namespace KerbalFoundries
             }
 
         }//End increase
-
         [KSPAction("Decrease Torque")]
         public void decrease(KSPActionParam param)
         {
@@ -465,7 +524,7 @@ namespace KerbalFoundries
         }//end toggle steering
         //end action groups
         
-        [KSPEvent(guiActive = true, guiName = "Invert Steering ", active = true)]
+        [KSPEvent(guiActive = true, guiName = "Invert Steering", active = true)]
         public void InvertSteering()
         {
             steeringInvert *= -1;
@@ -476,16 +535,55 @@ namespace KerbalFoundries
         {
             foreach (ModuleTrack mt in this.vessel.FindPartModulesImplementing<ModuleTrack>())
             {
+
                 if (groupNumber != 0 && groupNumber == mt.groupNumber)
                 {
+                    currentRideHeight = rideHeight;
+                    mt.currentRideHeight = rideHeight;
+                    mt.rideHeight = rideHeight;
                     mt.steeringInvert = steeringInvert;
                     mt.torque = torque;
                 }
                 mt.steeringRatio = mt.SetupRatios(mt.rootIndexLong);
             }
-
-            
         }
+
+        [KSPAction("Toggle Deployed")]
+        public void AGToggleDeployed(KSPActionParam param)
+        {
+            if (isRetracted)
+            {
+                Deploy(param);
+            }
+            else
+            {
+                Retract(param);
+            }
+        }//End Deploy toggle
+
+        [KSPAction("Deploy")]
+        public void Deploy(KSPActionParam param)
+        {
+            if (isRetracted == true)
+            {
+                if(hasRetractAnimation)
+                    PlayAnimation();
+                isRetracted = false;
+                UpdateColliders("deploy");
+            }
+        }//end Reploy
+
+        [KSPAction("Retract")]
+        public void Retract(KSPActionParam param)
+        {
+            if (isRetracted == false)
+            {
+                if (hasRetractAnimation)
+                    PlayAnimation();
+                isRetracted = true;
+                UpdateColliders("retract");
+            }
+        }//end Retract
 
     }//end class
 }//end namespaces

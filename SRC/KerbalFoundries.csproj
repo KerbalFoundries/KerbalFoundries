@@ -30,10 +30,13 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\KPSDev.24.2\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\KSPDev\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -43,22 +46,19 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\KPSDev.24.2\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\KSPDev\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlphaModuleTrack.cs" />
     <Compile Include="AlphaRepulsor.cs" />
-    <Compile Include="AlphaSteering.cs" />
-    <Compile Include="AlphaTrackWheel.cs" />
     <Compile Include="APUController.cs" />
     <Compile Include="HeavyCrawler.cs" />
     <Compile Include="LandingGearWheel.cs" />
     <Compile Include="ModuleLandingGear2.cs" />
-    <Compile Include="ModuleMainGear.cs" />
     <Compile Include="ModulePropeller.cs" />
     <Compile Include="ModuleTrack.cs" />
     <Compile Include="ModuleTrackSurface.cs" />
+    <Compile Include="PartMirror.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepulsorTest.cs" />
     <Compile Include="RepulsorWheel.cs" />
@@ -69,7 +69,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>call "$(SolutionDir)robocopy.bat"</PostBuildEvent>
+    <PostBuildEvent>call "$(SolutionDir)copyfiles.bat"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

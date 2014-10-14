@@ -9,7 +9,7 @@ namespace KerbalFoundries
     [KSPModule("TrackWheel")]
     public class TrackWheel : PartModule
     {
-        //start variables
+        //config fields
         [KSPField]
         public string wheelName;
         [KSPField]
@@ -26,47 +26,55 @@ namespace KerbalFoundries
         public bool isIdler = false;
         [KSPField]
         public float smoothSpeed = 40;
-
-        WheelCollider wheelCollider;
-        Transform susTrav;
-        Transform wheel;
-        Transform trackSteering;
-        ModuleTrack track;
-
-        Vector3 initialTraverse;
-        Vector3 initialSteeringAngles;
-     
-        
-        float lastTempTraverse;
+        [KSPField(isPersistant=true)]
+        public float suspensionDistance;
         [KSPField]
         public float rotationCorrection = 1;
-
-        public int directionCorrector = 1;
-        //end variables
-
+            //wheel rotation axis
         [KSPField]
         public float wheelRotationX = 1;
         [KSPField]
         public float wheelRotationY = 0;
         [KSPField]
         public float wheelRotationZ = 0;
-
+            //suspension traverse axis
         [KSPField]
         public string susTravAxis = "Y";
         [KSPField]
         public string steeringAxis = "Y";
 
+        //object types
+        WheelCollider _wheelCollider;
+        Transform _susTrav;
+        Transform _wheel;
+        Transform _trackSteering;
+        ModuleTrack _track;
+
+        //gloabl variables
+        Vector3 initialTraverse;
+        Vector3 initialSteeringAngles;
+        Vector3 wheelRotation;
+        float lastTempTraverse;
         int susTravIndex = 1;
         int steeringIndex = 1;
-
-        Vector3 wheelRotation;
-
+        public int directionCorrector = 1;
         
 
         //OnStart
         public override void OnStart(PartModule.StartState state)
         {
-            
+            if (HighLogic.LoadedSceneIsGame)
+            {
+                foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
+                {
+                    if (wc.name.StartsWith(colliderName, StringComparison.Ordinal))
+                    {
+                        _wheelCollider = wc;
+                        suspensionDistance = wc.suspensionDistance;
+                    }
+                }
+
+            }
             print("TrackWheel Called");
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -78,60 +86,53 @@ namespace KerbalFoundries
                 //find names onjects in part
                 this.part.force_activate();
 
+                print("suspensionDistance is");
+                print(suspensionDistance);
+
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
-                    if (wc.name.Equals(colliderName, StringComparison.Ordinal))
+                    if (wc.name.StartsWith(colliderName, StringComparison.Ordinal))
                     {
-                        wheelCollider = wc;
+                        _wheelCollider = wc;
                     }
                 }
                 foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
                 {
-                    if (tr.name.Equals(sustravName, StringComparison.Ordinal))
+                    if (tr.name.StartsWith(wheelName, StringComparison.Ordinal))
                     {
-                        susTrav = tr;
+                        _wheel = tr;
                     }
-                }
-                foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
-                {
-                    if (tr.name.Equals(wheelName, StringComparison.Ordinal))
+                    if (tr.name.StartsWith(steeringName, StringComparison.Ordinal))
                     {
-                        wheel = tr;
+                        _trackSteering = tr;
                     }
-                }
-                foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
-                {
-                    if (tr.name.Equals(steeringName, StringComparison.Ordinal))
+                    if (tr.name.StartsWith(sustravName, StringComparison.Ordinal))
                     {
-                        trackSteering = tr;
+                        _susTrav = tr;
                     }
                 }
 
-                track = this.part.GetComponentInChildren<ModuleTrack>();
 
+                _track = this.part.GetComponentInChildren<ModuleTrack>();
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis);
 
-                initialTraverse = susTrav.transform.localPosition;
-                if (track.hasSteering)
+                initialTraverse = _susTrav.transform.localPosition;
+                if (_track.hasSteering)
                 {
-                    initialSteeringAngles = trackSteering.transform.localEulerAngles;
+                    initialSteeringAngles = _trackSteering.transform.localEulerAngles;
                     print(initialSteeringAngles);
                 }
 
-
                 if (useDirectionCorrector)
-                    directionCorrector = track.directionCorrector;
+                    directionCorrector = _track.directionCorrector;
                 else directionCorrector = 1;
                 print(directionCorrector);
 
                 wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
-                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance;
+                lastTempTraverse = initialTraverse[susTravIndex] - _wheelCollider.suspensionDistance;
             }
-
-            
-
             //end find named objects
             base.OnStart(state);
         }//end OnStart
@@ -140,29 +141,29 @@ namespace KerbalFoundries
         public override void OnUpdate()
         {
             base.OnUpdate();
-            wheel.transform.Rotate(wheelRotation, track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
+            _wheel.transform.Rotate(wheelRotation, _track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
             //suspension movement
             WheelHit hit;
             Vector3 tempTraverse = initialTraverse;
-            bool grounded = wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
+            bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
+            _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
             if (grounded && !isSprocket) //is it on the ground
             {
-                tempTraverse[susTravIndex] -= (-wheelCollider.transform.InverseTransformPoint(hit.point).y + track.raycastError) - wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
+                tempTraverse[susTravIndex] -= (-_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError) - _wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
                 lastTempTraverse = tempTraverse[susTravIndex];
             }
             else
             {
                 tempTraverse[susTravIndex] = lastTempTraverse;
             } //movement defaults back to zero when not grounded
-            susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
-            if (track.hasSteering)
+            _susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
+            if (_track.hasSteering)
             {
                 Vector3 newSteeringAngle = initialSteeringAngles;
-                newSteeringAngle[steeringIndex] += track.steeringAngleSmoothed;
-                trackSteering.transform.localEulerAngles = newSteeringAngle;
+                newSteeringAngle[steeringIndex] += _track.steeringAngleSmoothed;
+                _trackSteering.transform.localEulerAngles = newSteeringAngle;
             }
-
-            //end suspension mvoement
+            //end suspension movement
         }//end OnUpdate
     }//end modele
 }//end class

@@ -43,6 +43,37 @@ namespace KerbalFoundries
             return index;
         }
 
+        public static void PlaySound(Part parta, string effectName, float effectPower)
+        {
+            parta.Effect(effectName, effectPower);
+        }
+
+        public static void DisableAnimateButton(Part part)
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                foreach (ModuleAnimateGeneric ma in part.FindModulesImplementing<ModuleAnimateGeneric>())
+                {
+                    try
+                    {
+                        ma.Actions["ToggleAction"].active = false;
+                    }
+                    catch
+                    {
+                        //do nothing
+                    }
+
+                    try
+                    {
+                        ma.Events["Toggle"].guiActive = false;
+                    }
+                    catch
+                    {
+                        //do nothing
+                    }
+                }
+            }
+        }
 
     }
 

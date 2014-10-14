@@ -18,12 +18,14 @@ namespace KerbalFoundries
 
         [KSPField(isPersistant = true)]
         public bool repulsorMode = false;
-        //forward friction values
-        [KSPField]
-        public string wheelCollider;
 
-        public List<WheelCollider> wcList = new List<WheelCollider>();
-        public List<WheelCollider> rcList = new List<WheelCollider>();
+        List<WheelCollider> wcList = new List<WheelCollider>();
+        List<float> wfForwardList = new List<float>();
+        List<float> susDistList = new List<float>();
+        List<float> wfSideList = new List<float>();
+
+        ModuleWaterSlider mws;
+        
 
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
@@ -36,18 +38,40 @@ namespace KerbalFoundries
                 foreach (ModuleAnimateGeneric ma in this.part.FindModulesImplementing<ModuleAnimateGeneric>())
                 {
                     ma.Actions["ToggleAction"].active = false;
+                    ma.Events["Toggle"].guiActive = false;
                 }
             }
 
             if(HighLogic.LoadedSceneIsFlight)
             {
                 print("Repulsor Wheel started");
-                //this.part.force_activate();
 
-                FindRepulsors(wcList, rcList);
-                var MT = this.part.GetComponentInChildren<ModuleTrack>();
-                MT.wcList = wcList; //override the list gernetated in ModuleTrack
-                MT.wheelCount = 1;
+                foreach (ModuleAnimateGeneric ma in this.part.FindModulesImplementing<ModuleAnimateGeneric>())
+                {
+                    ma.Events["Toggle"].guiActive = false;
+                }
+                //this.part.force_activate();
+                mws = this.vessel.FindPartModulesImplementing<ModuleWaterSlider>().SingleOrDefault();
+
+                //FindRepulsors(wcList, rcList);
+                //MT = this.part.GetComponentInChildren<ModuleTrack>();
+                //AR = this.part.GetComponentInChildren<AlphaRepulsor>();
+                //wcList = MT.wcList; 
+                //MT.wheelCount = wcList.Count();
+                //AR.wcList = rcList;
+                //AR.repulsorCount = rcList.Count();
+
+                foreach(WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
+                {
+                    wcList.Add(wc);
+                }
+
+                for (int i = 0; i < wcList.Count(); i++)
+                {
+                    wfForwardList.Add(wcList[i].forwardFriction.stiffness);
+                    wfSideList.Add(wcList[i].sidewaysFriction.stiffness);
+                    susDistList.Add(wcList[i].suspensionDistance);
+                }
 
                 if (repulsorMode == true) //is the deployed flag set? set the rideheight appropriately
                 {
@@ -55,63 +79,45 @@ namespace KerbalFoundries
                 }
                 if (repulsorMode == false)
                 {
-                    UpdateColliders("wheel"); 
+                    UpdateColliders("wheel");
                 }
             }//end isInFlight
         }//end start
-
-        public void FindRepulsors(List<WheelCollider> wheelList, List<WheelCollider> repulsorList)
-        {
-            foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>()) //set colliders to values chosen in editor and activate
-            {
-                print("Finding wheel colliders"); 
-                print(wc.name);
-                if (!wc.name.Equals(wheelCollider, StringComparison.Ordinal))
-                {
-                    repulsorList.Add(wc); 
-                }
-                if (wc.name.Equals(wheelCollider, StringComparison.Ordinal))
-                {
-                    wheelList.Add(wc);
-                }
-            }
-        }
-
 
         public void UpdateColliders(string mode)
         {
             if (mode == "repulsor")
             {
-                foreach (WheelCollider wc in rcList)
+                mws.colliderHeight = 3f;
+                for(int i = 0; i < wcList.Count(); i++)
                 {
-                    wc.enabled = true;
-                }
-                foreach (WheelCollider wc in wcList)
-                {
-                    wc.enabled = false;
+                    wcList[i].suspensionDistance = wcList[i].suspensionDistance * 2f;
+                    WheelFrictionCurve wf = wcList[i].forwardFriction;
+                    wf.stiffness = 0;
+                    wcList[i].forwardFriction = wf;
+                    wf = wcList[i].sidewaysFriction;
+                    wf.stiffness = 0;
+                    wcList[i].sidewaysFriction = wf;
                 }
             }
             else if (mode == "wheel")
             {
-                foreach (WheelCollider wc in rcList)
+                mws.colliderHeight = 10;
+                for (int i = 0; i < wcList.Count(); i++)
                 {
-                    wc.enabled = false;
-                }
-                foreach (WheelCollider wc in wcList)
-                {
-                    wc.enabled = true;
+                    wcList[i].suspensionDistance = susDistList[i];
+                    WheelFrictionCurve wf = wcList[i].forwardFriction;
+                    wf.stiffness = wfForwardList[i];
+                    wcList[i].forwardFriction = wf;
+                    wf = wcList[i].sidewaysFriction;
+                    wf.stiffness = wfSideList[i];
+                    wcList[i].sidewaysFriction = wf;
                 }
             }
-            else //default to wheel
+
+            else
             {
-                foreach (WheelCollider wc in rcList)
-                {
-                    wc.enabled = false;
-                }
-                foreach (WheelCollider wc in wcList)
-                {
-                    wc.enabled = true;
-                }
+                //do nothing
             }
 
         }
@@ -143,7 +149,6 @@ namespace KerbalFoundries
             else
             {
                     myAnimation.Toggle();
-
             }
 
         }

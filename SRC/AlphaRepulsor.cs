@@ -17,7 +17,8 @@ namespace KerbalFoundries
     {
 
         public JointSpring userspring;
-
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Repulsor Settings")]
+        public string settings = "";
         [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
         public string status = "Nominal";
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
@@ -41,6 +42,8 @@ namespace KerbalFoundries
         [KSPField]
         public float chargeConsumptionRate = 1f;
         //begin start
+        public List<WheelCollider> wcList = new List<WheelCollider>();
+
         public override void OnStart(PartModule.StartState start)  //when started
         {
             // degub only: print("onstart");
@@ -49,26 +52,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsEditor)
             {
-                foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
-                {
-                    
-                    userspring = b.suspensionSpring;
 
-                    if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
-                    {
-                        SpringRate = userspring.spring;                                    //pass to springrate to be used in the GUI
-                        DamperRate = userspring.damper;
-                        Rideheight = b.suspensionDistance;
-                    }
-                    else //set the values from those stored in persistance
-                    {
-                        userspring.spring = SpringRate;
-                        userspring.damper = DamperRate;
-                        b.suspensionSpring = userspring;
-                        b.suspensionDistance = Rideheight;
-                    }
-                }
-                print(PartResourceLibrary.Instance.resourceDefinitions);
             }
 
             if (HighLogic.LoadedSceneIsFlight)
@@ -82,18 +66,19 @@ namespace KerbalFoundries
                     userspring.damper = DamperRate;
                     b.suspensionSpring = userspring;
                     b.suspensionDistance = Rideheight;
-
-                    UpdateCollider();
-
+                    wcList.Add(b);
                 }
+                
+                UpdateCollider();
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
-                DestroyBounds();
+                
             }
+            DestroyBounds();
 
 
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
-            print("max effect power");
-            print(effectPowerMax);
+            //print("max effect power");
+            //print(effectPowerMax);
      
 
         }//end start 
@@ -143,12 +128,13 @@ namespace KerbalFoundries
                 effectPower = 0;
             }
             RepulsorSound();
-            print(effectPower);
+            effectPower = 0;    //reset to make sure it doesn't play when it shouldn't.
+            //print(effectPower);
         }
 
         public void UpdateCollider()
         {
-            foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
+            foreach (WheelCollider wc in wcList)
             {
                 wc.suspensionDistance = Rideheight;
                 

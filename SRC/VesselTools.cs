@@ -31,11 +31,15 @@ namespace KerbalFoundries
                 {
                     repulsorCount++;
                 }
+
+                foreach (RepulsorWheel RA in PA.GetComponentsInChildren<RepulsorWheel>())
+                {
+                    repulsorCount++;
+                }
             }
 
             if (repulsorCount > 0)
             {
-
                 FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterSlider");
             }
 
@@ -48,8 +52,12 @@ namespace KerbalFoundries
         GameObject _collider = new GameObject("ModuleWaterSlider.Collider", typeof(BoxCollider), typeof(Rigidbody));
         float triggerDistance = 100f; // avoid moving every frame
 
-        float colliderHeight = 3.5f;
+        public float colliderHeight = 10f;
 
+        float currentColliderHeight;
+
+        public bool isColliderEnabled = true;
+         
         void Start()
         {
             print("WaterSlider start");
@@ -65,27 +73,24 @@ namespace KerbalFoundries
             var visible = GameObject.CreatePrimitive(PrimitiveType.Cube);
             visible.transform.parent = _collider.transform;
             visible.transform.localScale = box.size;
-            visible.renderer.enabled = false; // enable to see collider
-
+            visible.renderer.enabled = true; // enable to see collider
+            currentColliderHeight = 10;
             UpdatePosition();
         }
 
-
-
         void UpdatePosition()
         {
-            //print("Moving plane");
-
-            var oceanNormal = part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
-
-            _collider.rigidbody.position = (vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(vessel.ReferenceTransform.position) + colliderHeight));
-            _collider.rigidbody.rotation = Quaternion.LookRotation(oceanNormal) * Quaternion.AngleAxis(90f, Vector3.right);
+                var oceanNormal = part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
+                
+                print(currentColliderHeight);
+                _collider.rigidbody.position = (vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(vessel.ReferenceTransform.position) + currentColliderHeight));
+                _collider.rigidbody.rotation = Quaternion.LookRotation(oceanNormal) * Quaternion.AngleAxis(90f, Vector3.right);
         }
-
 
         void FixedUpdate()
         {
-            if (Vector3.Distance(_collider.transform.position, vessel.ReferenceTransform.position) > triggerDistance)
+            currentColliderHeight = Mathf.Lerp(colliderHeight, currentColliderHeight, 25 * Time.deltaTime);
+            if (Vector3.Distance(_collider.transform.position, vessel.ReferenceTransform.position) > triggerDistance || currentColliderHeight != Math.Round(colliderHeight,1))
                 UpdatePosition();
         }
     }
