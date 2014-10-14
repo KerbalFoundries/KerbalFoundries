@@ -23,8 +23,8 @@ namespace KerbalFoundries
         public string status = "Nominal";
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
         public float groupNumber = 1;
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 8f, stepIncrement = 0.5f)]
-        public float Rideheight;        //this is what's tweaked by the line above
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 100f, stepIncrement = 5f)]
+        public float Rideheight = 25;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
         public float SpringRate;        //this is what's tweaked by the line above
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.025f)]
@@ -38,17 +38,29 @@ namespace KerbalFoundries
 
         float effectPowerMax;
 
+        float appliedRideHeight;
+        float smoothedRideHeight;
+        float currentRideHeight;
+
+        float maxRepulsorHeight = 8;
+
         public float repulsorCount = 0;
         [KSPField]
         public float chargeConsumptionRate = 1f;
         //begin start
         public List<WheelCollider> wcList = new List<WheelCollider>();
+        //public List<float> susDistList = new List<float>();
 
         public override void OnStart(PartModule.StartState start)  //when started
         {
             // degub only: print("onstart");
             base.OnStart(start);
             print(Version.versionNumber);
+
+            if (HighLogic.LoadedSceneIsGame)
+            {
+
+            }
 
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -69,9 +81,13 @@ namespace KerbalFoundries
                     wcList.Add(b);
                 }
                 
-                UpdateCollider();
-                this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 
+                this.part.force_activate(); //force the part active or OnFixedUpate is not called
+
+                currentRideHeight = Rideheight;
+
+                UpdateCollider();
+
             }
             DestroyBounds();
 
@@ -79,7 +95,7 @@ namespace KerbalFoundries
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
             //print("max effect power");
             //print(effectPowerMax);
-     
+
 
         }//end start 
         public void DestroyBounds()
@@ -101,9 +117,11 @@ namespace KerbalFoundries
         public override void OnFixedUpdate()
         {
 
+
+
             if (deployed)
             {
-                float chargeConsumption = (Rideheight / 16) * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate;
+                float chargeConsumption = (appliedRideHeight / 2) * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate;
                 effectPower = chargeConsumption / effectPowerMax;
 
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
@@ -130,15 +148,25 @@ namespace KerbalFoundries
             RepulsorSound();
             effectPower = 0;    //reset to make sure it doesn't play when it shouldn't.
             //print(effectPower);
+
+
+
+            for (int i = 0; i < wcList.Count(); i++)
+            {
+                wcList[i].suspensionDistance = maxRepulsorHeight * appliedRideHeight;
+            }
+
+            smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime * 2);
+            appliedRideHeight = smoothedRideHeight / 100;
         }
 
         public void UpdateCollider()
         {
+            currentRideHeight = Rideheight;
             foreach (WheelCollider wc in wcList)
             {
-                wc.suspensionDistance = Rideheight;
-                
-                if (Rideheight < 0.5f)
+
+                if (Rideheight < 5f)
                 {
                     wc.enabled = false;
                     deployed = false;
@@ -156,7 +184,7 @@ namespace KerbalFoundries
         {
             if (Rideheight > 0)
             {
-                Rideheight -= 0.5f;
+                Rideheight -= 5f;
                 print("Retracting");
                 UpdateCollider();
             }
@@ -166,9 +194,9 @@ namespace KerbalFoundries
         [KSPAction("Extend")]
         public void Extend(KSPActionParam param)
         {
-            if (Rideheight < 8)
+            if (Rideheight < 100)
             {
-                Rideheight += 0.5f;
+                Rideheight += 5f;
                 print("Extending");
                 UpdateCollider();
             }
@@ -182,6 +210,8 @@ namespace KerbalFoundries
                 if (groupNumber != 0 && groupNumber == mt.groupNumber)
                 {
                     mt.Rideheight = Rideheight;
+                    currentRideHeight = Rideheight;
+                    mt.currentRideHeight = Rideheight;
                     mt.UpdateCollider();
                 }
             }
