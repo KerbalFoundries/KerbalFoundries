@@ -84,8 +84,8 @@ namespace KerbalFoundries
         int groundedWheels = 0; 
         float trackRPM = 0;
         float effectPower;
-        float currentRideHeight;
-        float smoothedRideHeight;
+        
+        
         
 
         //stuff deliberately made available to other modules:
@@ -99,6 +99,8 @@ namespace KerbalFoundries
         public int steeringCorrector = 1;
         public float steeringRatio;
         public float degreesPerTick;
+        public float currentRideHeight;
+        public float smoothedRideHeight;
 
         public List<WheelCollider> wcList = new List<WheelCollider>();
         
@@ -120,6 +122,7 @@ namespace KerbalFoundries
             smoothedRideHeight = currentRideHeight;
             appliedRideHeight = smoothedRideHeight / 100;
             print(appliedRideHeight);
+           
 
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -279,6 +282,10 @@ namespace KerbalFoundries
                     wc.steerAngle = 0;
                 }
             }
+            //print(effectPower);
+            smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime * 2);
+            appliedRideHeight = smoothedRideHeight / 100;
+            //print(smoothedRideHeight); //debugging
             
 
         }//end OnFixedUpdate
@@ -295,10 +302,7 @@ namespace KerbalFoundries
             lastCommandId = commandId;
 
             effectPower = Math.Abs(averageTrackRPM / maxRPM);
-            //print(effectPower);
-            smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime / 2.5f);
-            appliedRideHeight = smoothedRideHeight / 100;
-            //print(smoothedRideHeight); //debugging
+
             WheelSound();
         } //end OnUpdate
 
@@ -306,26 +310,28 @@ namespace KerbalFoundries
         {
             if (mode == "retract")
             {
+                isRetracted = true;
                 currentRideHeight = 0;
                 Events["ApplySettings"].guiActive = false;
                 Events["InvertSteering"].guiActive = false;
                 Fields["rideHeight"].guiActive = false;
                 Fields["torque"].guiActive = false;
-                Fields["springRate"].guiActive = false;
-                Fields["damperRate"].guiActive = false;
+                //Fields["springRate"].guiActive = false;
+                //Fields["damperRate"].guiActive = false;
                 Fields["steeringDisabled"].guiActive = false;
                 status = "Retracted";
 
             }
             else if (mode == "deploy")
             {
+                isRetracted = false;
                 currentRideHeight = rideHeight;
                 Events["ApplySettings"].guiActive = true;
                 Events["InvertSteering"].guiActive = true;
                 Fields["rideHeight"].guiActive = true;
                 Fields["torque"].guiActive = true;
-                Fields["springRate"].guiActive = true;
-                Fields["damperRate"].guiActive = true;
+                //Fields["springRate"].guiActive = true;
+                //Fields["damperRate"].guiActive = true;
                 Fields["steeringDisabled"].guiActive = true;
                 status = "Nominal";
             }
@@ -530,7 +536,7 @@ namespace KerbalFoundries
             steeringInvert *= -1;
         }
 
-        [KSPEvent(guiActive = true, guiName = "Apply Settings", active = true)]
+        [KSPEvent(guiActive = true, guiName = "Apply Wheel Settings", active = true)]
         public void ApplySettings()
         {
             foreach (ModuleTrack mt in this.vessel.FindPartModulesImplementing<ModuleTrack>())
@@ -568,7 +574,7 @@ namespace KerbalFoundries
             {
                 if(hasRetractAnimation)
                     PlayAnimation();
-                isRetracted = false;
+                
                 UpdateColliders("deploy");
             }
         }//end Reploy
@@ -580,7 +586,7 @@ namespace KerbalFoundries
             {
                 if (hasRetractAnimation)
                     PlayAnimation();
-                isRetracted = true;
+                
                 UpdateColliders("retract");
             }
         }//end Retract

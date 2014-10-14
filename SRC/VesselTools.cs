@@ -52,7 +52,7 @@ namespace KerbalFoundries
         GameObject _collider = new GameObject("ModuleWaterSlider.Collider", typeof(BoxCollider), typeof(Rigidbody));
         float triggerDistance = 100f; // avoid moving every frame
 
-        public float colliderHeight = 10f;
+        public float colliderHeight = 3f;
 
         float currentColliderHeight;
 
@@ -74,7 +74,7 @@ namespace KerbalFoundries
             visible.transform.parent = _collider.transform;
             visible.transform.localScale = box.size;
             visible.renderer.enabled = true; // enable to see collider
-            currentColliderHeight = 10;
+            currentColliderHeight = 3;
             UpdatePosition();
         }
 
@@ -89,8 +89,8 @@ namespace KerbalFoundries
 
         void FixedUpdate()
         {
-            currentColliderHeight = Mathf.Lerp(colliderHeight, currentColliderHeight, 25 * Time.deltaTime);
-            if (Vector3.Distance(_collider.transform.position, vessel.ReferenceTransform.position) > triggerDistance || currentColliderHeight != Math.Round(colliderHeight,1))
+            //currentColliderHeight = Mathf.Lerp(colliderHeight, currentColliderHeight, 25 * Time.deltaTime);
+            if (Vector3.Distance(_collider.transform.position, vessel.ReferenceTransform.position) > triggerDistance)// || currentColliderHeight != Math.Round(colliderHeight,1))
                 UpdatePosition();
         }
     }

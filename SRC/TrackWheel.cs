@@ -138,23 +138,26 @@ namespace KerbalFoundries
         }//end OnStart
         //OnUpdate
 
-        public override void OnUpdate()
+        public override void OnFixedUpdate()
         {
-            base.OnUpdate();
+            base.OnFixedUpdate();
             _wheel.transform.Rotate(wheelRotation, _track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
             //suspension movement
             WheelHit hit;
             Vector3 tempTraverse = initialTraverse;
             bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
             _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
+
             if (grounded && !isSprocket) //is it on the ground
             {
-                tempTraverse[susTravIndex] -= (-_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError) - _wheelCollider.radius;// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
+                tempTraverse[susTravIndex] -= Mathf.Clamp( ((-_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError) - _wheelCollider.radius), -_wheelCollider.suspensionDistance, _wheelCollider.suspensionDistance);// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
                 lastTempTraverse = tempTraverse[susTravIndex];
+                //print(tempTraverse);
             }
             else
             {
                 tempTraverse[susTravIndex] = lastTempTraverse;
+
             } //movement defaults back to zero when not grounded
             _susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
             if (_track.hasSteering)
