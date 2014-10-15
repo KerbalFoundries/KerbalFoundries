@@ -24,6 +24,12 @@ namespace KerbalFoundries
         public bool repulsorMode = false;
 
         //float repulsorDistance = 8;
+        [KSPField]
+        public float chargeConsumptionRate = 1;
+
+        float effectPower;
+        float effectPowerMax;
+        bool lowEnergy = false;
 
         List<WheelCollider> wcList = new List<WheelCollider>();
         List<float> wfForwardList = new List<float>();
@@ -86,44 +92,68 @@ namespace KerbalFoundries
 
                 if (repulsorMode == true) //is the deployed flag set? set the rideheight appropriately
                 {
-                    
                     UpdateColliders("repulsor");
-                    
                 }
+
                 if (repulsorMode == false)
                 {
                     UpdateColliders("wheel");
                 }
+                effectPowerMax = 1 * chargeConsumptionRate * Time.deltaTime;
+                print(effectPowerMax);
             }//end isInFlight
         }//end start
-/*
+
         public override void OnUpdate()
         {
             base.OnUpdate();
             if (repulsorMode)
             {
-                for (int i = 0; i < wcList.Count(); i++)
+                float chargeConsumption = (repulsorHeight / 2) * (1 + _moduletrack.springRate) * Time.deltaTime * chargeConsumptionRate;
+                effectPower = chargeConsumption / effectPowerMax;
+                print(effectPower);
+
+                float electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
+                //print(electricCharge);
+                // = Extensions.GetBattery(this.part);
+                if (electricCharge < (chargeConsumption * 0.9f))
                 {
-                    wcList[i].suspensionDistance = repulsorHeight * _moduletrack.appliedRideHeight;
+                    print("Retracting due to low Electric Charge");
+                    lowEnergy = true;
+                    repulsorHeight = 0;
+                    UpdateColliders("wheel");
+                    _moduletrack.status = "Low Charge";
+                }
+                else
+                {
+                    lowEnergy = false;
+                    _moduletrack.status = "Nominal";
                 }
             }
             else
             {
-                for (int i = 0; i < wcList.Count(); i++)
-                {
-                    wcList[i].suspensionDistance = wcList[i].suspensionDistance;
-                }
+                effectPower = 0;
             }
+            RepulsorSound();
+            effectPower = 0;    //reset to make sure it doesn't play when it shouldn't.
+            //print(effectPower);
         }
-*/
+
+        public void RepulsorSound()
+        {
+            part.Effect("RepulsorEffect", effectPower);
+        }
+
         public void UpdateColliders(string mode)
         {
             if (mode == "repulsor")
             {
                 //mws.colliderHeight = 3f;
-                
+                if(lowEnergy)
+                    return;
                 _moduletrack.UpdateColliders("retract");
                 _moduletrack.currentRideHeight = repulsorHeight * replusorHeightMultiplier;
+                repulsorMode = true;
                 
                 for(int i = 0; i < wcList.Count(); i++)
                 {
@@ -142,6 +172,8 @@ namespace KerbalFoundries
                 _moduletrack.currentRideHeight = _moduletrack.rideHeight;
                 _moduletrack.smoothedRideHeight = _moduletrack.currentRideHeight;
                 _moduletrack.UpdateColliders("deploy");
+
+                repulsorMode = false;
  
                 for (int i = 0; i < wcList.Count(); i++)
                 {
@@ -214,11 +246,9 @@ namespace KerbalFoundries
 
         }
 
-        [KSPAction("Repulsor Mode")]
+        [KSPAction("Wheel Mode")]
         public void toWheel(KSPActionParam param)
         {
-            //print(thisTransform);
-            // note: this loop will find "us" too. Intended
             if (repulsorMode == true)
             {
 
@@ -230,9 +260,11 @@ namespace KerbalFoundries
 
         }//end Deploy All
 
-        [KSPAction("Wheel Mode")]
+        [KSPAction("Repulsor Mode")]
         public void toRepulsor(KSPActionParam param)
         {
+            if (lowEnergy)
+                return;
                 if (repulsorMode == false)
                 {
                     PlayAnimation();

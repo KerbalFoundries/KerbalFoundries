@@ -19,6 +19,8 @@ namespace KerbalFoundries
         [KSPField]
         public string steeringName;
         [KSPField]
+        public string susNeutralName;
+        [KSPField]
         public bool useDirectionCorrector = false; //make sure it's set to false if not specified in the config
         [KSPField]
         public bool isSprocket = false;
@@ -53,6 +55,7 @@ namespace KerbalFoundries
         //gloabl variables
         Vector3 initialTraverse;
         Vector3 initialSteeringAngles;
+        Transform susStart;
         Vector3 wheelRotation;
         float lastTempTraverse;
         int susTravIndex = 1;
@@ -110,6 +113,10 @@ namespace KerbalFoundries
                     {
                         _susTrav = tr;
                     }
+                    if (tr.name.StartsWith(susNeutralName, StringComparison.Ordinal))
+                    {
+                        susStart = tr;
+                    }
                 }
 
 
@@ -131,7 +138,8 @@ namespace KerbalFoundries
                 print(directionCorrector);
 
                 wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
-                lastTempTraverse = initialTraverse[susTravIndex] - _wheelCollider.suspensionDistance;
+                //lastTempTraverse = initialTraverse[susTravIndex] - _wheelCollider.suspensionDistance;
+                lastTempTraverse = susStart.localPosition[susTravIndex] - _wheelCollider.suspensionDistance;
             }
             //end find named objects
             base.OnStart(state);
@@ -144,26 +152,38 @@ namespace KerbalFoundries
             _wheel.transform.Rotate(wheelRotation, _track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
             //suspension movement
             WheelHit hit;
-            Vector3 tempTraverse = initialTraverse;
+            float tempFloat = 0;
+            //Vector3 tempTraverse = initialTraverse;
+            Vector3 tempTraverse = susStart.localPosition;
             bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
             _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
 
             if (grounded && !isSprocket) //is it on the ground
             {
-                tempTraverse[susTravIndex] -= Mathf.Clamp( ((-_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError) - _wheelCollider.radius), -_wheelCollider.suspensionDistance, _wheelCollider.suspensionDistance);// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
-                lastTempTraverse = tempTraverse[susTravIndex];
+                //tempTraverse[susTravIndex] -= Mathf.Clamp( ((-_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError) - _wheelCollider.radius), -_wheelCollider.suspensionDistance, _wheelCollider.suspensionDistance);// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
+                tempTraverse[susTravIndex] -= (-_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError) - _wheelCollider.radius;
+                tempFloat = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError - _wheelCollider.radius;
+                //print(tempFloat);
+                lastTempTraverse = tempFloat;
+                //lastTempTraverse = tempTraverse[susTravIndex];
                 //print(tempTraverse);
             }
             else
             {
-                tempTraverse[susTravIndex] = lastTempTraverse;
+                tempFloat = lastTempTraverse;
+                //tempTraverse[susTravIndex] = lastTempTraverse;
 
             } //movement defaults back to zero when not grounded
-            _susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
+            //_susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
+            Vector3 tempVector = susStart.localPosition;
+            tempVector[susTravIndex] -= tempFloat;
+            _susTrav.localPosition = tempVector;
+            //print(_susTrav.localPosition);
+            
             if (_track.hasSteering)
             {
                 Vector3 newSteeringAngle = initialSteeringAngles;
-                newSteeringAngle[steeringIndex] += _track.steeringAngleSmoothed;
+                newSteeringAngle[steeringIndex] -= _track.steeringAngleSmoothed;
                 _trackSteering.transform.localEulerAngles = newSteeringAngle;
             }
             //end suspension movement

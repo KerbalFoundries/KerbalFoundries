@@ -53,6 +53,7 @@
     <Compile Include="AlphaRepulsor.cs" />
     <Compile Include="APUController.cs" />
     <Compile Include="HeavyCrawler.cs" />
+    <Compile Include="KFLookAt.cs" />
     <Compile Include="LandingGearWheel.cs" />
     <Compile Include="ModuleLandingGear2.cs" />
     <Compile Include="ModulePropeller.cs" />

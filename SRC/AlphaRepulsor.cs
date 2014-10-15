@@ -163,17 +163,17 @@ namespace KerbalFoundries
         public void UpdateCollider()
         {
             currentRideHeight = Rideheight;
-            foreach (WheelCollider wc in wcList)
+            for (int i = 0; i < wcList.Count(); i++)
             {
 
                 if (Rideheight < 5f)
                 {
-                    wc.enabled = false;
+                    wcList[i].enabled = false;
                     deployed = false;
                 }
                 else
                 {
-                    wc.enabled = true;
+                    wcList[i].enabled = true;
                     deployed = true;
                 }
             }
