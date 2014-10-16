@@ -87,7 +87,7 @@ namespace KerbalFoundries
             if (HighLogic.LoadedSceneIsFlight)
             {
                 //find names onjects in part
-                this.part.force_activate();
+                
 
                 print("suspensionDistance is");
                 print(suspensionDistance);
@@ -138,11 +138,12 @@ namespace KerbalFoundries
                 print(directionCorrector);
 
                 wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
-                //lastTempTraverse = initialTraverse[susTravIndex] - _wheelCollider.suspensionDistance;
-                lastTempTraverse = susStart.localPosition[susTravIndex] - _wheelCollider.suspensionDistance;
+                lastTempTraverse = initialTraverse[susTravIndex] - _wheelCollider.suspensionDistance;
+                //lastTempTraverse = susStart.localPosition[susTravIndex] - _wheelCollider.suspensionDistance;
             }
             //end find named objects
             base.OnStart(state);
+            this.part.force_activate();
         }//end OnStart
         //OnUpdate
 
@@ -153,8 +154,8 @@ namespace KerbalFoundries
             //suspension movement
             WheelHit hit;
             float tempFloat = 0;
-            //Vector3 tempTraverse = initialTraverse;
-            Vector3 tempTraverse = susStart.localPosition;
+            Vector3 tempTraverse = initialTraverse;
+            //Vector3 tempTraverse = susStart.localPosition;
             bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
             _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
 
@@ -175,7 +176,8 @@ namespace KerbalFoundries
 
             } //movement defaults back to zero when not grounded
             //_susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
-            Vector3 tempVector = susStart.localPosition;
+            //Vector3 tempVector = susStart.localPosition;
+            Vector3 tempVector = initialTraverse;
             tempVector[susTravIndex] -= tempFloat;
             _susTrav.localPosition = tempVector;
             //print(_susTrav.localPosition);
