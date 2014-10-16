@@ -185,7 +185,7 @@ namespace KerbalFoundries
             if (_track.hasSteering)
             {
                 Vector3 newSteeringAngle = initialSteeringAngles;
-                newSteeringAngle[steeringIndex] -= _track.steeringAngleSmoothed;
+                newSteeringAngle[steeringIndex] += _track.steeringAngleSmoothed;
                 _trackSteering.transform.localEulerAngles = newSteeringAngle;
             }
             //end suspension movement
