@@ -58,7 +58,7 @@ namespace KerbalFoundries
         Vector3 initialPosition;
         Vector3 initialSteeringAngles;
         Transform susStart;
-        Vector3 wheelRotation;
+        Vector3 _wheelRotation;
         int susTravIndex = 1;
         int steeringIndex = 1;
         public int directionCorrector = 1;
@@ -119,14 +119,13 @@ namespace KerbalFoundries
                         susStart = tr;
                     }
                 }
-
+                //end find named objects
 
                 _track = this.part.GetComponentInChildren<ModuleTrack>();
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis);
 
-                
                 if (_track.hasSteering)
                 {
                     initialSteeringAngles = _trackSteering.transform.localEulerAngles;
@@ -136,19 +135,15 @@ namespace KerbalFoundries
                 if (useDirectionCorrector)
                     directionCorrector = _track.directionCorrector;
                 else directionCorrector = 1;
-                print(directionCorrector);
 
-                wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
+                _wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
 
                 initialPosition = _susTrav.transform.localPosition;
                 if (lastFrameTraverse == 0) //check to see if we have a value in persistance
                 {
                     lastFrameTraverse = initialPosition[susTravIndex] + _wheelCollider.suspensionDistance + _wheelCollider.radius;
                 }
-                
-                    //lastTempTraverse = susStart.localPosition[susTravIndex] - _wheelCollider.suspensionDistance;
             }
-            //end find named objects
             base.OnStart(state);
             this.part.force_activate(); 
         }//end OnStart
@@ -157,39 +152,31 @@ namespace KerbalFoundries
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
-            _wheel.transform.Rotate(wheelRotation, _track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
+            _wheel.transform.Rotate(_wheelRotation, _track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
             _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
             //suspension movement
             WheelHit hit;
             float frameTraverse = 0;
-                                            //Vector3 tempTraverse = initialTraverse;
-                                            //Vector3 tempTraverse = susStart.localPosition;
             bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
             if (grounded && !isSprocket) //is it on the ground
             {
-
                 frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError - _wheelCollider.radius;
                 lastFrameTraverse = frameTraverse;
-                                            //tempTraverse[susTravIndex] -= Mathf.Clamp( ((-_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError) - _wheelCollider.radius), -_wheelCollider.suspensionDistance, _wheelCollider.suspensionDistance);// / wheelCollider.suspensionDistance; //out hit does not take wheel radius into account
-                                            //tempTraverse[susTravIndex] -= (-_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError) - _wheelCollider.radius;
-                                            //lastTempTraverse = tempTraverse[susTravIndex];
             }
             else
             {
-                frameTraverse = lastFrameTraverse;
-                //tempTraverse[susTravIndex] = lastTempTraverse;
-            } //movement defaults back to zero when not grounded
-                                            //_susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
-                                            //Vector3 tempVector = susStart.localPosition;
-            moveSuspension(initialPosition, susTravIndex, frameTraverse, _susTrav);
+                frameTraverse = lastFrameTraverse; //movement defaults back to zero when not grounded
+            } 
 
+            moveSuspension(initialPosition, susTravIndex, frameTraverse, _susTrav);
+            //end suspension movement
             if (_track.hasSteering)
             {
                 Vector3 newSteeringAngle = initialSteeringAngles;
                 newSteeringAngle[steeringIndex] += _track.steeringAngleSmoothed;
                 _trackSteering.transform.localEulerAngles = newSteeringAngle;
             }
-            //end suspension movement
+            
         }//end OnUpdate
 
         public void moveSuspension(Vector3 traverseStart, int index, float movement, Transform movedObject)
@@ -200,8 +187,3 @@ namespace KerbalFoundries
         }
     }//end modele
 }//end class
-/*
-            Vector3 tempVector = initialTraverse;
-            tempVector[susTravIndex] -= frameTraverse;
-            _susTrav.localPosition = tempVector;
-*/
