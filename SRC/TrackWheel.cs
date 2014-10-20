@@ -141,8 +141,13 @@ namespace KerbalFoundries
                 initialPosition = _susTrav.transform.localPosition;
                 if (lastFrameTraverse == 0) //check to see if we have a value in persistance
                 {
-                    lastFrameTraverse = initialPosition[susTravIndex] + _wheelCollider.suspensionDistance + _wheelCollider.radius;
+                    Debug.LogError("Last frame = 0. Setting");
+                    lastFrameTraverse = _wheelCollider.suspensionDistance;
+                    Debug.LogError(lastFrameTraverse);
                 }
+                Debug.LogError("Last frame =");
+                Debug.LogError(lastFrameTraverse);
+                moveSuspension(initialPosition, susTravIndex, lastFrameTraverse, _susTrav); //to get the initial stuff correct
             }
             base.OnStart(state);
             this.part.force_activate(); 
@@ -166,7 +171,9 @@ namespace KerbalFoundries
             else
             {
                 frameTraverse = lastFrameTraverse; //movement defaults back to zero when not grounded
-            } 
+            }
+            //print(frameTraverse);
+            //print(lastFrameTraverse);
 
             moveSuspension(initialPosition, susTravIndex, frameTraverse, _susTrav);
             //end suspension movement
