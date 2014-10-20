@@ -28,7 +28,7 @@ namespace KerbalFoundries
         public bool isIdler = false;
         [KSPField]
         public float smoothSpeed = 40;
-        [KSPField(isPersistant=true)]
+        [KSPField(isPersistant = true)]
         public float suspensionDistance;
         [KSPField]
         public float rotationCorrection = 1;
@@ -67,7 +67,7 @@ namespace KerbalFoundries
         //OnStart
         public override void OnStart(PartModule.StartState state)
         {
-            if (HighLogic.LoadedSceneIsGame)
+            if (suspensionDistance == 0 & !isSprocket)
             {
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
@@ -75,11 +75,12 @@ namespace KerbalFoundries
                     {
                         _wheelCollider = wc;
                         suspensionDistance = wc.suspensionDistance;
+                        print("suspensionDistance is");
+                        print(suspensionDistance);
                     }
                 }
-
             }
-            print("TrackWheel Called");
+
             if (HighLogic.LoadedSceneIsEditor)
             {
 
@@ -87,12 +88,7 @@ namespace KerbalFoundries
             
             if (HighLogic.LoadedSceneIsFlight)
             {
-                //find names onjects in part
-                
-
-                print("suspensionDistance is");
-                print(suspensionDistance);
-
+                //find named onjects in part
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     if (wc.name.StartsWith(colliderName, StringComparison.Ordinal))
@@ -129,7 +125,7 @@ namespace KerbalFoundries
                 if (_track.hasSteering)
                 {
                     initialSteeringAngles = _trackSteering.transform.localEulerAngles;
-                    print(initialSteeringAngles);
+                    //print(initialSteeringAngles);
                 }
 
                 if (useDirectionCorrector)

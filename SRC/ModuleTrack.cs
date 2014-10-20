@@ -121,7 +121,7 @@ namespace KerbalFoundries
                 currentRideHeight = 0;
             smoothedRideHeight = currentRideHeight;
             appliedRideHeight = smoothedRideHeight / 100;
-            print(appliedRideHeight);
+            //print(appliedRideHeight);
            
 
             if (HighLogic.LoadedSceneIsEditor)
@@ -335,10 +335,11 @@ namespace KerbalFoundries
                 Fields["steeringDisabled"].guiActive = true;
                 status = "Nominal";
             }
-            else
+            else if(mode =="update")
             {
                 //do nothing
             }
+            
         }
 
         public void GetControlAxis()
@@ -358,11 +359,11 @@ namespace KerbalFoundries
         {                                                                   // uses scalar products to determine which axis is closest to the axis specified in refDirection, return an index value 0 = X, 1 = Y, 2 = Z
             //orgpos = this.part.orgPos; //debugguing
             float dotx = Math.Abs(Vector3.Dot(refDirection, refTransform.right)); // up is forward
-            print(dotx); //debugging
+            //print(dotx); //debugging
             float doty = Math.Abs(Vector3.Dot(refDirection, refTransform.up));
-            print(doty); //debugging
+            //print(doty); //debugging
             float dotz = Math.Abs(Vector3.Dot(refDirection, refTransform.forward));
-            print(dotz); //debugging
+            //print(dotz); //debugging
 
             int orientationIndex = 0;
 
@@ -409,7 +410,7 @@ namespace KerbalFoundries
                 dot = Vector3.Dot(transformVector, referenceVector.forward); // up is forward
             }
 
-            print(dot);
+            //print(dot);
 
             if (dot < 0) // below 0 means the engine is on the left side of the craft
             {
@@ -454,8 +455,8 @@ namespace KerbalFoundries
 
             if (ratio == 0 || float.IsNaN(ratio)) //check is we managed to evaluate to zero or infinity somehow. Happens with less than three wheels, or all wheels mounted at the same position.
                 ratio = 1;
-            print("ratio"); //Debugging
-            print(ratio);
+            //print("ratio"); //Debugging
+            //print(ratio);
             return ratio;
         }
 
@@ -508,6 +509,7 @@ namespace KerbalFoundries
             {
                 torque += 0.25f;
             }
+
 
         }//End increase
         [KSPAction("Decrease Torque")]
