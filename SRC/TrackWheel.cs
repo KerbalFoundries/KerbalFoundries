@@ -28,10 +28,9 @@ namespace KerbalFoundries
         public bool isIdler = false;
         [KSPField]
         public float smoothSpeed = 40;
-        [KSPField(isPersistant = true)]
-        public float suspensionDistance;
         [KSPField]
         public float rotationCorrection = 1;
+
             //wheel rotation axis
         [KSPField]
         public float wheelRotationX = 1;
@@ -46,6 +45,16 @@ namespace KerbalFoundries
         public string steeringAxis = "Y";
         [KSPField(isPersistant = true)]
         public float lastFrameTraverse;
+
+        //persistent fields. Not to be used for config
+        [KSPField(isPersistant = true)]
+        public float suspensionDistance;
+        [KSPField(isPersistant = true)]
+        public float suspensionSpring;
+        [KSPField(isPersistant = true)]
+        public float suspensionDamper;
+        [KSPField(isPersistant = true)]
+        public bool isConfigured = false;
 
         //object types
         WheelCollider _wheelCollider;
@@ -67,7 +76,7 @@ namespace KerbalFoundries
         //OnStart
         public override void OnStart(PartModule.StartState state)
         {
-            if (suspensionDistance == 0 & !isSprocket)
+            if (!isConfigured)
             {
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
@@ -75,10 +84,18 @@ namespace KerbalFoundries
                     {
                         _wheelCollider = wc;
                         suspensionDistance = wc.suspensionDistance;
-                        print("suspensionDistance is");
-                        print(suspensionDistance);
+                        Debug.LogError("suspensionDistance is" + suspensionDistance);
+                        isConfigured = true;
+                    }
+                    else
+                    {
+                        Debug.LogError("Wheel Collider" + _wheelCollider + " not found. Disabling module");
                     }
                 }
+            }
+            else
+            {
+                Debug.LogError("Already configured - skipping");
             }
 
             if (HighLogic.LoadedSceneIsEditor)
@@ -86,7 +103,7 @@ namespace KerbalFoundries
 
             }
             
-            if (HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsFlight && isConfigured)
             {
                 //find named onjects in part
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
@@ -141,8 +158,8 @@ namespace KerbalFoundries
                     lastFrameTraverse = _wheelCollider.suspensionDistance;
                     Debug.LogError(lastFrameTraverse);
                 }
-                Debug.LogError("Last frame =");
-                Debug.LogError(lastFrameTraverse);
+                //Debug.LogError("Last frame =");
+                //Debug.LogError(lastFrameTraverse);
                 moveSuspension(initialPosition, susTravIndex, lastFrameTraverse, _susTrav); //to get the initial stuff correct
             }
             base.OnStart(state);
