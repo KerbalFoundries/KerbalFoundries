@@ -20,6 +20,7 @@ namespace KerbalFoundries
             print("RepulsorSkim Start");
             int partCount = 0;
             int repulsorCount = 0;
+            //
             foreach (Part PA in FlightGlobals.ActiveVessel.Parts)
             {
                 partCount++;
@@ -37,6 +38,7 @@ namespace KerbalFoundries
                     repulsorCount++;
                 }
             }
+            //
 
             if (repulsorCount > 0)
             {
@@ -52,7 +54,7 @@ namespace KerbalFoundries
         GameObject _collider = new GameObject("ModuleWaterSlider.Collider", typeof(BoxCollider), typeof(Rigidbody));
         float triggerDistance = 100f; // avoid moving every frame
 
-        public float colliderHeight = 3f;
+        public float colliderHeight = 5f;
 
         float currentColliderHeight;
 
@@ -82,15 +84,14 @@ namespace KerbalFoundries
         {
                 var oceanNormal = part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
                 
-                print(currentColliderHeight);
-                _collider.rigidbody.position = (vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(vessel.ReferenceTransform.position) + currentColliderHeight));
+                print(colliderHeight);
+                _collider.rigidbody.position = (vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(vessel.ReferenceTransform.position) + colliderHeight));
                 _collider.rigidbody.rotation = Quaternion.LookRotation(oceanNormal) * Quaternion.AngleAxis(90f, Vector3.right);
         }
 
         void FixedUpdate()
         {
-            //currentColliderHeight = Mathf.Lerp(colliderHeight, currentColliderHeight, 25 * Time.deltaTime);
-            if (Vector3.Distance(_collider.transform.position, vessel.ReferenceTransform.position) > triggerDistance)// || currentColliderHeight != Math.Round(colliderHeight,1))
+            if (Vector3.Distance(_collider.transform.position, vessel.ReferenceTransform.position) > triggerDistance)
                 UpdatePosition();
         }
     }
