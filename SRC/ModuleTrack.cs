@@ -26,7 +26,7 @@ namespace KerbalFoundries
         public float springRate;        
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring Damping"), UI_FloatRange(minValue = 0, maxValue = 1.0f, stepIncrement = 0.025f)]
         public float damperRate;
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Ride Height %"), UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 5)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Suspension Travel"), UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 5)]
         public float rideHeight = 100;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Steering"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool steeringDisabled;
