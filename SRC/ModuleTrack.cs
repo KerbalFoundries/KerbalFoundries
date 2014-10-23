@@ -62,6 +62,8 @@ namespace KerbalFoundries
         public bool hasRetract = false;
         [KSPField]
         public bool hasRetractAnimation = false;
+        [KSPField]
+        public string boundsName = "Bounds";
 
         //persistent fields
         [KSPField(isPersistant = true)]
@@ -478,7 +480,7 @@ namespace KerbalFoundries
 
         public void DestroyBounds()
         {
-            Transform bounds = transform.Search("Bounds");
+            Transform bounds = transform.Search(boundsName);
             if (bounds != null)
             {
                 GameObject.Destroy(bounds.gameObject);
