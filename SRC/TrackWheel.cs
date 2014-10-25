@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -30,6 +31,8 @@ namespace KerbalFoundries
         public float smoothSpeed = 40;
         [KSPField]
         public float rotationCorrection = 1;
+        [KSPField]
+        public bool trackedWheel = true; //default to tracked type (average of all colliders in contact with floor). This is OK for wheels, and will only need to be changed for multi wheeled parts that are not tracks 
 
             //wheel rotation axis
         [KSPField]
@@ -66,11 +69,12 @@ namespace KerbalFoundries
         //gloabl variables
         Vector3 initialPosition;
         Vector3 initialSteeringAngles;
-        Transform susStart;
+        float newTranslation;
         Vector3 _wheelRotation;
         int susTravIndex = 1;
         int steeringIndex = 1;
         public int directionCorrector = 1;
+        float degreesPerTick;
         
 
         //OnStart
@@ -127,10 +131,7 @@ namespace KerbalFoundries
                     {
                         _susTrav = tr;
                     }
-                    if (tr.name.StartsWith(susNeutralName, StringComparison.Ordinal))
-                    {
-                        susStart = tr;
-                    }
+                    
                 }
                 //end find named objects
 
@@ -152,6 +153,9 @@ namespace KerbalFoundries
                 _wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
 
                 initialPosition = _susTrav.transform.localPosition;
+                //suspensionNeutralPoint.transform.localPosition = _susTrav.localPosition;
+                //suspensionNeutralPoint.transform.localRotation = _susTrav.localRotation;
+
                 if (lastFrameTraverse == 0) //check to see if we have a value in persistance
                 {
                     Debug.LogError("Last frame = 0. Setting");
@@ -160,22 +164,65 @@ namespace KerbalFoundries
                 }
                 //Debug.LogError("Last frame =");
                 //Debug.LogError(lastFrameTraverse);
-                moveSuspension(initialPosition, susTravIndex, lastFrameTraverse, _susTrav); //to get the initial stuff correct
-            }
+                MoveSuspension(susTravIndex, -lastFrameTraverse, _susTrav); //to get the initial stuff correct
+
+                if (_track.hasSteering)
+                {
+                    StartCoroutine(Steering());
+                    Debug.LogError("starting steering coroutine");
+                }
+                if (trackedWheel)
+                {
+                    StartCoroutine(TrackedWheel());
+                }
+                else
+                {
+                    StartCoroutine(IndividualWheel());
+                }
+                this.part.force_activate();
+            }//end flight
             base.OnStart(state);
-            this.part.force_activate(); 
         }//end OnStart
         //OnUpdate
+
+        IEnumerator Steering() //Coroutine for steering
+        {
+            while(true)
+            {
+            Vector3 newSteeringAngle = initialSteeringAngles;
+            newSteeringAngle[steeringIndex] += _track.steeringAngleSmoothed;
+            _trackSteering.transform.localEulerAngles = newSteeringAngle;
+            yield return null;
+            }
+        }
+        IEnumerator TrackedWheel() //coroutine for tracked wheels (all rotate the same speed in the part) 
+        {
+            while (true)
+            {
+                _wheel.transform.Rotate(_wheelRotation, _track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
+                yield return null;
+            }
+        }
+        IEnumerator IndividualWheel() //coroutine for individual wheels
+        {
+            while (true)
+            {
+                degreesPerTick = (_wheelCollider.rpm / 60) * Time.deltaTime * 360;
+                _wheel.transform.Rotate(_wheelRotation, degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
+                yield return null;
+            }
+        }
 
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
-            _wheel.transform.Rotate(_wheelRotation, _track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
+            
             _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
             //suspension movement
             WheelHit hit;
             float frameTraverse = 0;
             bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
+            float tempLastFrameTraverse = lastFrameTraverse;
             if (grounded && !isSprocket) //is it on the ground
             {
                 frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError - _wheelCollider.radius;
@@ -188,22 +235,28 @@ namespace KerbalFoundries
             //print(frameTraverse);
             //print(lastFrameTraverse);
 
-            moveSuspension(initialPosition, susTravIndex, frameTraverse, _susTrav);
-            //end suspension movement
-            if (_track.hasSteering)
-            {
-                Vector3 newSteeringAngle = initialSteeringAngles;
-                newSteeringAngle[steeringIndex] += _track.steeringAngleSmoothed;
-                _trackSteering.transform.localEulerAngles = newSteeringAngle;
-            }
-            
-        }//end OnUpdate
+            newTranslation = tempLastFrameTraverse - frameTraverse;
+            print(newTranslation);
 
+            //moveSuspension(initialPosition, susTravIndex, frameTraverse, _susTrav);
+            MoveSuspension(susTravIndex, newTranslation, _susTrav);
+            //end suspension movement
+            
+        }//end OnFixedUpdate
+
+        public void MoveSuspension(int index, float movement, Transform movedObject)
+        {
+            Vector3 tempVector = new Vector3(0, 0, 0);
+            tempVector[index] = movement;
+            movedObject.transform.Translate(tempVector, Space.Self);
+        }
+        /*
         public void moveSuspension(Vector3 traverseStart, int index, float movement, Transform movedObject)
         {
             Vector3 tempVector = traverseStart;
             tempVector[index] -= movement;
             movedObject.localPosition = tempVector;
         }
+         * */
     }//end modele
 }//end class
