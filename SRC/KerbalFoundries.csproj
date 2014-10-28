@@ -59,6 +59,8 @@
     <Compile Include="ModulePropeller.cs" />
     <Compile Include="ModuleTrack.cs" />
     <Compile Include="ModuleTrackSurface.cs" />
+    <Compile Include="ObjectDestroy.cs" />
+    <Compile Include="OverrideWheelCollider.cs" />
     <Compile Include="PartMirror.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepulsorTest.cs" />

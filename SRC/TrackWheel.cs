@@ -67,7 +67,7 @@ namespace KerbalFoundries
         ModuleTrack _track;
 
         //gloabl variables
-        Vector3 initialPosition;
+
         Vector3 initialSteeringAngles;
         float newTranslation;
         Vector3 _wheelRotation;
@@ -152,10 +152,6 @@ namespace KerbalFoundries
 
                 _wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
 
-                initialPosition = _susTrav.transform.localPosition;
-                //suspensionNeutralPoint.transform.localPosition = _susTrav.localPosition;
-                //suspensionNeutralPoint.transform.localRotation = _susTrav.localRotation;
-
                 if (lastFrameTraverse == 0) //check to see if we have a value in persistance
                 {
                     Debug.LogError("Last frame = 0. Setting");
@@ -232,13 +228,8 @@ namespace KerbalFoundries
             {
                 frameTraverse = lastFrameTraverse; //movement defaults back to zero when not grounded
             }
-            //print(frameTraverse);
-            //print(lastFrameTraverse);
 
             newTranslation = tempLastFrameTraverse - frameTraverse;
-            print(newTranslation);
-
-            //moveSuspension(initialPosition, susTravIndex, frameTraverse, _susTrav);
             MoveSuspension(susTravIndex, newTranslation, _susTrav);
             //end suspension movement
             
@@ -250,13 +241,5 @@ namespace KerbalFoundries
             tempVector[index] = movement;
             movedObject.transform.Translate(tempVector, Space.Self);
         }
-        /*
-        public void moveSuspension(Vector3 traverseStart, int index, float movement, Transform movedObject)
-        {
-            Vector3 tempVector = traverseStart;
-            tempVector[index] -= movement;
-            movedObject.localPosition = tempVector;
-        }
-         * */
     }//end modele
 }//end class
