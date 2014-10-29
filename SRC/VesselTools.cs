@@ -20,7 +20,7 @@ namespace KerbalFoundries
             print("RepulsorSkim Start");
             int partCount = 0;
             int repulsorCount = 0;
-            /*
+            
             foreach (Part PA in FlightGlobals.ActiveVessel.Parts)
             {
                 partCount++;
@@ -44,7 +44,7 @@ namespace KerbalFoundries
             {
                 FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterSlider");
             }
-             * */
+            
 
         }
 

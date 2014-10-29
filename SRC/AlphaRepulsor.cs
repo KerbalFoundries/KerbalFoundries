@@ -57,7 +57,7 @@ namespace KerbalFoundries
             base.OnStart(start);
             print(Version.versionNumber);
 
-            this.part.AddModule("ModuleWaterSlider");
+            //this.part.AddModule("ModuleWaterSlider");
             if (HighLogic.LoadedSceneIsGame)
             {
 
