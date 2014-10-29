@@ -50,6 +50,7 @@ namespace KerbalFoundries
         //begin start
         public List<WheelCollider> wcList = new List<WheelCollider>();
         //public List<float> susDistList = new List<float>();
+        ModuleWaterSlider _MWS;
 
         public override void OnStart(PartModule.StartState start)  //when started
         {
@@ -87,8 +88,13 @@ namespace KerbalFoundries
 
                 currentRideHeight = Rideheight;
 
-                UpdateCollider();
+                UpdateHeight();
 
+                foreach (ModuleWaterSlider mws in this.vessel.FindPartModulesImplementing<ModuleWaterSlider>())
+                {
+                    _MWS = mws;
+                }
+                print("water slider height is" + _MWS.colliderHeight);
             }
             DestroyBounds();
 
@@ -117,29 +123,43 @@ namespace KerbalFoundries
 
         public override void OnFixedUpdate()
         {
+            smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime * 2);
+            appliedRideHeight = smoothedRideHeight / 100;
 
-
+            for (int i = 0; i < wcList.Count(); i++)
+            {
+                wcList[i].suspensionDistance = maxRepulsorHeight * appliedRideHeight;
+            }
 
             if (deployed)
             {
+                _MWS.colliderHeight = -2.5f; //reset the height of the water collider that slips away every frame
+
                 float chargeConsumption = (appliedRideHeight / 2) * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate;
                 effectPower = chargeConsumption / effectPowerMax;
 
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
                 //print(electricCharge);
                 // = Extensions.GetBattery(this.part);
-                if (electricCharge < (chargeConsumption * 0.9f))
+                if (electricCharge < (chargeConsumption * 0.5f))
                 {
                     print("Retracting due to low Electric Charge");
                     lowEnergy = true;
                     Rideheight = 0;
-                    UpdateCollider();
+                    UpdateHeight();
                     status = "Low Charge";
                 }
                 else
                 {
                     lowEnergy = false;
                     status = "Nominal";
+                }
+
+                if (appliedRideHeight == 0 || lowEnergy) //disable the colliders if there is not enough energy or height slips below the threshold
+                {
+                    deployed = false;
+                    DisableColliders();
+                    print(appliedRideHeight);
                 }
             }
             else
@@ -150,34 +170,30 @@ namespace KerbalFoundries
             effectPower = 0;    //reset to make sure it doesn't play when it shouldn't.
             //print(effectPower);
 
-
-
-            for (int i = 0; i < wcList.Count(); i++)
-            {
-                wcList[i].suspensionDistance = maxRepulsorHeight * appliedRideHeight;
-            }
-
-            smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime * 2);
-            appliedRideHeight = smoothedRideHeight / 100;
         }
 
-        public void UpdateCollider()
+        public void EnableColliders()
         {
-            currentRideHeight = Rideheight;
             for (int i = 0; i < wcList.Count(); i++)
             {
-
-                if (Rideheight < 5f)
-                {
-                    wcList[i].enabled = false;
-                    deployed = false;
-                }
-                else
-                {
-                    wcList[i].enabled = true;
-                    deployed = true;
-                }
+                wcList[i].enabled = true;
+                deployed = true;
             }
+        }
+
+        public void DisableColliders()
+        {
+            for (int i = 0; i < wcList.Count(); i++)
+            {
+                wcList[i].enabled = false;
+                deployed = false;
+            }
+        }
+
+        public void UpdateHeight()
+        {
+            currentRideHeight = Rideheight;
+            EnableColliders();
         }
 
         [KSPAction("Retract")]
@@ -187,7 +203,7 @@ namespace KerbalFoundries
             {
                 Rideheight -= 5f;
                 print("Retracting");
-                UpdateCollider();
+                UpdateHeight();
             }
 
         }//End Retract
@@ -199,7 +215,7 @@ namespace KerbalFoundries
             {
                 Rideheight += 5f;
                 print("Extending");
-                UpdateCollider();
+                UpdateHeight();
             }
         }//end Deploy
 
@@ -213,11 +229,11 @@ namespace KerbalFoundries
                     mt.Rideheight = Rideheight;
                     currentRideHeight = Rideheight;
                     mt.currentRideHeight = Rideheight;
-                    mt.UpdateCollider();
+                    mt.UpdateHeight();
                 }
             }
 
-            UpdateCollider();
+            UpdateHeight();
         }
     }//end class
 } //end namespace

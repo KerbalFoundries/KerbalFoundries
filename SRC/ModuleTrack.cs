@@ -554,7 +554,18 @@ namespace KerbalFoundries
                     mt.steeringInvert = steeringInvert;
                     mt.torque = torque;
                 }
-                mt.steeringRatio = mt.SetupRatios(mt.rootIndexLong);
+            }
+        }
+
+        [KSPEvent(guiActive = true, guiName = "Apply Steering Settings", active = true)]
+        public void ApplySteeringSettings()
+        {
+            foreach (ModuleTrack mt in this.vessel.FindPartModulesImplementing<ModuleTrack>())
+            {
+                if (groupNumber != 0 && groupNumber == mt.groupNumber)
+                {
+                    mt.steeringRatio = mt.SetupRatios(mt.rootIndexLong);
+                }
             }
         }
 

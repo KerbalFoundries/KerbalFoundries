@@ -15,6 +15,8 @@ namespace KerbalFoundries
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class RepulsorSkim : MonoBehaviour
     {
+        
+
         void Start()
         {
             print("RepulsorSkim Start");
@@ -55,12 +57,8 @@ namespace KerbalFoundries
         GameObject _collider = new GameObject("ModuleWaterSlider.Collider", typeof(BoxCollider), typeof(Rigidbody));
         float triggerDistance = 25f; // avoid moving every frame
 
-        public float colliderHeight = 2.5f;
+        public float colliderHeight = -2.5f;
 
-        // float currentColliderHeight;
-
-        public bool isColliderEnabled = true;
-         
         void Start()
         {
             print("WaterSlider start");
@@ -76,7 +74,7 @@ namespace KerbalFoundries
             var visible = GameObject.CreatePrimitive(PrimitiveType.Cube);
             visible.transform.parent = _collider.transform;
             visible.transform.localScale = box.size;
-            visible.renderer.enabled = false; // enable to see collider
+            visible.renderer.enabled = true; // enable to see collider
             //currentColliderHeight = 3;
             UpdatePosition();
         }
@@ -86,7 +84,7 @@ namespace KerbalFoundries
                 Vector3d oceanNormal = this.part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
                 
                 //print(colliderHeight);
-                Vector3 newPosition = (this.part.vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(this.part.vessel.ReferenceTransform.position)));
+                Vector3 newPosition = (this.part.vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(this.part.vessel.ReferenceTransform.position)-colliderHeight));
                 //newPosition.x -= colliderHeight;
                 _collider.rigidbody.position = newPosition;
                 _collider.rigidbody.rotation = Quaternion.LookRotation(oceanNormal) * Quaternion.AngleAxis(90f, Vector3.right);
@@ -96,6 +94,8 @@ namespace KerbalFoundries
         {
             if (Vector3.Distance(_collider.transform.position, this.part.transform.position) > triggerDistance)
                 UpdatePosition();
+            colliderHeight = Mathf.Clamp((colliderHeight -= 0.1f), -10, 2.5f);
+            //print(colliderHeight);
         }
     }
 }
