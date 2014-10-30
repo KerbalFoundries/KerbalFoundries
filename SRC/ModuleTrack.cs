@@ -35,6 +35,8 @@ namespace KerbalFoundries
         [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
         public string status = "Nominal";
 
+        
+
         //config fields
         [KSPField]
         public FloatCurve torqueCurve = new FloatCurve();       //torque applied to wheel colliders
@@ -84,8 +86,8 @@ namespace KerbalFoundries
         float brakeSteering;
         float motorTorque;
         int groundedWheels = 0; 
-        float trackRPM = 0;
         float effectPower;
+        float trackRPM = 0;
         
         
         
@@ -95,7 +97,7 @@ namespace KerbalFoundries
         public float steeringAngleSmoothed;
         public float appliedRideHeight;
         public int wheelCount;
-        [KSPField(isPersistant = false, guiActive = false, guiName = "RPM", guiFormat = "F1")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "RPM", guiFormat = "F1")]
         public float averageTrackRPM;
         public int directionCorrector;
         public int steeringCorrector = 1;
