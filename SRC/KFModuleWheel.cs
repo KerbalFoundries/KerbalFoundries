@@ -7,8 +7,8 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-    [KSPModule("ModuleTrack")]
-    public class ModuleTrack : PartModule
+
+    public class KFModuleWheel : PartModule
     {
         //name definitions
         public string right = "right";
@@ -435,7 +435,7 @@ namespace KerbalFoundries
             float maxPos = this.part.orgPos[refIndex];
             float minPos = this.part.orgPos[refIndex];
             float ratio = 1;
-            foreach (ModuleTrack st in this.vessel.FindPartModulesImplementing<ModuleTrack>()) //scan vessel to find fore or rearmost wheel. 
+            foreach (KFModuleWheel st in this.vessel.FindPartModulesImplementing<KFModuleWheel>()) //scan vessel to find fore or rearmost wheel. 
             {
                 if (st.groupNumber == groupNumber && groupNumber != 0)
                 {
@@ -545,7 +545,7 @@ namespace KerbalFoundries
         [KSPEvent(guiActive = true, guiName = "Apply Wheel Settings", active = true)]
         public void ApplySettings()
         {
-            foreach (ModuleTrack mt in this.vessel.FindPartModulesImplementing<ModuleTrack>())
+            foreach (KFModuleWheel mt in this.vessel.FindPartModulesImplementing<KFModuleWheel>())
             {
 
                 if (groupNumber != 0 && groupNumber == mt.groupNumber)
@@ -562,7 +562,7 @@ namespace KerbalFoundries
         [KSPEvent(guiActive = true, guiName = "Apply Steering Settings", active = true)]
         public void ApplySteeringSettings()
         {
-            foreach (ModuleTrack mt in this.vessel.FindPartModulesImplementing<ModuleTrack>())
+            foreach (KFModuleWheel mt in this.vessel.FindPartModulesImplementing<KFModuleWheel>())
             {
                 if (groupNumber != 0 && groupNumber == mt.groupNumber)
                 {

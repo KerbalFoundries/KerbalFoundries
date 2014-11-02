@@ -37,7 +37,7 @@ namespace KerbalFoundries
         List<float> wfSideList = new List<float>();
 
         //ModuleWaterSlider mws;
-        ModuleTrack _moduletrack;
+        KFModuleWheel _moduletrack;
 
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
@@ -64,7 +64,7 @@ namespace KerbalFoundries
                     ma.Events["Toggle"].guiActive = false;
                 }
 
-                _moduletrack = this.part.GetComponentInChildren<ModuleTrack>();
+                _moduletrack = this.part.GetComponentInChildren<KFModuleWheel>();
                 _moduletrack.Events["ApplySettings"].guiActive = false;
                 
                 //this.part.force_activate();
@@ -198,7 +198,7 @@ namespace KerbalFoundries
         [KSPEvent(guiActive = true, guiName = "Apply Repulsor Settings", active = true)]
         public void ApplySettings()
         {
-            foreach (ModuleTrack mt in this.vessel.FindPartModulesImplementing<ModuleTrack>())
+            foreach (KFModuleWheel mt in this.vessel.FindPartModulesImplementing<KFModuleWheel>())
             {
                 //if (!_moduletrack.isRetracted)   //normally the button would be disabled in the wheel is retracted.
                 //    _moduletrack.ApplySettings(); 

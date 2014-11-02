@@ -50,6 +50,8 @@ namespace KerbalFoundries
         [KSPField]
         public bool moveCollider = false;
         [KSPField]
+        public bool overrideFriction = true;
+        [KSPField]
         public float moveColliderBy;
         [KSPField]
         public int susTravIndex = 1;
@@ -105,22 +107,24 @@ namespace KerbalFoundries
                     js.targetPosition = targetPosition;
                     _wheelCollider.suspensionSpring = js;
                 }
+                if (overrideFriction)
+                {
+                    WheelFrictionCurve _forwardFric = _wheelCollider.forwardFriction;
+                    _forwardFric.extremumSlip = forExtSlip;
+                    _forwardFric.extremumValue = forExtValue;
+                    _forwardFric.asymptoteSlip = forAsySlip;
+                    _forwardFric.asymptoteValue = forAsyValue;
+                    _forwardFric.stiffness = forStiffness;
+                    _wheelCollider.forwardFriction = _forwardFric;
 
-                WheelFrictionCurve _forwardFric = _wheelCollider.forwardFriction;
-                _forwardFric.extremumSlip = forExtSlip;
-                _forwardFric.extremumValue = forExtValue;
-                _forwardFric.asymptoteSlip = forAsySlip;
-                _forwardFric.asymptoteValue = forAsyValue;
-                _forwardFric.stiffness = forStiffness;
-                _wheelCollider.forwardFriction = _forwardFric;
-
-                WheelFrictionCurve _sideFric = _wheelCollider.sidewaysFriction;
-                _sideFric.extremumSlip = forExtSlip;
-                _sideFric.extremumValue = forExtValue;
-                _sideFric.asymptoteSlip = forAsySlip;
-                _sideFric.asymptoteValue = forAsyValue;
-                _sideFric.stiffness = forStiffness;
-                _wheelCollider.sidewaysFriction = _sideFric;
+                    WheelFrictionCurve _sideFric = _wheelCollider.sidewaysFriction;
+                    _sideFric.extremumSlip = forExtSlip;
+                    _sideFric.extremumValue = forExtValue;
+                    _sideFric.asymptoteSlip = forAsySlip;
+                    _sideFric.asymptoteValue = forAsyValue;
+                    _sideFric.stiffness = forStiffness;
+                    _wheelCollider.sidewaysFriction = _sideFric;
+                }
             }
             
             base.OnStart(state);

@@ -6,11 +6,10 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-    [KSPModule("ModuleTrackSurface")]
-    public class ModuleTrackSurface : PartModule
+    public class KFTrackSurface : PartModule
     {
         GameObject _trackSurface;
-        ModuleTrack _track;
+        KFModuleWheel _track;
         [KSPField]
         public float trackLength = 10;
 
@@ -24,7 +23,7 @@ namespace KerbalFoundries
                 _trackSurface = Track.gameObject;
             }
 
-            _track = this.part.GetComponentInChildren<ModuleTrack>();
+            _track = this.part.GetComponentInChildren<KFModuleWheel>();
 
         }
 

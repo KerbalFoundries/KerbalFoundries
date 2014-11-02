@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections;
+using System.Collections;  
 using System.Linq;
 using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
 {
-    [KSPModule("TrackWheel")]
-    public class TrackWheel : PartModule
+
+    public class KFWheel : PartModule
     {
         //config fields
         [KSPField]
@@ -20,15 +20,13 @@ namespace KerbalFoundries
         [KSPField]
         public string steeringName;
         [KSPField]
-        public string susNeutralName;
-        [KSPField]
         public bool useDirectionCorrector = false; //make sure it's set to false if not specified in the config
         [KSPField]
         public bool isSprocket = false;
         [KSPField]
-        public bool isIdler = false;
+        public bool hasSuspension = true;
         [KSPField]
-        public float smoothSpeed = 40;
+        public float smoothSpeed = 40; 
         [KSPField]
         public float rotationCorrection = 1;
         [KSPField]
@@ -64,7 +62,7 @@ namespace KerbalFoundries
         Transform _susTrav;
         Transform _wheel;
         Transform _trackSteering;
-        ModuleTrack _track;
+        KFModuleWheel _track;
 
         //gloabl variables
 
@@ -135,7 +133,7 @@ namespace KerbalFoundries
                 }
                 //end find named objects
 
-                _track = this.part.GetComponentInChildren<ModuleTrack>();
+                _track = this.part.GetComponentInChildren<KFModuleWheel>();
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis);
@@ -175,6 +173,10 @@ namespace KerbalFoundries
                 {
                     StartCoroutine(IndividualWheel());
                 }
+                if(hasSuspension)
+                {
+                    StartCoroutine(Suspension());
+                }
                 this.part.force_activate();
             }//end flight
             base.OnStart(state);
@@ -209,29 +211,38 @@ namespace KerbalFoundries
             }
         }
 
+        IEnumerator Suspension()
+        {
+            while (true)
+            {
+                _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
+                //suspension movement
+                WheelHit hit;
+                float frameTraverse = 0;
+                bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
+                float tempLastFrameTraverse = lastFrameTraverse;
+                if (grounded && !isSprocket) //is it on the ground
+                {
+                    frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError - _wheelCollider.radius;
+                    lastFrameTraverse = frameTraverse;
+                }
+                else
+                {
+                    frameTraverse = lastFrameTraverse; //movement defaults back to zero when not grounded
+                }
+
+                newTranslation = tempLastFrameTraverse - frameTraverse;
+                MoveSuspension(susTravIndex, newTranslation, _susTrav);
+                //end suspension movement
+                yield return null;
+            }
+        }
+
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
             
-            _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
-            //suspension movement
-            WheelHit hit;
-            float frameTraverse = 0;
-            bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
-            float tempLastFrameTraverse = lastFrameTraverse;
-            if (grounded && !isSprocket) //is it on the ground
-            {
-                frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError - _wheelCollider.radius;
-                lastFrameTraverse = frameTraverse;
-            }
-            else
-            {
-                frameTraverse = lastFrameTraverse; //movement defaults back to zero when not grounded
-            }
 
-            newTranslation = tempLastFrameTraverse - frameTraverse;
-            MoveSuspension(susTravIndex, newTranslation, _susTrav);
-            //end suspension movement
             
         }//end OnFixedUpdate
 

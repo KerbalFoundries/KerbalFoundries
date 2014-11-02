@@ -9,7 +9,7 @@ namespace KerbalFoundries
     [KSPModule("ModulePropeller")]
     class ModulePropeller : PartModule
     {
-        ModuleTrack master;
+        KFModuleWheel master;
 
         [KSPField]
         public float propellerForce = 5;
@@ -21,7 +21,7 @@ namespace KerbalFoundries
             base.OnStart(state);
             if (HighLogic.LoadedSceneIsFlight) 
             {
-                master = this.part.GetComponentInChildren<ModuleTrack>();
+                master = this.part.GetComponentInChildren<KFModuleWheel>();
             }
         }
 
