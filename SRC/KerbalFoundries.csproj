@@ -54,6 +54,7 @@
     <Compile Include="APUController.cs" />
     <Compile Include="HeavyCrawler.cs" />
     <Compile Include="KFLookAt.cs" />
+    <Compile Include="KFSteering.cs" />
     <Compile Include="LandingGearWheel.cs" />
     <Compile Include="ModuleLandingGear2.cs" />
     <Compile Include="ModulePropeller.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="Utils.cs" />
     <Compile Include="Version.cs" />
     <Compile Include="VesselTools.cs" />
+    <Compile Include="WheelUtils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

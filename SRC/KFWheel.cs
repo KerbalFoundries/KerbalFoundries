@@ -207,7 +207,8 @@ namespace KerbalFoundries
             {
                 degreesPerTick = (_wheelCollider.rpm / 60) * Time.deltaTime * 360;
                 _wheel.transform.Rotate(_wheelRotation, degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
-                yield return null;
+                yield return new WaitForFixedUpdate();
+                print(Time.deltaTime);
             }
         }
 

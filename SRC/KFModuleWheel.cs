@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-
 namespace KerbalFoundries
 {
 
@@ -19,7 +18,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = false, guiActive = true, guiName = "Wheel Settings")]
         public string settings = "";
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
-        public float groupNumber = 1;
+        public int groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque Ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
         public float torque = 1;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring Strength"), UI_FloatRange(minValue = 0, maxValue = 6.00f, stepIncrement = 0.2f)]
@@ -66,6 +65,8 @@ namespace KerbalFoundries
         public bool hasRetractAnimation = false;
         [KSPField]
         public string boundsName = "Bounds";
+        [KSPField]
+        public bool passivePart = false;
 
         //persistent fields
         [KSPField(isPersistant = true)]
@@ -88,9 +89,6 @@ namespace KerbalFoundries
         int groundedWheels = 0; 
         float effectPower;
         float trackRPM = 0;
-        
-        
-        
 
         //stuff deliberately made available to other modules:
         public float steeringAngle;
@@ -147,11 +145,11 @@ namespace KerbalFoundries
                     Extensions.DisableAnimateButton(this.part);
 
                 // wheel steering ratio setup
-                rootIndexLong = GetRefAxis(this.part.transform.forward, this.vessel.rootPart.transform); //Find the root part axis which matches each wheel axis.
-                rootIndexLat = GetRefAxis(this.part.transform.right, this.vessel.rootPart.transform);
-                rootIndexUp = GetRefAxis(this.part.transform.up, this.vessel.rootPart.transform);
+                rootIndexLong = WheelUtils.GetRefAxis(this.part.transform.forward, this.vessel.rootPart.transform); //Find the root part axis which matches each wheel axis.
+                rootIndexLat = WheelUtils.GetRefAxis(this.part.transform.right, this.vessel.rootPart.transform);
+                rootIndexUp = WheelUtils.GetRefAxis(this.part.transform.up, this.vessel.rootPart.transform);
 
-                steeringRatio = SetupRatios(rootIndexLong); //use the axis which corresponds to the forward axis of the wheel.
+                steeringRatio = WheelUtils.SetupRatios(rootIndexLong, this.part, this.vessel, groupNumber); //use the axis which corresponds to the forward axis of the wheel.
 
                 GetControlAxis(); // sets up motor and steering direction direction
 
@@ -222,7 +220,7 @@ namespace KerbalFoundries
                 motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
                 brakeSteeringTorque = Mathf.Clamp(brakeSteering * this.vessel.ctrlState.wheelSteer, 0, 1000); //if the calculated value is negative, disregard: Only brake on inside track. no need to direction correct as we are using the velocity or the part not the vessel.
                 //chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
-                steeringAngleSmoothed = Mathf.Lerp(steeringAngleSmoothed, steeringAngle, Time.deltaTime * smoothSpeed);
+                
 
                 float chargeConsumption = Time.deltaTime * chargeConsumptionRate * (Math.Abs(motorTorque) / 100);
                 //print(chargeConsumption);
@@ -231,7 +229,7 @@ namespace KerbalFoundries
                 foreach (WheelCollider wc in wcList)
                 {
                     if (electricCharge != chargeConsumption)
-                    {
+                    { 
                         motorTorque = 0;
                         status = "Low Charge";
                     }
@@ -278,6 +276,7 @@ namespace KerbalFoundries
             {
                 averageTrackRPM = 0;
                 degreesPerTick = 0;
+                steeringAngle = 0;
             
                 foreach (WheelCollider wc in wcList)
                 {
@@ -289,6 +288,7 @@ namespace KerbalFoundries
             //print(effectPower);
             smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime * 2);
             appliedRideHeight = smoothedRideHeight / 100;
+            steeringAngleSmoothed = Mathf.Lerp(steeringAngleSmoothed, steeringAngle, Time.deltaTime * smoothSpeed);
             //print(smoothedRideHeight); //debugging
             
 
@@ -348,121 +348,22 @@ namespace KerbalFoundries
 
         public void GetControlAxis()
         {
-            controlAxisIndex = GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform); //grab current values for the part and the control module, which may ahve changed.
-            directionCorrector = GetCorrector(this.part.transform.forward, this.vessel.ReferenceTransform, controlAxisIndex); // dets the motor direction correction again.
+            controlAxisIndex = WheelUtils.GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform); //grab current values for the part and the control module, which may ahve changed.
+            directionCorrector = WheelUtils.GetCorrector(this.part.transform.forward, this.vessel.ReferenceTransform, controlAxisIndex); // dets the motor direction correction again.
             if (controlAxisIndex == rootIndexLat)       //uses the precalulated forward (as far as this part is concerned) to determined the orientation of the control module
-                steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLat);
+                steeringCorrector = WheelUtils.GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLat);
             if (controlAxisIndex == rootIndexLong)
-                steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLong);
+                steeringCorrector = WheelUtils.GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexLong);
             if (controlAxisIndex == rootIndexUp)
-                steeringCorrector = GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexUp);
+                steeringCorrector = WheelUtils.GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexUp);
         }
 
 
-        public int GetRefAxis(Vector3 refDirection, Transform refTransform) //takes a vector 3 derived from the axis of the parts transform (typically), and the transform of the part to compare to (usually the root part)
-        {                                                                   // uses scalar products to determine which axis is closest to the axis specified in refDirection, return an index value 0 = X, 1 = Y, 2 = Z
-            //orgpos = this.part.orgPos; //debugguing
-            float dotx = Math.Abs(Vector3.Dot(refDirection, refTransform.right)); // up is forward
-            //print(dotx); //debugging
-            float doty = Math.Abs(Vector3.Dot(refDirection, refTransform.up));
-            //print(doty); //debugging
-            float dotz = Math.Abs(Vector3.Dot(refDirection, refTransform.forward));
-            //print(dotz); //debugging
 
-            int orientationIndex = 0;
 
-            if (dotx > doty && dotx > dotz)
-            {
-                print("root part mounted right");
-                orientationIndex = 0;
-            }
-            if (doty > dotx && doty > dotz)
-            {
-                print("root part mounted forward");
-                orientationIndex = 1;
-            }
-            if (dotz > doty && dotz > dotx)
-            {
-                print("root part mounted up");
-                orientationIndex = 2;
-            }
-            /*
-            if (referenceDirection == 0)
-            {
-                referenceTranformVector.x = Math.Abs(referenceTranformVector.x);
-            }
-             * */
-            return orientationIndex;
-        }
 
-        public int GetCorrector(Vector3 transformVector, Transform referenceVector, int directionIndex) // takes a vector (usually from a parts axis) and a transform, plus an index giving which axis to   
-        {                                                                                               // use for the scalar product of the two. Returns a value of -1 or 1, depending on whether the product is positive or negative.
-            int corrector = 1;
-            float dot = 0;
 
-            if (directionIndex == 0)
-            {
-                dot = Vector3.Dot(transformVector, referenceVector.right); // up is forward
-                
-            }
-            if (directionIndex == 1)
-            {
-                dot = Vector3.Dot(transformVector, referenceVector.up); // up is forward
-            }
-            if (directionIndex == 2)
-            {
-                dot = Vector3.Dot(transformVector, referenceVector.forward); // up is forward
-            }
 
-            //print(dot);
-
-            if (dot < 0) // below 0 means the engine is on the left side of the craft
-            {
-                corrector = -1;
-                print("left");
-            }
-            else
-            {
-                corrector = 1;
-                print("right");
-            }
-            return corrector;
-        }
-
-        public float SetupRatios(int refIndex)      // Determines how much this wheel should be steering according to its position in the craft. Returns a value -1 to 1.
-        {
-            float myPosition = this.part.orgPos[refIndex];
-            float maxPos = this.part.orgPos[refIndex];
-            float minPos = this.part.orgPos[refIndex];
-            float ratio = 1;
-            foreach (KFModuleWheel st in this.vessel.FindPartModulesImplementing<KFModuleWheel>()) //scan vessel to find fore or rearmost wheel. 
-            {
-                if (st.groupNumber == groupNumber && groupNumber != 0)
-                {
-                    float otherPosition = myPosition;
-                    otherPosition = st.part.orgPos[refIndex];
-
-                    if ((otherPosition + 1000) >= (maxPos + 1000)) //dodgy hack. Make sure all values are positive or we struggle to evaluate < or >
-                        maxPos = otherPosition; //Store transform y value
-
-                    if ((otherPosition + 1000) <= (minPos + 1000))
-                        minPos = otherPosition; //Store transform y value
-                }
-            }
-
-            float minToMax = maxPos - minPos;
-            float midPoint = minToMax / 2;
-            float offset = (maxPos + minPos) / 2;
-            float myAdjustedPosition = myPosition - offset;
-
-            ratio = myAdjustedPosition / midPoint;
-
-            if (ratio == 0 || float.IsNaN(ratio)) //check is we managed to evaluate to zero or infinity somehow. Happens with less than three wheels, or all wheels mounted at the same position.
-                ratio = 1;
-            //print("ratio"); //Debugging
-            //print(ratio);
-            return ratio;
-        }
 
         public void PlayAnimation()
         {
@@ -566,7 +467,7 @@ namespace KerbalFoundries
             {
                 if (groupNumber != 0 && groupNumber == mt.groupNumber)
                 {
-                    mt.steeringRatio = mt.SetupRatios(mt.rootIndexLong);
+                    mt.steeringRatio = WheelUtils.SetupRatios(mt.rootIndexLong, this.part, this.vessel, groupNumber);
                 }
             }
         }
