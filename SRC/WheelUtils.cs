@@ -76,7 +76,7 @@ namespace KerbalFoundries
             return orientationIndex;
         }
 
-        public static float SetupRatios(int refIndex, Part thisPart, Vessel thisVessel, int groupNumber)      // Determines how much this wheel should be steering according to its position in the craft. Returns a value -1 to 1.
+        public static float SetupRatios(int refIndex, Part thisPart, Vessel thisVessel, float groupNumber)      // Determines how much this wheel should be steering according to its position in the craft. Returns a value -1 to 1.
         {
             float myPosition = thisPart.orgPos[refIndex];
             float maxPos = thisPart.orgPos[refIndex];

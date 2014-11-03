@@ -18,7 +18,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = false, guiActive = true, guiName = "Wheel Settings")]
         public string settings = "";
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
-        public int groupNumber = 1;
+        public float groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque Ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
         public float torque = 1;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring Strength"), UI_FloatRange(minValue = 0, maxValue = 6.00f, stepIncrement = 0.2f)]
@@ -467,7 +467,7 @@ namespace KerbalFoundries
             {
                 if (groupNumber != 0 && groupNumber == mt.groupNumber)
                 {
-                    mt.steeringRatio = WheelUtils.SetupRatios(mt.rootIndexLong, this.part, this.vessel, groupNumber);
+                    mt.steeringRatio = WheelUtils.SetupRatios(mt.rootIndexLong, mt.part, this.vessel, groupNumber);
                 }
             }
         }
