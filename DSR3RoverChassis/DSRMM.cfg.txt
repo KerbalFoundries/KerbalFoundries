@@ -1,0 +1,47 @@
+ @PART[DSR3SciPod]:NEEDS[RasterPropMonitor]
+ {
+     @INTERNAL
+     {
+         @name = DSR3SciIntRPM
+     }
+     MODULE
+     {
+         name = RasterPropMonitorComputer
+     }
+	 MODULE
+{
+	name = JSITransparentPod
+	transparentTransforms = Glass
+}
+ }
+//  @PART[DSR3RoverHull]:NEEDS[RasterPropMonitor]
+// {
+ //    @INTERNAL
+ //    {
+ //        @name = DSR3SciIntRPM
+ //    }
+ //    MODULE
+ //    {
+  //       name = RasterPropMonitorComputer
+ //    }
+//	 MODULE
+//{
+//	name = JSITransparentPod
+///	transparentTransforms = Glass
+//}
+ //}
+ //  @PART[DSR3CRoverHull]:NEEDS[RasterPropMonitor]
+ //{
+ //    @INTERNAL
+ //    {
+ //        @name = DSR3SciIntRPM
+ //    }
+ //    MODULE
+ //    {
+//         name = RasterPropMonitorComputer
+//     }
+//	 MODULE
+//{
+//	name = JSITransparentPod
+//	transparentTransforms = Glass
+//}

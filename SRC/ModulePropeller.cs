@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-    [KSPModule("ModulePropeller")]
     class ModulePropeller : PartModule
     {
         KFModuleWheel master;
