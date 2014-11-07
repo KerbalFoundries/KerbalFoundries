@@ -212,28 +212,37 @@ namespace KerbalFoundries
             }
         }
 
-        IEnumerator Suspension()
+        IEnumerator Suspension() //Coroutine for wheels with suspension.
         {
             while (true)
             {
                 _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
                 //suspension movement
-                WheelHit hit;
+                WheelHit hit; //set this up to grab sollider raycast info
                 float frameTraverse = 0;
                 bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
-                float tempLastFrameTraverse = lastFrameTraverse;
-                if (grounded && !isSprocket) //is it on the ground
+                float tempLastFrameTraverse = lastFrameTraverse; //we need the value, but will over-write shortly. Store it here.
+                if (grounded) //is it on the ground
                 {
-                    frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError - _wheelCollider.radius;
+                    frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError - _wheelCollider.radius; //calculate suspension travel using the collider raycast.
+                    if (frameTraverse > (_wheelCollider.suspensionDistance + _track.raycastError)) //the raycast sometimes goes further than its max value. Catch and stop the mesh moving further
+                    {
+                        frameTraverse = _wheelCollider.suspensionDistance;
+                    }
+                    else if (frameTraverse < 0) //the raycast can be negative (!); catch this too
+                    {
+                        frameTraverse = 0;
+                    }
+                    //print(frameTraverse);
                     lastFrameTraverse = frameTraverse;
                 }
                 else
                 {
-                    frameTraverse = lastFrameTraverse; //movement defaults back to zero when not grounded
+                    frameTraverse = lastFrameTraverse; //movement defaults back to last position when the collider is not grounded. Ungrounded collider returns suspension travel of zero!
                 }
 
-                newTranslation = tempLastFrameTraverse - frameTraverse;
-                MoveSuspension(susTravIndex, newTranslation, _susTrav);
+                newTranslation = tempLastFrameTraverse - frameTraverse; // calculate the change of movement. Using Translate on susTrav, which is cumulative, not absolute.
+                MoveSuspension(susTravIndex, newTranslation, _susTrav); //move suspension in its configured direction by the amount calculated for this frame. 
                 //end suspension movement
                 yield return null;
             }
@@ -243,11 +252,11 @@ namespace KerbalFoundries
         {
             base.OnFixedUpdate();
             
-
+            //not a lof in here since I moved it all into coroutines.
             
         }//end OnFixedUpdate
 
-        public void MoveSuspension(int index, float movement, Transform movedObject)
+        public void MoveSuspension(int index, float movement, Transform movedObject) //susTrav Axis, amount to move, named object.
         {
             Vector3 tempVector = new Vector3(0, 0, 0);
             tempVector[index] = movement;
