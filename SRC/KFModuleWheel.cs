@@ -226,7 +226,7 @@ namespace KerbalFoundries
                 //print(chargeConsumption);
                 electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
                 float freeWheelRPM = 0;
-                foreach (WheelCollider wc in wcList)
+                for(int i = 0; i < wcList.Count(); i++)
                 {
                     if (electricCharge != chargeConsumption)
                     { 
@@ -242,20 +242,20 @@ namespace KerbalFoundries
                     {
                         status = "Nominal";
                     }
-                    wc.motorTorque = motorTorque;
-                    wc.brakeTorque = brakeTorque + brakeSteeringTorque + rollingResistance;
+                    wcList[i].motorTorque = motorTorque;
+                    wcList[i].brakeTorque = brakeTorque + brakeSteeringTorque + rollingResistance;
 
-                    if (wc.isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
+                    if (wcList[i].isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
                     {
                         groundedWheels++;
-                        trackRPM += wc.rpm;
+                        trackRPM += wcList[i].rpm;
                     }
-                    else if (wc.suspensionDistance != 0) //the sprocket colliders could be doing anything. Don't count them.
+                    else if (wcList[i].suspensionDistance != 0) //the sprocket colliders could be doing anything. Don't count them.
                     {
-                        freeWheelRPM += wc.rpm;
+                        freeWheelRPM += wcList[i].rpm;
                     }
-
-                    wc.steerAngle = steeringAngleSmoothed;
+                    if(hasSteering)
+                        wcList[i].steerAngle = steeringAngleSmoothed;
                 }
 
 
@@ -272,26 +272,24 @@ namespace KerbalFoundries
                 groundedWheels = 0; //reset number of wheels.
 
             }
-            else
+            else //if(isRetracted)
             {
                 averageTrackRPM = 0;
                 degreesPerTick = 0;
                 steeringAngle = 0;
             
-                foreach (WheelCollider wc in wcList)
+                for (int i = 0; i < wcList.Count(); i++)
                 {
-                    wc.motorTorque = 0;
-                    wc.brakeTorque = 500;
-                    wc.steerAngle = 0;
+                    wcList[i].motorTorque = 0;
+                    wcList[i].brakeTorque = 500;
+                    wcList[i].steerAngle = 0;
                 }
             }
-            //print(effectPower);
             smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime * 2);
             appliedRideHeight = smoothedRideHeight / 100;
             steeringAngleSmoothed = Mathf.Lerp(steeringAngleSmoothed, steeringAngle, Time.deltaTime * smoothSpeed);
             //print(smoothedRideHeight); //debugging
             
-
         }//end OnFixedUpdate
 
         public override void OnUpdate()

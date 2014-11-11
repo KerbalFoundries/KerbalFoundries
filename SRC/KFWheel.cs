@@ -62,7 +62,7 @@ namespace KerbalFoundries
         Transform _susTrav;
         Transform _wheel;
         Transform _trackSteering;
-        KFModuleWheel _track;
+        KFModuleWheel _KFModuleWheel;
 
         //gloabl variables
 
@@ -133,19 +133,19 @@ namespace KerbalFoundries
                 }
                 //end find named objects
 
-                _track = this.part.GetComponentInChildren<KFModuleWheel>();
+                _KFModuleWheel = this.part.GetComponentInChildren<KFModuleWheel>();
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis);
 
-                if (_track.hasSteering)
+                if (_KFModuleWheel.hasSteering)
                 {
                     initialSteeringAngles = _trackSteering.transform.localEulerAngles;
                     //print(initialSteeringAngles);
                 }
 
                 if (useDirectionCorrector)
-                    directionCorrector = _track.directionCorrector;
+                    directionCorrector = _KFModuleWheel.directionCorrector;
                 else directionCorrector = 1;
 
                 _wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
@@ -160,7 +160,7 @@ namespace KerbalFoundries
                 //Debug.LogError(lastFrameTraverse);
                 MoveSuspension(susTravIndex, -lastFrameTraverse, _susTrav); //to get the initial stuff correct
 
-                if (_track.hasSteering)
+                if (_KFModuleWheel.hasSteering)
                 {
                     StartCoroutine(Steering());
                     Debug.LogError("starting steering coroutine");
@@ -188,7 +188,7 @@ namespace KerbalFoundries
             while(true)
             {
             Vector3 newSteeringAngle = initialSteeringAngles;
-            newSteeringAngle[steeringIndex] += _track.steeringAngleSmoothed;
+            newSteeringAngle[steeringIndex] += _KFModuleWheel.steeringAngleSmoothed;
             _trackSteering.transform.localEulerAngles = newSteeringAngle;
             yield return null;
             }
@@ -197,7 +197,7 @@ namespace KerbalFoundries
         {
             while (true)
             {
-                _wheel.transform.Rotate(_wheelRotation, _track.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
+                _wheel.transform.Rotate(_wheelRotation, _KFModuleWheel.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
                 yield return null;
             }
         }
@@ -208,7 +208,6 @@ namespace KerbalFoundries
                 degreesPerTick = (_wheelCollider.rpm / 60) * Time.deltaTime * 360;
                 _wheel.transform.Rotate(_wheelRotation, degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
                 yield return new WaitForFixedUpdate();
-                print(Time.deltaTime);
             }
         }
 
@@ -216,7 +215,7 @@ namespace KerbalFoundries
         {
             while (true)
             {
-                _wheelCollider.suspensionDistance = suspensionDistance * _track.appliedRideHeight;
+                _wheelCollider.suspensionDistance = suspensionDistance * _KFModuleWheel.appliedRideHeight;
                 //suspension movement
                 WheelHit hit; //set this up to grab sollider raycast info
                 float frameTraverse = 0;
@@ -224,8 +223,8 @@ namespace KerbalFoundries
                 float tempLastFrameTraverse = lastFrameTraverse; //we need the value, but will over-write shortly. Store it here.
                 if (grounded) //is it on the ground
                 {
-                    frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _track.raycastError - _wheelCollider.radius; //calculate suspension travel using the collider raycast.
-                    if (frameTraverse > (_wheelCollider.suspensionDistance + _track.raycastError)) //the raycast sometimes goes further than its max value. Catch and stop the mesh moving further
+                    frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _KFModuleWheel.raycastError - _wheelCollider.radius; //calculate suspension travel using the collider raycast.
+                    if (frameTraverse > (_wheelCollider.suspensionDistance + _KFModuleWheel.raycastError)) //the raycast sometimes goes further than its max value. Catch and stop the mesh moving further
                     {
                         frameTraverse = _wheelCollider.suspensionDistance;
                     }
@@ -252,7 +251,7 @@ namespace KerbalFoundries
         {
             base.OnFixedUpdate();
             
-            //not a lof in here since I moved it all into coroutines.
+            //not a lot in here since I moved it all into coroutines.
             
         }//end OnFixedUpdate
 
