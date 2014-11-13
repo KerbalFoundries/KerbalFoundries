@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -16,6 +17,8 @@ namespace KerbalFoundries
         public string mirrorObjectName;
         [KSPField]
         public float mirrorOffset;
+        [KSPField]
+        public bool activeEditor = false;
 
         Transform _target;
         Transform _rotator;
@@ -26,31 +29,54 @@ namespace KerbalFoundries
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
-             
+
+            if (HighLogic.LoadedSceneIsEditor && activeEditor)
+            {
+                SetupObjects();
+                StartCoroutine(Rotator());
+            }
+
             if (HighLogic.LoadedSceneIsFlight)
             {
-                _rotator = transform.Search(rotatorsName);
-                _target = transform.Search(targetName);
-                _mirrorObject = transform.Search(mirrorObjectName);
+                SetupObjects();
+                StartCoroutine(Rotator());
+            }
 
-                if (_mirrorObject.transform.localScale.x < 0 || _mirrorObject.transform.localScale.y < 0 || _mirrorObject.transform.localScale.z < 0)
-                {
-                    invert = true;
-                }
-                else
-                    invert = false;
-            } 
+
+        }
+        public void SetupObjects()
+        {
+            _rotator = transform.Search(rotatorsName);
+            _target = transform.Search(targetName);
+
+            _mirrorObject = transform.Search(mirrorObjectName);
+
+            if (_mirrorObject.transform.localScale.x < 0 || _mirrorObject.transform.localScale.y < 0 || _mirrorObject.transform.localScale.z < 0)
+            {
+                invert = true;
+            }
+            else
+                invert = false;
         }
 
-        public override void OnUpdate()
+        IEnumerator Rotator()
+        {
+            while (true)
+            {
+                _rotator.LookAt(_target.position, this.part.transform.forward);
+                if (invert == true)
+                {
+                    _rotator.Rotate(Vector3.right, 180 - mirrorOffset);
+                }
+                yield return null;
+            }
+        }
+
+        public void Update()
         {
             base.OnUpdate();
 
-            _rotator.LookAt(_target.position, this.part.transform.forward);
-            if (invert == true)
-            {
-                _rotator.Rotate(Vector3.right, 180 - mirrorOffset);
-            }
+
 
         }
     }

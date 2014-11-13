@@ -11,14 +11,22 @@ namespace KerbalFoundries
     public class PartMirror : PartModule
     {
 
-        public Transform rootObject;
-        public string right = "right";
-        public string left = "left";
-        public string swap = "swap";
+        Transform rootObject;
+        string right = "right";
+        string left = "left";
+        string swap = "swap";
+        string mirror = "mirror";
+        string move = "move";
+        string rotate = "rotate";
+        string scale = "scale";
         [KSPField(isPersistant = true)]
         public string flightSide;
         [KSPField(isPersistant = true)]
         public string cloneSide;
+        [KSPField(isPersistant = true)]
+        public Vector3 initialPosition;
+        [KSPField(isPersistant = true)]
+        public bool alreadyConfigured = false;
 
         public PartMirror clone;
         Vector3 _scale;
@@ -26,8 +34,13 @@ namespace KerbalFoundries
         [KSPField]
         public string rootObjectName;
         [KSPField]
-        public int scaleIndex = 0;
-
+        public int objectAxisIndex = 0;
+        [KSPField]
+        public string mode = "mirror"; 
+        [KSPField]
+        public Vector3 moveAxis = new Vector3(0, 0, 1);
+        [KSPField]
+        public float moveAmount = 0;
         
         
 
@@ -35,12 +48,17 @@ namespace KerbalFoundries
         {
             base.OnStart(state);
 
+            
+
             rootObject = transform.Search(rootObjectName);
             //rootObject = this.part.transform;
             if(rootObject == null)
                 print("did not find root part");
 
             _scale = this.part.transform.localScale;
+            if(!alreadyConfigured)
+                initialPosition = rootObject.transform.localPosition;
+            alreadyConfigured = true;
 
             if (flightSide == "") //check to see if we have a value in persistence
             {
@@ -146,12 +164,21 @@ namespace KerbalFoundries
 
         public void SetSide(string side) //accepts the string value
         {
+            
             if (side == left)
             {
-                _scale[scaleIndex] = Math.Abs(_scale[scaleIndex]); // make sure it's positive
-                print(_scale);
-                //this.part.transform.localScale = _scale;
-                rootObject.transform.localScale = _scale; 
+                if (mode == scale)
+                {
+                    _scale[objectAxisIndex] = Math.Abs(_scale[objectAxisIndex]); // make sure it's positive
+                    print(_scale);
+                    //this.part.transform.localScale = _scale;
+                    rootObject.transform.localScale = _scale;
+                }
+                else if (mode == move)
+                {
+                    rootObject.localPosition = initialPosition;
+                    rootObject.transform.Translate(moveAxis * -moveAmount);
+                }
                 flightSide = side;
                 cloneSide = right;
                 Events["LeftSide"].active = false;
@@ -159,10 +186,18 @@ namespace KerbalFoundries
             }
             if (side == right)
             {
-                _scale[scaleIndex] = -Math.Abs(_scale[scaleIndex]); // make sure it's positive
-                print(_scale);
-                //this.part.transform.localScale = _scale;
-                rootObject.transform.localScale = _scale;
+                if (mode == scale)
+                {
+                    _scale[objectAxisIndex] = -Math.Abs(_scale[objectAxisIndex]); // make sure it's positive
+                    print(_scale);
+                    //this.part.transform.localScale = _scale;
+                    rootObject.transform.localScale = _scale;
+                }
+                else if (mode == move)
+                {
+                    rootObject.localPosition = initialPosition;
+                    rootObject.transform.Translate(moveAxis * moveAmount);
+                }
                 flightSide = side;
                 cloneSide = left;
                 Events["LeftSide"].active = true;

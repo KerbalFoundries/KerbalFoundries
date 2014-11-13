@@ -56,6 +56,7 @@
     <Compile Include="KFLookAt.cs" />
     <Compile Include="KFSteering.cs" />
     <Compile Include="LandingGearWheel.cs" />
+    <Compile Include="MirrorMover.cs" />
     <Compile Include="ModuleLandingGear2.cs" />
     <Compile Include="ModulePropeller.cs" />
     <Compile Include="KFModuleWheel.cs" />
