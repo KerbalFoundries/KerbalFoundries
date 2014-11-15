@@ -10,6 +10,9 @@ namespace KerbalFoundries
 
     public class KFWheel : PartModule
     {
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Suspension travel")]
+        public float susTravel;
+
         //config fields
         [KSPField]
         public string wheelName;
@@ -56,6 +59,8 @@ namespace KerbalFoundries
         public float suspensionDamper;
         [KSPField(isPersistant = true)]
         public bool isConfigured = false;
+        [KSPField(isPersistant = true)]
+        public int suspensionCorrector = 1;
 
         //object types
         WheelCollider _wheelCollider;
@@ -72,6 +77,7 @@ namespace KerbalFoundries
         int susTravIndex = 1;
         int steeringIndex = 1;
         public int directionCorrector = 1;
+        
         float degreesPerTick;
         
 
@@ -153,7 +159,7 @@ namespace KerbalFoundries
                 if (lastFrameTraverse == 0) //check to see if we have a value in persistance
                 {
                     Debug.LogError("Last frame = 0. Setting");
-                    lastFrameTraverse = _wheelCollider.suspensionDistance;
+                    lastFrameTraverse = _wheelCollider.suspensionDistance * suspensionCorrector;
                     Debug.LogError(lastFrameTraverse);
                 }
                 //Debug.LogError("Last frame =");
@@ -228,17 +234,21 @@ namespace KerbalFoundries
                     {
                         frameTraverse = _wheelCollider.suspensionDistance;
                     }
+                        /*
                     else if (frameTraverse < 0) //the raycast can be negative (!); catch this too
                     {
                         frameTraverse = 0;
                     }
+                         * */
                     //print(frameTraverse);
+                    frameTraverse *= suspensionCorrector;
                     lastFrameTraverse = frameTraverse;
                 }
                 else
                 {
                     frameTraverse = lastFrameTraverse; //movement defaults back to last position when the collider is not grounded. Ungrounded collider returns suspension travel of zero!
                 }
+                susTravel = frameTraverse;
 
                 newTranslation = tempLastFrameTraverse - frameTraverse; // calculate the change of movement. Using Translate on susTrav, which is cumulative, not absolute.
                 MoveSuspension(susTravIndex, newTranslation, _susTrav); //move suspension in its configured direction by the amount calculated for this frame. 
