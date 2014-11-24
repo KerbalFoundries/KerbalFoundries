@@ -45,7 +45,7 @@ namespace KerbalFoundries
         {
             // degub only: print("onstart");
             base.OnStart(start);
-            print(Version.versionNumber);
+            print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
             if (HighLogic.LoadedSceneIsEditor)
             {

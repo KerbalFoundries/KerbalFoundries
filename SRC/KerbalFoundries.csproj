@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>KerbalFoundries</RootNamespace>
-    <AssemblyName>Wheels</AssemblyName>
+    <AssemblyName>KerbalFoundries</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -69,7 +69,6 @@
     <Compile Include="RepulsorWheel.cs" />
     <Compile Include="KFWheel.cs" />
     <Compile Include="Utils.cs" />
-    <Compile Include="Version.cs" />
     <Compile Include="VesselTools.cs" />
     <Compile Include="WheelUtils.cs" />
   </ItemGroup>

@@ -19,7 +19,7 @@ namespace KerbalFoundries
         string move = "move";
         string rotate = "rotate";
         string scale = "scale";
-        [KSPField(isPersistant = true)]
+        [KSPField(isPersistant = true)] 
         public string flightSide;
         [KSPField(isPersistant = true)]
         public string cloneSide;

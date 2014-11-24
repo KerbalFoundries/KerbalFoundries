@@ -110,7 +110,7 @@ namespace KerbalFoundries
         {
              
             base.OnStart(start);
-            print(Version.versionNumber);
+            print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version); 
 
             if (startRetracted)
             {

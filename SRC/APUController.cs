@@ -32,7 +32,7 @@ namespace KerbalFoundries
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
-            print(Version.versionNumber);
+            print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
             FindEngine(); 
             if (HighLogic.LoadedSceneIsFlight)

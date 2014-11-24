@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System.Text;
-using UnityEngine;
+using UnityEngine; 
 
 namespace KerbalFoundries
 {
     public class KFLookAt : PartModule
     {
         [KSPField]
-        public string targetName;
+        public string targetName; 
         [KSPField]
         public string rotatorsName;
         [KSPField]
         public string mirrorObjectName;
         [KSPField]
-        public float mirrorOffset;
+        public float mirrorOffset = 0;
         [KSPField]
         public bool activeEditor = false;
 
