@@ -25,9 +25,9 @@ namespace KerbalFoundries
         public float groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 100f, stepIncrement = 5f)]
         public float Rideheight = 25;        //this is what's tweaked by the line above
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 6.00f, stepIncrement = 0.2f)]
         public float SpringRate;        //this is what's tweaked by the line above
-        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.2f, stepIncrement = 0.025f)]
+        [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.3f, stepIncrement = 0.05f)]
         public float DamperRate;        //this is what's tweaked by the line above
         [KSPField]
         public bool deployed;
@@ -174,8 +174,10 @@ namespace KerbalFoundries
 
         public void EnableColliders()
         {
+            print(wcList.Count());
             for (int i = 0; i < wcList.Count(); i++)
             {
+                print(i);
                 wcList[i].enabled = true;
                 deployed = true;
             }

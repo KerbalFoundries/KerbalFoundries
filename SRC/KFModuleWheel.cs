@@ -75,6 +75,8 @@ namespace KerbalFoundries
         public bool brakesApplied;                      //saves the brake state
         [KSPField(isPersistant = true)]
         public bool isRetracted = false;
+        [KSPField(isPersistant = true, guiActive = true, guiName = "TS", guiFormat = "F1")] //debug only.
+        public float tweakScaleCorrector = 1;
 
         //global variables
         int rootIndexLong;      
@@ -140,6 +142,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
+                maxRPM /= tweakScaleCorrector;
                 startRetracted = false;
                 if (!hasRetract)
                     Extensions.DisableAnimateButton(this.part);
@@ -163,8 +166,8 @@ namespace KerbalFoundries
                 {
                     wheelCount++;
                     JointSpring userSpring = wc.suspensionSpring;
-                    userSpring.spring = springRate;
-                    userSpring.damper = damperRate;
+                    userSpring.spring = springRate * tweakScaleCorrector;
+                    userSpring.damper = damperRate * tweakScaleCorrector;
                     wc.suspensionSpring = userSpring;
                     wc.suspensionDistance = wc.suspensionDistance * appliedRideHeight;
                     wcList.Add(wc);

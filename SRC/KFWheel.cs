@@ -60,7 +60,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true)]
         public bool isConfigured = false;
         [KSPField(isPersistant = true)]
-        public int suspensionCorrector = 1;
+        public float tweakScaleCorrector = 1;
 
         //object types
         WheelCollider _wheelCollider;
@@ -142,7 +142,7 @@ namespace KerbalFoundries
                 _KFModuleWheel = this.part.GetComponentInChildren<KFModuleWheel>();
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
-                steeringIndex = Extensions.SetAxisIndex(steeringAxis);
+                steeringIndex = Extensions.SetAxisIndex(steeringAxis); 
 
                 if (_KFModuleWheel.hasSteering)
                 {
@@ -159,7 +159,7 @@ namespace KerbalFoundries
                 if (lastFrameTraverse == 0) //check to see if we have a value in persistance
                 {
                     Debug.LogError("Last frame = 0. Setting");
-                    lastFrameTraverse = _wheelCollider.suspensionDistance * suspensionCorrector;
+                    lastFrameTraverse = _wheelCollider.suspensionDistance;
                     Debug.LogError(lastFrameTraverse);
                 }
                 //Debug.LogError("Last frame =");
@@ -230,25 +230,26 @@ namespace KerbalFoundries
                 if (grounded) //is it on the ground
                 {
                     frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _KFModuleWheel.raycastError - _wheelCollider.radius; //calculate suspension travel using the collider raycast.
-                    if (frameTraverse > (_wheelCollider.suspensionDistance + _KFModuleWheel.raycastError)) //the raycast sometimes goes further than its max value. Catch and stop the mesh moving further
+                    /*
+                    if (frameTraverse > ((_wheelCollider.suspensionDistance * tweakScaleCorrector) + _KFModuleWheel.raycastError)) //the raycast sometimes goes further than its max value. Catch and stop the mesh moving further
                     {
-                        frameTraverse = _wheelCollider.suspensionDistance;
+                        frameTraverse = _wheelCollider.suspensionDistance * tweakScaleCorrector;
                     }
-                        /*
+                        
                     else if (frameTraverse < 0) //the raycast can be negative (!); catch this too
                     {
                         frameTraverse = 0;
                     }
                          * */
                     //print(frameTraverse);
-                    frameTraverse *= suspensionCorrector;
+                    //frameTraverse *= tweakScaleCorrector;
                     lastFrameTraverse = frameTraverse;
                 }
                 else
                 {
                     frameTraverse = lastFrameTraverse; //movement defaults back to last position when the collider is not grounded. Ungrounded collider returns suspension travel of zero!
                 }
-                susTravel = frameTraverse;
+                susTravel = frameTraverse; //debug only
 
                 newTranslation = tempLastFrameTraverse - frameTraverse; // calculate the change of movement. Using Translate on susTrav, which is cumulative, not absolute.
                 MoveSuspension(susTravIndex, newTranslation, _susTrav); //move suspension in its configured direction by the amount calculated for this frame. 
@@ -268,7 +269,7 @@ namespace KerbalFoundries
         public void MoveSuspension(int index, float movement, Transform movedObject) //susTrav Axis, amount to move, named object.
         {
             Vector3 tempVector = new Vector3(0, 0, 0);
-            tempVector[index] = movement;
+            tempVector[index] = movement * tweakScaleCorrector;
             movedObject.transform.Translate(tempVector, Space.Self);
         }
     }//end modele
