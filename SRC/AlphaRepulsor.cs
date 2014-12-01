@@ -135,7 +135,7 @@ namespace KerbalFoundries
             {
                 _MWS.colliderHeight = -2.5f; //reset the height of the water collider that slips away every frame
 
-                float chargeConsumption = (appliedRideHeight / 2) * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate;
+                float chargeConsumption = appliedRideHeight * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate /4;
                 effectPower = chargeConsumption / effectPowerMax;
 
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
