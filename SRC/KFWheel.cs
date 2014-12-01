@@ -230,17 +230,17 @@ namespace KerbalFoundries
                 if (grounded) //is it on the ground
                 {
                     frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _KFModuleWheel.raycastError - _wheelCollider.radius; //calculate suspension travel using the collider raycast.
-                    /*
-                    if (frameTraverse > ((_wheelCollider.suspensionDistance * tweakScaleCorrector) + _KFModuleWheel.raycastError)) //the raycast sometimes goes further than its max value. Catch and stop the mesh moving further
+                    
+                    if (frameTraverse > (_wheelCollider.suspensionDistance + _KFModuleWheel.raycastError)) //the raycast sometimes goes further than its max value. Catch and stop the mesh moving further
                     {
-                        frameTraverse = _wheelCollider.suspensionDistance * tweakScaleCorrector;
+                        frameTraverse = _wheelCollider.suspensionDistance;
                     }
                         
                     else if (frameTraverse < 0) //the raycast can be negative (!); catch this too
                     {
                         frameTraverse = 0;
                     }
-                         * */
+
                     //print(frameTraverse);
                     //frameTraverse *= tweakScaleCorrector;
                     lastFrameTraverse = frameTraverse;
