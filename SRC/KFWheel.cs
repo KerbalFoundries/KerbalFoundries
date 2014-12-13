@@ -59,8 +59,8 @@ namespace KerbalFoundries
         public float suspensionDamper;
         [KSPField(isPersistant = true)]
         public bool isConfigured = false;
-        [KSPField(isPersistant = true)]
-        public float tweakScaleCorrector = 1;
+        //[KSPField(isPersistant = true)]
+        float tweakScaleCorrector = 1;
 
         //object types
         WheelCollider _wheelCollider;
@@ -84,6 +84,9 @@ namespace KerbalFoundries
         //OnStart
         public override void OnStart(PartModule.StartState state)
         {
+            _KFModuleWheel = this.part.GetComponentInChildren<KFModuleWheel>();
+            tweakScaleCorrector = _KFModuleWheel.tweakScaleCorrector;
+
             if (!isConfigured)
             {
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
@@ -139,7 +142,7 @@ namespace KerbalFoundries
                 }
                 //end find named objects
 
-                _KFModuleWheel = this.part.GetComponentInChildren<KFModuleWheel>();
+                
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis); 
