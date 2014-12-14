@@ -445,18 +445,25 @@ namespace KerbalFoundries
         }
 
         [KSPEvent(guiActive = true, guiName = "Apply Wheel Settings", active = true)]
-        public void ApplySettings()
+        public void applySettingsGUI()
+        {
+            ApplySettings(false);
+        }
+        
+        public void ApplySettings(bool actionGroup)
         {
             foreach (KFModuleWheel mt in this.vessel.FindPartModulesImplementing<KFModuleWheel>())
             {
-
-                if (groupNumber != 0 && groupNumber == mt.groupNumber)
+                if (groupNumber != 0 && groupNumber == mt.groupNumber && !actionGroup)
                 {
                     currentRideHeight = rideHeight;
                     mt.currentRideHeight = rideHeight;
                     mt.rideHeight = rideHeight;
-                    mt.steeringInvert = steeringInvert;
                     mt.torque = torque;
+                }
+                if (actionGroup || groupNumber == 0)
+                {
+                    currentRideHeight = rideHeight;
                 }
             }
         }
@@ -469,6 +476,7 @@ namespace KerbalFoundries
                 if (groupNumber != 0 && groupNumber == mt.groupNumber)
                 {
                     mt.steeringRatio = WheelUtils.SetupRatios(mt.rootIndexLong, mt.part, this.vessel, groupNumber);
+                    mt.steeringInvert = steeringInvert;
                 }
             }
         }
@@ -509,6 +517,41 @@ namespace KerbalFoundries
                 UpdateColliders("retract");
             }
         }//end Retract
+
+        //Addons by Gaalidas
+        [KSPAction("Lower Suspension")]
+        public void LowerRideHeight(KSPActionParam param)
+        {
+            if (rideHeight > 0)
+            {
+                rideHeight -= 5;
+            }
+            ApplySettings(true);
+        }//end decrease
+        [KSPAction("Raise Suspension")]
+        public void RaiseRideHeight(KSPActionParam param)
+        {
+            if (rideHeight < 100)
+            {
+                rideHeight += 5;
+            }
+            ApplySettings(true);
+        }//end increase
+        //End Addons by Gaalidas
+
+
+        //Addons by Gaalidas
+        [KSPAction("Apply Wheel")]
+        public void ApplyWheelAction(KSPActionParam param)
+        {
+            ApplySettings(true);
+        }
+        [KSPAction("Apply Steering")]
+        public void ApplySteeringAction(KSPActionParam param)
+        {
+            ApplySteeringSettings();
+        }
+        //End Addons by Gaalidas
 
     }//end class
 }//end namespaces
