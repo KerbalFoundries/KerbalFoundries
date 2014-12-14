@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -42,7 +41,6 @@ namespace KerbalFoundries
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
         {
-
             base.OnStart(start);
             
             if (HighLogic.LoadedSceneIsEditor)
@@ -243,7 +241,6 @@ namespace KerbalFoundries
             {
                     myAnimation.Toggle();
             }
-
         }
 
         [KSPAction("Wheel Mode")]
@@ -251,12 +248,10 @@ namespace KerbalFoundries
         {
             if (repulsorMode == true)
             {
-
                 PlayAnimation();
                 repulsorMode = false;
                 UpdateColliders("wheel");
             }
-
 
         }//end Deploy All
 

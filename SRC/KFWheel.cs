@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections;  
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -70,17 +68,14 @@ namespace KerbalFoundries
         KFModuleWheel _KFModuleWheel;
 
         //gloabl variables
-
         Vector3 initialSteeringAngles;
         float newTranslation;
         Vector3 _wheelRotation;
         int susTravIndex = 1;
         int steeringIndex = 1;
         public int directionCorrector = 1;
-        
         float degreesPerTick;
         
-
         //OnStart
         public override void OnStart(PartModule.StartState state)
         {
@@ -138,11 +133,8 @@ namespace KerbalFoundries
                     {
                         _susTrav = tr;
                     }
-                    
                 }
                 //end find named objects
-
-                
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis); 
@@ -190,6 +182,7 @@ namespace KerbalFoundries
             }//end flight
             base.OnStart(state);
         }//end OnStart
+
         //OnUpdate
 
         IEnumerator Steering() //Coroutine for steering
@@ -202,6 +195,7 @@ namespace KerbalFoundries
             yield return null;
             }
         }
+
         IEnumerator TrackedWheel() //coroutine for tracked wheels (all rotate the same speed in the part) 
         {
             while (true)
@@ -210,6 +204,7 @@ namespace KerbalFoundries
                 yield return null;
             }
         }
+
         IEnumerator IndividualWheel() //coroutine for individual wheels
         {
             while (true)
@@ -238,7 +233,6 @@ namespace KerbalFoundries
                     {
                         frameTraverse = _wheelCollider.suspensionDistance;
                     }
-                        
                     else if (frameTraverse < 0) //the raycast can be negative (!); catch this too
                     {
                         frameTraverse = 0;
@@ -253,7 +247,6 @@ namespace KerbalFoundries
                     frameTraverse = lastFrameTraverse; //movement defaults back to last position when the collider is not grounded. Ungrounded collider returns suspension travel of zero!
                 }
                 susTravel = frameTraverse; //debug only
-
                 newTranslation = tempLastFrameTraverse - frameTraverse; // calculate the change of movement. Using Translate on susTrav, which is cumulative, not absolute.
                 MoveSuspension(susTravIndex, newTranslation, _susTrav); //move suspension in its configured direction by the amount calculated for this frame. 
                 //end suspension movement
@@ -264,9 +257,7 @@ namespace KerbalFoundries
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
-            
             //not a lot in here since I moved it all into coroutines.
-            
         }//end OnFixedUpdate
 
         public void MoveSuspension(int index, float movement, Transform movedObject) //susTrav Axis, amount to move, named object.

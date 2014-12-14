@@ -5,9 +5,7 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -15,8 +13,6 @@ namespace KerbalFoundries
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class RepulsorSkim : MonoBehaviour
     {
-        
-
         void Start()
         {
             print("RepulsorSkim Start");
@@ -41,15 +37,11 @@ namespace KerbalFoundries
                 }
             }
             
-
             if (repulsorCount > 0)
             {
                 FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterSlider");
             }
-            
-
         }
-
     }
 
     public class ModuleWaterSlider : PartModule
@@ -81,13 +73,13 @@ namespace KerbalFoundries
 
         void UpdatePosition()
         {
-                Vector3d oceanNormal = this.part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
+        	Vector3d oceanNormal = this.part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
                 
-                //print(colliderHeight);
-                Vector3 newPosition = (this.part.vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(this.part.vessel.ReferenceTransform.position)-colliderHeight));
-                //newPosition.x -= colliderHeight;
-                _collider.rigidbody.position = newPosition;
-                _collider.rigidbody.rotation = Quaternion.LookRotation(oceanNormal) * Quaternion.AngleAxis(90f, Vector3.right);
+        	//print(colliderHeight);
+        	Vector3 newPosition = (this.part.vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(this.part.vessel.ReferenceTransform.position)-colliderHeight));
+        	//newPosition.x -= colliderHeight;
+        	_collider.rigidbody.position = newPosition;
+        	_collider.rigidbody.rotation = Quaternion.LookRotation(oceanNormal) * Quaternion.AngleAxis(90f, Vector3.right);
         }
 
         void FixedUpdate()

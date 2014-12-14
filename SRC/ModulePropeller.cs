@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using UnityEngine;
 
 namespace KerbalFoundries
 {
@@ -12,7 +9,6 @@ namespace KerbalFoundries
 
         [KSPField]
         public float propellerForce = 5;
-
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -35,4 +31,4 @@ namespace KerbalFoundries
             }
         }
     }
-} 
+}

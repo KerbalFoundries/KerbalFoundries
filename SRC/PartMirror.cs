@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 
@@ -10,7 +8,6 @@ namespace KerbalFoundries
 {
     public class PartMirror : PartModule
     {
-
         Transform rootObject;
         string right = "right";
         string left = "left";
@@ -42,13 +39,9 @@ namespace KerbalFoundries
         [KSPField]
         public float moveAmount = 0;
         
-        
-
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
-
-            
 
             rootObject = transform.Search(rootObjectName);
             //rootObject = this.part.transform;
@@ -80,13 +73,11 @@ namespace KerbalFoundries
                 {
                     print("Setting LHS");
                     SetSide(left);
-
                 }
                 if (flightSide == right)
                 {
                     print("Setting RHS");
                     SetSide(right);
-
                 }
             }
             print("Side is");
@@ -111,21 +102,15 @@ namespace KerbalFoundries
                 print("Setting value from persistence");
                 SetSide(flightSide);
             }
-
-               
                 /*
                 ConfigNode _fx = new ConfigNode("MODULE");
                 _fx.name = "FXModuleLookAtConstraint";
-                
                 ConfigNode _cn = new ConfigNode("CONSTRAINLOOKFX");
                 _cn.AddValue("targetName", "susTravLeft");
                 _cn.AddValue("rotatorsName" ,"SuspensionArmLeft");
                 _fx.AddNode(_cn);
-
                 this.part.AddModule(_fx);
  */
-            
-
         }//end OnStart
 
         public void FindClone()
@@ -164,7 +149,6 @@ namespace KerbalFoundries
 
         public void SetSide(string side) //accepts the string value
         {
-            
             if (side == left)
             {
                 if (mode == scale)
@@ -204,7 +188,6 @@ namespace KerbalFoundries
                 Events["RightSide"].active = false;
             }
         }
-
     }//end class
 }//end namespace
 

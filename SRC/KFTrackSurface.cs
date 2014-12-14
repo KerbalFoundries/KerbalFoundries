@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -22,9 +20,7 @@ namespace KerbalFoundries
             {
                 _trackSurface = Track.gameObject;
             }
-
             _track = this.part.GetComponentInChildren<KFModuleWheel>();
-
         }
 
         public override void OnUpdate()
