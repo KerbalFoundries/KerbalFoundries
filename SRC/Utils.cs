@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -17,6 +18,7 @@ namespace KerbalFoundries
 
                 if (result != null) return result;
             }
+
             return null;
         }
 
@@ -60,6 +62,7 @@ namespace KerbalFoundries
                     {
                         //do nothing
                     }
+
                     try
                     {
                         ma.Events["Toggle"].guiActive = false;
@@ -71,12 +74,27 @@ namespace KerbalFoundries
                 }
             }
         }
+
+
+        public static string GetLast(this string source, int tail_length)
+        {
+            if (tail_length >= source.Length)
+                return source;
+            return source.Substring(source.Length - tail_length);
+        }
+
+
     }
+
 }
 
 //Gash code:
 
 //tempSmoothSteeringy = steeringFound.localEulerAngles.y * 0.5f;
+
+//
+
+
 
 //Transform tempSteering = steeringFound.transform;
 //Vector3 tempQuart = tempSteering.transform.eulerAngles;
@@ -86,7 +104,10 @@ namespace KerbalFoundries
 //tempSmoothSteeringx = tempSteering.transform.rotation.x;
 // tempSmoothSteeringy = steeringFound.transform.rotation.x;
 
+
+
 //tempSmoothSteeringx = Mathf.Lerp(steeringFound.transform.eulerAngles.x, tempSmoothSteeringx, Time.deltaTime * smoothSpeed);// / steeringratio;
+
 
 //smoothSteering.eulerAngles.Set(tempSmoothSteeringx, smoothSteering.transform.rotation.y, smoothSteering.transform.rotation.z);
 //Mathf.Lerp(steeringFound.transform.localEulerAngles.x, smoothSteering.transform.localEulerAngles.x, Time.deltaTime * smoothSpeed);// / steeringratio;
@@ -95,6 +116,7 @@ namespace KerbalFoundries
 //        print(tempSmoothSteeringy);
 //      tempSmoothSteeringx = steeringFound.transform.eulerAngles.z;//Mathf.Lerp(steeringFound.transform.localEulerAngles.z, smoothSteering.transform.localEulerAngles.z, Time.deltaTime * smoothSpeed);// / steeringratio;
 //    print(tempSmoothSteeringz);
+
 
 //tempSmoothSteeringy = steeringFound.transform.eulerAngles.y;// / steeringratio;
 //print(tempSmoothSteeringy);
@@ -115,6 +137,7 @@ if (!mywc.isGrounded)
     print(FlightGlobals.currentMainBody.gravParameter);
 }
 */
+
 
 /* 
 if(framecount == randomNumber1)
@@ -149,8 +172,10 @@ print(Time.deltaTime);
     */
 //if arrow.transform.position
 
+
 //}
 //framecount++;
+
 
 //Proportional Steering
 //print("This Vessel");

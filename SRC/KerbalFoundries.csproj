@@ -52,6 +52,8 @@
   <ItemGroup>
     <Compile Include="AlphaRepulsor.cs" />
     <Compile Include="APUController.cs" />
+    <Compile Include="DozerBlade.cs" />
+    <Compile Include="GoldenShower.cs" />
     <Compile Include="HeavyCrawler.cs" />
     <Compile Include="KFLookAt.cs" />
     <Compile Include="KFSteering.cs" />
@@ -68,6 +70,7 @@
     <Compile Include="RepulsorTest.cs" />
     <Compile Include="RepulsorWheel.cs" />
     <Compile Include="KFWheel.cs" />
+    <Compile Include="RockSpawner.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="VesselTools.cs" />
     <Compile Include="WheelUtils.cs" />

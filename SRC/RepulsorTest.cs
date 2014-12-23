@@ -4,14 +4,18 @@
  * 
  */
 
+
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
 {
     public class RepulsorTest : PartModule
     {
+
         public JointSpring userspring;
 
         [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
@@ -47,6 +51,7 @@ namespace KerbalFoundries
             {
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
+
                     userspring = b.suspensionSpring;
 
                     if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
@@ -68,6 +73,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
+
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     repulsorCount += 1;
@@ -78,14 +84,17 @@ namespace KerbalFoundries
                     b.suspensionDistance = Rideheight;
 
                     UpdateCollider();
+
                 }
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 DestroyBounds();
             }
 
+
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
             print("max effect power");
             print(effectPowerMax);
+
 
         }//end start 
         public void DestroyBounds()
@@ -106,6 +115,7 @@ namespace KerbalFoundries
 
         public override void OnFixedUpdate()
         {
+
             if (deployed)
             {
                 float chargeConsumption = (Rideheight / 64) * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate;
@@ -164,6 +174,7 @@ namespace KerbalFoundries
                 print("Retracting");
                 UpdateCollider();
             }
+
         }//End Retract
 
         [KSPAction("Extend")]
@@ -188,6 +199,7 @@ namespace KerbalFoundries
                     mt.UpdateCollider();
                 }
             }
+
             UpdateCollider();
         }
     }//end class

@@ -4,9 +4,11 @@
  * 
  */
 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -69,6 +71,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
+
                 foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     repulsorCount += 1;
@@ -79,6 +82,7 @@ namespace KerbalFoundries
                     b.suspensionDistance = Rideheight;
                     wcList.Add(b);
                 }
+                
                 
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
 
@@ -94,11 +98,13 @@ namespace KerbalFoundries
             }
             DestroyBounds();
 
+
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
             //print("max effect power");
             //print(effectPowerMax);
-        }//end start
 
+
+        }//end start 
         public void DestroyBounds()
         {
             Transform bounds = transform.Search("Bounds");
@@ -215,14 +221,6 @@ namespace KerbalFoundries
             }
         }//end Deploy
 
-		//Addons by Gaalidas
-		[KSPAction("Apply Settings")]
-		public void ApplySettingsAction(KSPActionParam param)
-		{
-			ApplySettings();
-		}//end apply action
-		//End Addons by Gaalidas
-		
         [KSPEvent(guiActive = true, guiName = "Apply Settings", active = true)]
         public void ApplySettings()
         {

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections;  
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -67,15 +69,21 @@ namespace KerbalFoundries
         Transform _trackSteering;
         KFModuleWheel _KFModuleWheel;
 
+
         //gloabl variables
+
+        Vector3 initialPosition;
         Vector3 initialSteeringAngles;
         float newTranslation;
         Vector3 _wheelRotation;
         int susTravIndex = 1;
         int steeringIndex = 1;
         public int directionCorrector = 1;
-        float degreesPerTick;
         
+        float degreesPerTick;
+
+        bool couroutinesActive = false;
+
         //OnStart
         public override void OnStart(PartModule.StartState state)
         {
@@ -90,12 +98,12 @@ namespace KerbalFoundries
                     {
                         _wheelCollider = wc;
                         suspensionDistance = wc.suspensionDistance;
-                        Debug.LogError("suspensionDistance is" + suspensionDistance);
+                        //Debug.LogError("suspensionDistance is" + suspensionDistance);
                         isConfigured = true;
                     }
                     else
                     {
-                        Debug.LogError("Wheel Collider" + _wheelCollider + " not found. Disabling module");
+                        //Debug.LogError("Wheel Collider" + _wheelCollider + " not found. Disabling module");
                     }
                 }
             }
@@ -111,6 +119,9 @@ namespace KerbalFoundries
             
             if (HighLogic.LoadedSceneIsFlight && isConfigured)
             {
+
+                GameEvents.onGamePause.Add(new EventVoid.OnEvent(this.OnPause));
+                GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(this.OnUnPause));
                 //find named onjects in part
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
@@ -133,9 +144,12 @@ namespace KerbalFoundries
                     {
                         _susTrav = tr;
                     }
+                    
                 }
                 //end find named objects
 
+
+                initialPosition = _susTrav.localPosition;
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
                 steeringIndex = Extensions.SetAxisIndex(steeringAxis); 
 
@@ -153,36 +167,37 @@ namespace KerbalFoundries
 
                 if (lastFrameTraverse == 0) //check to see if we have a value in persistance
                 {
-                    Debug.LogError("Last frame = 0. Setting");
+                    //Debug.LogError("Last frame = 0. Setting");
                     lastFrameTraverse = _wheelCollider.suspensionDistance;
-                    Debug.LogError(lastFrameTraverse);
+                    //Debug.LogError(lastFrameTraverse);
                 }
                 //Debug.LogError("Last frame =");
                 //Debug.LogError(lastFrameTraverse);
+                couroutinesActive = true;
+
                 MoveSuspension(susTravIndex, -lastFrameTraverse, _susTrav); //to get the initial stuff correct
 
                 if (_KFModuleWheel.hasSteering)
                 {
-                    StartCoroutine(Steering());
-                    Debug.LogError("starting steering coroutine");
+                    StartCoroutine("Steering");
+                    //Debug.LogError("starting steering coroutine");
                 }
                 if (trackedWheel)
                 {
-                    StartCoroutine(TrackedWheel());
+                    StartCoroutine("TrackedWheel");
                 }
                 else
                 {
-                    StartCoroutine(IndividualWheel());
+                    StartCoroutine("IndividualWheel");
                 }
                 if(hasSuspension)
                 {
-                    StartCoroutine(Suspension());
+                    StartCoroutine("Suspension");
                 }
                 this.part.force_activate();
             }//end flight
             base.OnStart(state);
         }//end OnStart
-
         //OnUpdate
 
         IEnumerator Steering() //Coroutine for steering
@@ -195,19 +210,17 @@ namespace KerbalFoundries
             yield return null;
             }
         }
-
         IEnumerator TrackedWheel() //coroutine for tracked wheels (all rotate the same speed in the part) 
         {
-            while (true)
+            while (couroutinesActive)
             {
                 _wheel.transform.Rotate(_wheelRotation, _KFModuleWheel.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
                 yield return null;
             }
         }
-
         IEnumerator IndividualWheel() //coroutine for individual wheels
         {
-            while (true)
+            while (couroutinesActive)
             {
                 degreesPerTick = (_wheelCollider.rpm / 60) * Time.deltaTime * 360;
                 _wheel.transform.Rotate(_wheelRotation, degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
@@ -224,7 +237,7 @@ namespace KerbalFoundries
                 WheelHit hit; //set this up to grab sollider raycast info
                 float frameTraverse = 0;
                 bool grounded = _wheelCollider.GetGroundHit(out hit); //set up to pass out wheelhit coordinates
-                float tempLastFrameTraverse = lastFrameTraverse; //we need the value, but will over-write shortly. Store it here.
+                //float tempLastFrameTraverse = lastFrameTraverse; //we need the value, but will over-write shortly. Store it here.
                 if (grounded) //is it on the ground
                 {
                     frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _KFModuleWheel.raycastError - _wheelCollider.radius; //calculate suspension travel using the collider raycast.
@@ -233,13 +246,11 @@ namespace KerbalFoundries
                     {
                         frameTraverse = _wheelCollider.suspensionDistance;
                     }
-                    else if (frameTraverse < 0) //the raycast can be negative (!); catch this too
+                        
+                    else if (frameTraverse < -0.1) //the raycast can be negative (!); catch this too
                     {
                         frameTraverse = 0;
                     }
-
-                    //print(frameTraverse);
-                    //frameTraverse *= tweakScaleCorrector;
                     lastFrameTraverse = frameTraverse;
                 }
                 else
@@ -247,17 +258,50 @@ namespace KerbalFoundries
                     frameTraverse = lastFrameTraverse; //movement defaults back to last position when the collider is not grounded. Ungrounded collider returns suspension travel of zero!
                 }
                 susTravel = frameTraverse; //debug only
-                newTranslation = tempLastFrameTraverse - frameTraverse; // calculate the change of movement. Using Translate on susTrav, which is cumulative, not absolute.
-                MoveSuspension(susTravIndex, newTranslation, _susTrav); //move suspension in its configured direction by the amount calculated for this frame. 
+
+                //newTranslation = tempLastFrameTraverse - frameTraverse; // calculate the change of movement. Using Translate on susTrav, which is cumulative, not absolute.
+                //MoveSuspension(susTravIndex, newTranslation, _susTrav); //move suspension in its configured direction by the amount calculated for this frame. 
+                _susTrav.localPosition = initialPosition; //use the 
+                MoveSuspension(susTravIndex, -frameTraverse, _susTrav);
+                
                 //end suspension movement
-                yield return null;
+
+
+                yield return null; 
+            }
+        }
+
+        public void OnPause()
+        {
+            couroutinesActive = false; //this will drop couroutines checking it out. StopCoroutine() will stop all instances, which is NOT good.
+        }
+
+        public void OnUnPause()
+        {
+            //Debug.LogWarning("unpaused");
+            couroutinesActive = true;
+            try
+            {
+                if (trackedWheel)
+                {
+                    StartCoroutine("TrackedWheel");
+                }
+                else
+                {
+                    StartCoroutine("IndividualWheel");
+                }
+            }
+            catch
+            {
             }
         }
 
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
+            
             //not a lot in here since I moved it all into coroutines.
+            
         }//end OnFixedUpdate
 
         public void MoveSuspension(int index, float movement, Transform movedObject) //susTrav Axis, amount to move, named object.
