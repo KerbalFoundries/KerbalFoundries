@@ -19,6 +19,8 @@ namespace KerbalFoundries
         public float spawnChance;
         [KSPField]
         public float maxDistance;
+        [KSPField]
+        public float bladeForce = 1;
 
         [KSPField]
         public float resistance;
@@ -85,6 +87,7 @@ namespace KerbalFoundries
                     {
                         SpawnRock(i);
                     }
+                    this.part.rigidbody.AddForceAtPosition(-_wcList[i].transform.up * bladeForce, _wcList[i].transform.position);
                 }
                 //print("slip  " + hit.sidewaysSlip + " " + i);
                 //print(-_wcList[i].transform.InverseTransformPoint(hit.point).y);
@@ -116,11 +119,20 @@ namespace KerbalFoundries
         public void SpawnRock(int i)
         {
             var rock = (GameObject)Instantiate(_rockPrefab, _spawnPosition[i].transform.position, new Quaternion(0, 0, 0, 0));
+            
                 //Debug.LogWarning("Object instantiated");
             var physicRock = rock.gameObject.AddComponent<physicalObject>();
             physicRock.maxDistance = maxDistance;
                 //Debug.LogWarning("rock set");
             rock.gameObject.SetActive(true);
+            var randomScale = UnityEngine.Random.Range(0.5f, 1.2f);
+            GameObject rockCollider = rock.GetComponentInChildren<Collider>().gameObject;
+            if (scale < 0.8f)
+            {
+                Destroy(rockCollider);
+            }
+            rock.transform.localScale = new Vector3(randomScale, randomScale, randomScale);
+            rock.rigidbody.velocity = this.part.vessel.srf_velocity;
         }
     }
 }
