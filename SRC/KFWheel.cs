@@ -74,7 +74,7 @@ namespace KerbalFoundries
 
         Vector3 initialPosition;
         Vector3 initialSteeringAngles;
-        float newTranslation;
+        
         Vector3 _wheelRotation;
         int susTravIndex = 1;
         int steeringIndex = 1;

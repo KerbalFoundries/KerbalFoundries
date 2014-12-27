@@ -10,6 +10,9 @@ namespace KerbalFoundries
     {
         GameObject _trackSurface;
         KFModuleWheel _track;
+        Material trackMaterial = new Material(Shader.Find("Diffuse"));
+
+
         [KSPField]
         public float trackLength = 10;
 
@@ -25,14 +28,24 @@ namespace KerbalFoundries
 
             _track = this.part.GetComponentInChildren<KFModuleWheel>();
 
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                trackMaterial = _trackSurface.renderer.material;
+                Vector2 trackTiling = trackMaterial.mainTextureScale;
+                Debug.LogWarning("texture tiling is " + trackTiling);
+                trackTiling = new Vector2(trackTiling.x * _track.directionCorrector, trackTiling.y);
+                Debug.LogWarning("texture tiling is " + trackTiling);
+                trackMaterial.SetTextureScale("_MainTex",  trackTiling);
+                trackMaterial.SetTextureScale("_BumpMap", trackTiling);
+            }
         }
 
         public override void OnUpdate()
         {
             base.OnUpdate();
-            float degreesPerTick = (_track.averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
-            float distanceTravelled = (float)((_track.averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime; //calculate how far the track will need to move
-            Material trackMaterial = _trackSurface.renderer.material;    //set things up for changing the texture offset on the track
+            //float degreesPerTick = (_track.averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
+            float distanceTravelled = (float)((_track.averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime * _track.directionCorrector; //calculate how far the track will need to move
+                
             Vector2 textureOffset = trackMaterial.mainTextureOffset;
             textureOffset = textureOffset + new Vector2(-distanceTravelled / trackLength, 0); //tracklength is used to fine tune the speed of movement.
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);

@@ -172,6 +172,7 @@ namespace KerbalFoundries
                     wc.suspensionDistance = wc.suspensionDistance * appliedRideHeight;
                     wcList.Add(wc);
                     wc.enabled = true;
+                    wc.gameObject.layer = 27;
                 }
 
                 if (brakesApplied)
