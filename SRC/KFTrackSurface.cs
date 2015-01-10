@@ -34,7 +34,7 @@ namespace KerbalFoundries
                 Vector2 trackTiling = trackMaterial.mainTextureScale;
                 Debug.LogWarning("texture tiling is " + trackTiling);
                 trackTiling = new Vector2(trackTiling.x * _track.directionCorrector, trackTiling.y);
-                Debug.LogWarning("texture tiling is " + trackTiling);
+                Debug.LogWarning("new texture tiling is " + trackTiling);
                 trackMaterial.SetTextureScale("_MainTex",  trackTiling);
                 trackMaterial.SetTextureScale("_BumpMap", trackTiling);
             }
@@ -43,9 +43,7 @@ namespace KerbalFoundries
         public override void OnUpdate()
         {
             base.OnUpdate();
-            //float degreesPerTick = (_track.averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel
             float distanceTravelled = (float)((_track.averageTrackRPM * 2 * Math.PI) / 60) * Time.deltaTime * _track.directionCorrector; //calculate how far the track will need to move
-                
             Vector2 textureOffset = trackMaterial.mainTextureOffset;
             textureOffset = textureOffset + new Vector2(-distanceTravelled / trackLength, 0); //tracklength is used to fine tune the speed of movement.
             trackMaterial.SetTextureOffset("_MainTex", textureOffset);
