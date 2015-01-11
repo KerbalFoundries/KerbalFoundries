@@ -75,7 +75,7 @@ namespace KerbalFoundries
         public bool brakesApplied;                      //saves the brake state
         [KSPField(isPersistant = true)]
         public bool isRetracted = false;
-        [KSPField(isPersistant = true, guiActive = true, guiName = "TS", guiFormat = "F1")] //debug only.
+        [KSPField(isPersistant = true, guiActive = false, guiName = "TS", guiFormat = "F1")] //debug only.
         public float tweakScaleCorrector = 1;
 
         //global variables
@@ -99,7 +99,7 @@ namespace KerbalFoundries
         public int wheelCount;
         [KSPField(isPersistant = false, guiActive = true, guiName = "RPM", guiFormat = "F1")]
         public float averageTrackRPM;
-        public int directionCorrector;
+        public int directionCorrector = 1;
         public int steeringCorrector = 1;
         public float steeringRatio;
         public float degreesPerTick;

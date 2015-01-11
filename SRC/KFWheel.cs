@@ -10,7 +10,7 @@ namespace KerbalFoundries
 
     public class KFWheel : PartModule
     {
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Suspension travel")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Suspension travel")]
         public float susTravel;
 
         //config fields
