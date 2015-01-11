@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-
     public class KFModuleWheel : PartModule
     {
         //name definitions
@@ -151,7 +150,6 @@ namespace KerbalFoundries
                 rootIndexUp = WheelUtils.GetRefAxis(this.part.transform.up, this.vessel.rootPart.transform);
 
                 steeringRatio = WheelUtils.SetupRatios(rootIndexLong, this.part, this.vessel, groupNumber); //use the axis which corresponds to the forward axis of the wheel.
-
                 GetControlAxis(); // sets up motor and steering direction direction
 
                 if (torque > 2) //check if the torque value is using the old numbering system
@@ -213,6 +211,7 @@ namespace KerbalFoundries
                 brakeSteering = 0;
                 steeringAngle = 0;
             }
+    
             if (!isRetracted)
             {
                 motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
@@ -296,9 +295,7 @@ namespace KerbalFoundries
                 GetControlAxis();
             }
             lastCommandId = commandId;
-
             effectPower = Math.Abs(averageTrackRPM / maxRPM);
-
             WheelSound();
         } //end OnUpdate
 
@@ -507,6 +504,7 @@ namespace KerbalFoundries
             }
             ApplySettings(true);
         }//end decrease
+  
         [KSPAction("Raise Suspension")]
         public void RaiseRideHeight(KSPActionParam param)
         {
@@ -522,12 +520,12 @@ namespace KerbalFoundries
         {
             ApplySettings(true);
         }
+  
         [KSPAction("Apply Steering")]
         public void ApplySteeringAction(KSPActionParam param)
         {
             ApplySteeringSettings();
         }
         //End Addons by Gaalidas
-
     }//end class
 }//end namespaces

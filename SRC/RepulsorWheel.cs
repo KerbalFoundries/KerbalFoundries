@@ -16,6 +16,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Repulsor Height %"), UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 5)]
         public float repulsorHeight = 50;
 
+        // SharpDevelop wants this to be a local constant.  I am reisting, just in case it could break something.
         float replusorHeightMultiplier = 5;
 
         [KSPField(isPersistant = true)]

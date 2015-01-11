@@ -33,9 +33,7 @@ namespace KerbalFoundries
         public bool lowEnergy;
 
         float effectPower;
-
         float effectPowerMax;
-
         float appliedRideHeight;
         float smoothedRideHeight;
         float currentRideHeight;
@@ -59,12 +57,9 @@ namespace KerbalFoundries
             //this.part.AddModule("ModuleWaterSlider");
             if (HighLogic.LoadedSceneIsGame)
             {
-
             }
-
             if (HighLogic.LoadedSceneIsEditor)
             {
-
             }
 
             if (HighLogic.LoadedSceneIsFlight)
@@ -80,10 +75,8 @@ namespace KerbalFoundries
                     wcList.Add(b);
                 }
                 
-                this.part.force_activate(); //force the part active or OnFixedUpate is not called
-
+                this.part.force_activate(); //force the part active or OnFixedUpate is not called.
                 currentRideHeight = Rideheight;
-
                 UpdateHeight();
 
                 foreach (ModuleWaterSlider mws in this.vessel.FindPartModulesImplementing<ModuleWaterSlider>())
@@ -93,7 +86,6 @@ namespace KerbalFoundries
                 print("water slider height is" + _MWS.colliderHeight);
             }
             DestroyBounds();
-
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
             //print("max effect power");
             //print(effectPowerMax);
@@ -124,17 +116,16 @@ namespace KerbalFoundries
             {
                 wcList[i].suspensionDistance = maxRepulsorHeight * appliedRideHeight;
             }
-
             if (deployed)
             {
-                _MWS.colliderHeight = -2.5f; //reset the height of the water collider that slips away every frame
-
+                _MWS.colliderHeight = -2.5f; //reset the height of the water collider that slips away every frame.
                 float chargeConsumption = appliedRideHeight * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate /4;
                 effectPower = chargeConsumption / effectPowerMax;
 
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
                 //print(electricCharge);
                 // = Extensions.GetBattery(this.part);
+
                 if (electricCharge < (chargeConsumption * 0.5f))
                 {
                     print("Retracting due to low Electric Charge");
@@ -163,7 +154,6 @@ namespace KerbalFoundries
             RepulsorSound();
             effectPower = 0;    //reset to make sure it doesn't play when it shouldn't.
             //print(effectPower);
-
         }
 
         public void EnableColliders()
@@ -201,7 +191,6 @@ namespace KerbalFoundries
                 print("Retracting");
                 UpdateHeight();
             }
-
         }//End Retract
 
         [KSPAction("Extend")]
@@ -236,8 +225,7 @@ namespace KerbalFoundries
                     mt.UpdateHeight();
                 }
             }
-
             UpdateHeight();
         }
-    }//end class
+    } //end class
 } //end namespace

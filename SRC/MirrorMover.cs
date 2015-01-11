@@ -5,6 +5,5 @@ namespace KerbalFoundries
 {
     public class MirrorMover :PartModule
     {
-
     }
 }

@@ -33,20 +33,16 @@ namespace KerbalFoundries
                 SetupObjects();
                 StartCoroutine(Rotator());
             }
-
             if (HighLogic.LoadedSceneIsFlight)
             {
                 SetupObjects();
                 StartCoroutine(Rotator());
             }
-
-
         }
         public void SetupObjects()
         {
             _rotator = transform.Search(rotatorsName);
             _target = transform.Search(targetName);
-
             _mirrorObject = transform.Search(mirrorObjectName);
 
             if (_mirrorObject.transform.localScale.x < 0 || _mirrorObject.transform.localScale.y < 0 || _mirrorObject.transform.localScale.z < 0)
@@ -73,9 +69,6 @@ namespace KerbalFoundries
         public void Update()
         {
             base.OnUpdate();
-
-
-
         }
     }
 }

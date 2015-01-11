@@ -39,13 +39,12 @@ namespace KerbalFoundries
             print("LandingGearWheel Called");
             if (HighLogic.LoadedSceneIsEditor)
             {
-
             }
+
             if (HighLogic.LoadedSceneIsFlight)
             {
                 //find names onjects in part
                 this.part.force_activate();
-
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     if (wc.name.Equals(colliderName, StringComparison.Ordinal))
@@ -69,14 +68,12 @@ namespace KerbalFoundries
                 }
 
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
-
                 initialTraverse = susTrav.transform.localPosition;
-                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets
-
+                lastTempTraverse = initialTraverse[susTravIndex] - wheelCollider.suspensionDistance; //sets it to a default value for the sprockets.
                 wheelRotation = new Vector3(rotationX, rotationY, rotationZ);
-
             }
             //end find named objects
+
             base.OnStart(state);
         }//end OnStart
 
@@ -98,7 +95,6 @@ namespace KerbalFoundries
             //print(tempTraverse.y);
             susTrav.transform.localPosition = tempTraverse; //move the suspensioTraverse object
             float degreesPerTick = (wheelCollider.rpm / 60) * Time.deltaTime * 360;
-          
             wheel.transform.Rotate(wheelRotation, degreesPerTick / wheelCollider.radius); //rotate wheel
         }
     }

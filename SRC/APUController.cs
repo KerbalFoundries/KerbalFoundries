@@ -26,12 +26,10 @@ namespace KerbalFoundries
         [KSPField(isPersistant = false, guiActive = true, guiName = "Battery Ratio", guiFormat = "F8")]
         public float batteryRatio = .5f;
 
-
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
-
             FindEngine(); 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -55,7 +53,6 @@ namespace KerbalFoundries
             else
             {
                 thisEngine.currentThrottle = Mathf.Lerp((throttleSetting / 100), thisEngine.currentThrottle, Time.deltaTime * 40f);
-                
             }
         }
 

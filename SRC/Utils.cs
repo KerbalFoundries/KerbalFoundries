@@ -23,7 +23,8 @@ namespace KerbalFoundries
         public static float GetBattery(Part part)
         {
             PartResourceDefinition resourceDefinitions = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
-            List<PartResource> resources = new List<PartResource>();
+            var resources = new List<PartResource>(); // This was a suggestion from SharpDevelop. - Gaalidas
+            //List<PartResource> resources = new List<PartResource>();
             part.GetConnectedResources(resourceDefinitions.id, resourceDefinitions.resourceFlowMode, resources);
             var ratio = (float) resources.Sum(r => r.amount) /(float) resources.Sum(r => r.maxAmount);
             return ratio;

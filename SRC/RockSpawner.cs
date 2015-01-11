@@ -21,10 +21,8 @@ namespace KerbalFoundries
 
         public override void OnStart(PartModule.StartState state)
         {
-            
             if (HighLogic.LoadedSceneIsFlight)
             {
-
             }
             base.OnStart(state);
         }
@@ -32,7 +30,6 @@ namespace KerbalFoundries
         [KSPEvent(active = true, guiActive = true, name = "Spawn Rock")]
         public void SpawnRock()
         {
-
             _spawnPosition = this.part.FindModelTransform(spawnPoint);
                 Debug.LogWarning("RockSpawner");
 
@@ -46,7 +43,6 @@ namespace KerbalFoundries
             rb.mass = 0.01f;
             rb.angularDrag = 5f;
             
-
                 Debug.LogWarning("rigidbody added");
             /*
             var _rockCollider = _rockPrefab.transform.Search("potatoroid");
@@ -57,7 +53,6 @@ namespace KerbalFoundries
             _meshC.collider.attachedRigidbody.detectCollisions = true;
             _meshC.convex = true;
             
-            
             _meshC.collider.material = new PhysicMaterial
             {
                 frictionCombine = PhysicMaterialCombine.Minimum,
@@ -67,6 +62,7 @@ namespace KerbalFoundries
                 staticFriction = 0.25f
             };
             */
+ 
             _rockPrefab.SetActive(false);
                 Debug.LogWarning("Friction set");
                 //Part rock = FlightIntegrator.Instantiate(_rockPrefab, _spawnPosition.transform.position, new Quaternion(0, 0, 0, 0)) as Part;
@@ -82,8 +78,6 @@ namespace KerbalFoundries
 
             GameObject.Destroy(_rockPrefab);
                 Debug.LogWarning("Prefab destroyed");
-
         }
-
     }
 }

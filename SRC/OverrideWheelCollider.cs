@@ -72,7 +72,9 @@ namespace KerbalFoundries
                 if (moveCollider)
                 {
                     _wheelCollider.transform.Translate(0, moveColliderBy, 0, Space.Self);
-                    Vector3 tempVector = new Vector3(0, 0, 0);
+                    // SharpDevelop suggested we use "var" instead of reiterating "Vector3" in this definition. - Gaalidas
+                    var tempVector = new Vector3(0, 0, 0);
+                    //Vector3 tempVector = new Vector3(0, 0, 0);
                     tempVector[susTravIndex] = moveColliderBy;
                     _susTrav.transform.Translate(tempVector, Space.Self);
                 }
@@ -80,7 +82,6 @@ namespace KerbalFoundries
 
             if (_wheelCollider != null)
             {
-
                 if(mass != 0)
                     _wheelCollider.mass = mass;
                 if(radius != 0)

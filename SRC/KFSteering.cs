@@ -39,6 +39,5 @@ namespace KerbalFoundries
                 yield return new WaitForFixedUpdate();
             }
         }
-
     }
 }

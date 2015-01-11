@@ -35,19 +35,13 @@ namespace KerbalFoundries
                 dynamicFriction = 0.05f,
                 staticFriction = 0.25f
             };
-
-
             _coinPrefab.SetActive(false);
         }
-
-
 
         void OnGUI()
         {
             _windowRect = KSPUtil.ClampRectToScreen(GUILayout.Window(123, _windowRect, DrawWindow, "Menu"));
         }
-
-
 
         private void DrawWindow(int winid)
         {
@@ -60,7 +54,6 @@ namespace KerbalFoundries
             GUI.DragWindow();
         }
 
-
         private float Random360()
         {
             return UnityEngine.Random.Range(0f, 360f);
@@ -69,7 +62,6 @@ namespace KerbalFoundries
         private System.Collections.IEnumerator CoinShower()
         {
             print("Let there be wealth!");
-
             var vessel = FlightGlobals.ActiveVessel;
             float start = Time.realtimeSinceStartup;
 
@@ -85,7 +77,6 @@ namespace KerbalFoundries
 
                 // impart a bit of force to get it spinning
                 coin.rigidbody.AddTorque(new Vector3(Random360() * 0.1f, Random360() * 0.1f, Random360() * 0.1f), ForceMode.Impulse);
-
                 coin.SetActive(true);
 
                 // we might need to spawn more than [fps] coins per second if we're to reach ShowerCoinCount in
@@ -93,9 +84,7 @@ namespace KerbalFoundries
                 // so delay here if we're ahead of schedule, otherwise continue dumping coins
                 while ((Time.realtimeSinceStartup - start) / 2f <= (float)i / ShowerCoinCount)
                     yield return 0;
-
             }
-
             print("Wealth complete");
         }
     }

@@ -47,7 +47,6 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsEditor)
             {
-
             }
 
             if (HighLogic.LoadedSceneIsFlight)
@@ -57,8 +56,8 @@ namespace KerbalFoundries
                 {
                     wc.enabled = true;
                 }
-                
             }
+                
             Transform bounds = transform.Search("Bounds");
             if (bounds != null)
             {
@@ -96,15 +95,12 @@ namespace KerbalFoundries
                 print("Playing");
                 myAnimation.Toggle();
             }
-
         }
 
         [KSPAction("Gear", KSPActionGroup.Gear)]
         public void brakes(KSPActionParam param)
         {
-
                 PlayAnimation();
-
         }
 
         [KSPAction("Brakes", KSPActionGroup.Brakes)]

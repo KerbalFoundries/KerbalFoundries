@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-
     public class KFWheel : PartModule
     {
         [KSPField(isPersistant = false, guiActive = false, guiName = "Suspension travel")]
@@ -21,7 +20,7 @@ namespace KerbalFoundries
         [KSPField]
         public string steeringName;
         [KSPField]
-        public bool useDirectionCorrector = false; //make sure it's set to false if not specified in the config
+        public bool useDirectionCorrector = false; //make sure it's set to false if not specified in the config.
         [KSPField]
         public bool isSprocket = false;
         [KSPField]
@@ -31,8 +30,7 @@ namespace KerbalFoundries
         [KSPField]
         public float rotationCorrection = 1;
         [KSPField]
-        public bool trackedWheel = true; //default to tracked type (average of all colliders in contact with floor). This is OK for wheels, and will only need to be changed for multi wheeled parts that are not tracks 
-
+        public bool trackedWheel = true; //default to tracked type (average of all colliders in contact with floor). This is OK for wheels, and will only need to be changed for multi wheeled parts that are not tracks.
             //wheel rotation axis
         [KSPField]
         public float wheelRotationX = 1;
@@ -68,17 +66,15 @@ namespace KerbalFoundries
         KFModuleWheel _KFModuleWheel;
 
         //gloabl variables
-
         Vector3 initialPosition;
         Vector3 initialSteeringAngles;
-        
         Vector3 _wheelRotation;
+        
         int susTravIndex = 1;
         int steeringIndex = 1;
         public int directionCorrector = 1;
         
         float degreesPerTick;
-
         bool couroutinesActive = false;
 
         //OnStart
@@ -111,7 +107,6 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsEditor)
             {
-
             }
             
             if (HighLogic.LoadedSceneIsFlight && isConfigured)
@@ -143,7 +138,6 @@ namespace KerbalFoundries
                     }
                 }
                 //end find named objects
-
 
                 initialPosition = _susTrav.localPosition;
                 susTravIndex = Extensions.SetAxisIndex(susTravAxis);
@@ -241,7 +235,6 @@ namespace KerbalFoundries
                     {
                         frameTraverse = _wheelCollider.suspensionDistance;
                     }
-                        
                     else if (frameTraverse < -0.1) //the raycast can be negative (!); catch this too
                     {
                         frameTraverse = 0;
@@ -258,7 +251,6 @@ namespace KerbalFoundries
                 //MoveSuspension(susTravIndex, newTranslation, _susTrav); //move suspension in its configured direction by the amount calculated for this frame. 
                 _susTrav.localPosition = initialPosition; //use the 
                 MoveSuspension(susTravIndex, -frameTraverse, _susTrav);
-                
                 //end suspension movement
                 yield return null; 
             }
@@ -297,7 +289,8 @@ namespace KerbalFoundries
 
         public void MoveSuspension(int index, float movement, Transform movedObject) //susTrav Axis, amount to move, named object.
         {
-            Vector3 tempVector = new Vector3(0, 0, 0);
+        	// Instead of reiterating "Vector3" we an use "var" in this instance. - Gaalidas
+            var tempVector = new Vector3(0, 0, 0);
             tempVector[index] = movement * tweakScaleCorrector;
             movedObject.transform.Translate(tempVector, Space.Self);
         }

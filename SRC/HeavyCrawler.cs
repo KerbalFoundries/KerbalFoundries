@@ -42,6 +42,7 @@ namespace KerbalFoundries
         public float myPositionz; //debug only
         public float myPosition;
         public float myAdjustedPosition;
+
         [KSPField(isPersistant = true, guiActive = true, guiName = "Steering Ratio", guiFormat = "F1")]
         public float steeringRatio;
         [KSPField(isPersistant = true, guiActive = true, guiName = "Steering Ratio.Abs", guiFormat = "F1")]
@@ -86,7 +87,6 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-
                 this.part.force_activate(); //force the part active or OnFixedUpate is not called
                 //Start of initial proportional steering routine
 
@@ -105,14 +105,13 @@ namespace KerbalFoundries
                         frontWheel = st.part.orgPos.y; //Store transform y value
                         //print(st.part.orgPos.y);
                     }
-
                     if ((st.part.orgPos.y + 1000) <= (rearWheel + 1000))
                     {
                         rearWheel = st.part.orgPos.y; //Store transform y value
                         //print(st.part.orgPos.y);
                     }
-
                 }
+
                 //grab this one to compare
                 frontToBack = frontWheel - rearWheel; //distance front to back wheel
                 midToFore = frontToBack / 2;
@@ -125,7 +124,6 @@ namespace KerbalFoundries
                 //{
                   //  steeringRatio /= -1; //if it's negative
                 //}
-
             }//end isInFlight
         }//end start
 
@@ -163,6 +161,5 @@ namespace KerbalFoundries
             tempVector.y = rotationAngle;
             smoothSteering.transform.localEulerAngles = tempVector;
         } //end OnFixedUpdate 
-
-    }//end class
+    } //end class
 } //end namespace
