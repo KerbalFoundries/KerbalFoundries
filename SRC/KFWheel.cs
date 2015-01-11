@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections;  
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -68,7 +66,6 @@ namespace KerbalFoundries
         Transform _wheel;
         Transform _trackSteering;
         KFModuleWheel _KFModuleWheel;
-
 
         //gloabl variables
 
@@ -144,7 +141,6 @@ namespace KerbalFoundries
                     {
                         _susTrav = tr;
                     }
-                    
                 }
                 //end find named objects
 
@@ -159,9 +155,8 @@ namespace KerbalFoundries
                     //print(initialSteeringAngles);
                 }
 
-                if (useDirectionCorrector)
-                    directionCorrector = _KFModuleWheel.directionCorrector;
-                else directionCorrector = 1;
+				// Again, if/else can be made into a single line. - Gaalidas
+				directionCorrector = useDirectionCorrector ? _KFModuleWheel.directionCorrector : 1;
 
                 _wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
 
@@ -265,8 +260,6 @@ namespace KerbalFoundries
                 MoveSuspension(susTravIndex, -frameTraverse, _susTrav);
                 
                 //end suspension movement
-
-
                 yield return null; 
             }
         }
@@ -299,9 +292,7 @@ namespace KerbalFoundries
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
-            
             //not a lot in here since I moved it all into coroutines.
-            
         }//end OnFixedUpdate
 
         public void MoveSuspension(int index, float movement, Transform movedObject) //susTrav Axis, amount to move, named object.

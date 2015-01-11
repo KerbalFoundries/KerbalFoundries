@@ -12,7 +12,6 @@ namespace KerbalFoundries
         KFModuleWheel _track;
         Material trackMaterial = new Material(Shader.Find("Diffuse"));
 
-
         [KSPField]
         public float trackLength = 10;
 

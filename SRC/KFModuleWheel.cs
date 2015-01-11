@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -33,8 +32,6 @@ namespace KerbalFoundries
         public bool startRetracted;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
         public string status = "Nominal";
-
-        
 
         //config fields
         [KSPField]
@@ -110,24 +107,25 @@ namespace KerbalFoundries
         
         public override void OnStart(PartModule.StartState start)  //when started
         {
-             
             base.OnStart(start);
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version); 
 
-            if (startRetracted)
+            /* SharpDevelop reports that these two "if" checks can be replaced with single line checks. - Gaalidas
+			if (startRetracted)
             {
                 isRetracted = true;
             }
-
             if (!isRetracted)
                 currentRideHeight = rideHeight; //set up correct values from persistence
             else
                 currentRideHeight = 0;
+			*/
+			isRetracted |= startRetracted;
+			currentRideHeight = !isRetracted ? rideHeight : 0;
             smoothedRideHeight = currentRideHeight;
             appliedRideHeight = smoothedRideHeight / 100;
             //print(appliedRideHeight);
            
-
             if (HighLogic.LoadedSceneIsEditor)
             {
                 if (!hasRetract)
@@ -174,15 +172,12 @@ namespace KerbalFoundries
                     wc.enabled = true;
                     wc.gameObject.layer = 27;
                 }
-
                 if (brakesApplied)
                 {
                     brakeTorque = brakingTorque; //were the brakes left applied 
                 }
-
                 if (isRetracted)
                     UpdateColliders("retract");
-
             }//end scene is flight
             DestroyBounds(); //destroys the Bounds helper object if it is still in the model.
         }//end OnStart
@@ -218,14 +213,12 @@ namespace KerbalFoundries
                 brakeSteering = 0;
                 steeringAngle = 0;
             }
-
             if (!isRetracted)
             {
                 motorTorque = (forwardTorque * directionCorrector * this.vessel.ctrlState.wheelThrottle) - (steeringTorque * this.vessel.ctrlState.wheelSteer); //forward and low speed steering torque. Direction controlled by precalulated directioncorrector
                 brakeSteeringTorque = Mathf.Clamp(brakeSteering * this.vessel.ctrlState.wheelSteer, 0, 1000); //if the calculated value is negative, disregard: Only brake on inside track. no need to direction correct as we are using the velocity or the part not the vessel.
                 //chargeRequest = Math.Abs(motorTorque * 0.0005f); //calculate the requested charge
                 
-
                 float chargeConsumption = Time.deltaTime * chargeConsumptionRate * (Math.Abs(motorTorque) / 100);
                 //print(chargeConsumption);
                 electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
@@ -262,7 +255,6 @@ namespace KerbalFoundries
                         wcList[i].steerAngle = steeringAngleSmoothed;
                 }
 
-
                 if (groundedWheels >= 1)
                 {
                     averageTrackRPM = trackRPM / groundedWheels;
@@ -274,7 +266,6 @@ namespace KerbalFoundries
                 trackRPM = 0;
                 degreesPerTick = (averageTrackRPM / 60) * Time.deltaTime * 360; //calculate how many degrees to rotate the wheel mesh
                 groundedWheels = 0; //reset number of wheels.
-
             }
             else //if(isRetracted)
             {
@@ -293,7 +284,6 @@ namespace KerbalFoundries
             appliedRideHeight = smoothedRideHeight / 100;
             steeringAngleSmoothed = Mathf.Lerp(steeringAngleSmoothed, steeringAngle, Time.deltaTime * smoothSpeed);
             //print(smoothedRideHeight); //debugging
-            
         }//end OnFixedUpdate
 
         public override void OnUpdate()
@@ -314,38 +304,35 @@ namespace KerbalFoundries
 
         public void UpdateColliders(string mode)
         {
-            if (mode == "retract")
-            {
-                isRetracted = true;
-                currentRideHeight = 0;
-                Events["ApplySettings"].guiActive = false;
-                Events["InvertSteering"].guiActive = false;
-                Fields["rideHeight"].guiActive = false;
-                Fields["torque"].guiActive = false;
-                //Fields["springRate"].guiActive = false;
-                //Fields["damperRate"].guiActive = false;
-                Fields["steeringDisabled"].guiActive = false;
-                status = "Retracted";
-
+			// I am unsure if this is more efficient or what, but this format was suggested. - Gaalidas
+			switch (mode) {
+				case "retract":
+                	isRetracted = true;
+                	currentRideHeight = 0;
+                	Events["ApplySettings"].guiActive = false;
+                	Events["InvertSteering"].guiActive = false;
+                	Fields["rideHeight"].guiActive = false;
+                	Fields["torque"].guiActive = false;
+                	//Fields["springRate"].guiActive = false;
+                	//Fields["damperRate"].guiActive = false;
+                	Fields["steeringDisabled"].guiActive = false;
+                	status = "Retracted";
+					break;
+				case "deploy":
+                	isRetracted = false;
+                	currentRideHeight = rideHeight;
+                	Events["ApplySettings"].guiActive = true;
+                	Events["InvertSteering"].guiActive = true;
+                	Fields["rideHeight"].guiActive = true;
+                	Fields["torque"].guiActive = true;
+                	//Fields["springRate"].guiActive = true;
+                	//Fields["damperRate"].guiActive = true;
+                	Fields["steeringDisabled"].guiActive = true;
+                	status = "Nominal";
+					break;
+				case "update":
+					break;
             }
-            else if (mode == "deploy")
-            {
-                isRetracted = false;
-                currentRideHeight = rideHeight;
-                Events["ApplySettings"].guiActive = true;
-                Events["InvertSteering"].guiActive = true;
-                Fields["rideHeight"].guiActive = true;
-                Fields["torque"].guiActive = true;
-                //Fields["springRate"].guiActive = true;
-                //Fields["damperRate"].guiActive = true;
-                Fields["steeringDisabled"].guiActive = true;
-                status = "Nominal";
-            }
-            else if(mode =="update")
-            {
-                //do nothing
-            }
-            
         }
 
         public void GetControlAxis()
@@ -360,13 +347,6 @@ namespace KerbalFoundries
                 steeringCorrector = WheelUtils.GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexUp);
         }
 
-
-
-
-
-
-
-
         public void PlayAnimation()
         {
             // note: assumes one ModuleAnimateGeneric (or derived version) for this part
@@ -380,7 +360,6 @@ namespace KerbalFoundries
             {
                 myAnimation.Toggle();
             }
-
         }
 
         public void DestroyBounds()
@@ -409,6 +388,7 @@ namespace KerbalFoundries
                 brakesApplied = false;
             }
         }
+
         [KSPAction("Increase Torque")]
         public void increase(KSPActionParam param)
         {
@@ -416,9 +396,8 @@ namespace KerbalFoundries
             {
                 torque += 0.25f;
             }
-
-
         }//End increase
+
         [KSPAction("Decrease Torque")]
         public void decrease(KSPActionParam param)
         {
@@ -427,6 +406,7 @@ namespace KerbalFoundries
                 torque -= 0.25f;
             }
         }//end decrease
+
         [KSPAction("Toggle Steering")]
         public void toggleSteering(KSPActionParam param)
         {
@@ -502,7 +482,6 @@ namespace KerbalFoundries
             {
                 if(hasRetractAnimation)
                     PlayAnimation();
-                
                 UpdateColliders("deploy");
             }
         }//end Reploy
@@ -514,7 +493,6 @@ namespace KerbalFoundries
             {
                 if (hasRetractAnimation)
                     PlayAnimation();
-                
                 UpdateColliders("retract");
             }
         }//end Retract
@@ -538,10 +516,7 @@ namespace KerbalFoundries
             }
             ApplySettings(true);
         }//end increase
-        //End Addons by Gaalidas
 
-
-        //Addons by Gaalidas
         [KSPAction("Apply Wheel")]
         public void ApplyWheelAction(KSPActionParam param)
         {

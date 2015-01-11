@@ -5,9 +5,7 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -15,8 +13,6 @@ namespace KerbalFoundries
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class RepulsorSkim : MonoBehaviour
     {
-        
-
         void Start()
         {
             print("RepulsorSkim Start");
@@ -41,20 +37,18 @@ namespace KerbalFoundries
                 }
             }
             
-
             if (repulsorCount > 0)
             {
                 FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterSlider");
             }
-            
-
         }
-
     }
 
     public class ModuleWaterSlider : PartModule
     {
         GameObject _collider = new GameObject("ModuleWaterSlider.Collider", typeof(BoxCollider), typeof(Rigidbody));
+        //SharpDevelop wants this to be turned into a local constant.
+		//I have resisted as I do not know how that would effect the code. - Gaalidas
         float triggerDistance = 25f; // avoid moving every frame
 
         public float colliderHeight = -2.5f;
@@ -65,6 +59,11 @@ namespace KerbalFoundries
 
             var box = _collider.collider as BoxCollider;
             box.size = new Vector3(300f, .5f, 300f); // probably should encapsulate other colliders in real code
+			/*
+			The line above reports that a NullReferenceException will occur when "using memver of a null reference."
+			Might want to look into this.  I's the "box.size" part that it doesn't like, and gives no suggestions
+			on how to fix. - Gaalidas
+			 */
 
             var rb = _collider.rigidbody;
             rb.isKinematic = true;

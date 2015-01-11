@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -16,7 +14,6 @@ namespace KerbalFoundries
             if (directionIndex == 0)
             {
                 dot = Vector3.Dot(transformVector, referenceVector.right); // up is forward
-
             }
             if (directionIndex == 1)
             {
@@ -28,8 +25,9 @@ namespace KerbalFoundries
             }
 
             //print(dot);
-
-            if (dot < 0) // below 0 means the engine is on the left side of the craft
+			// This is another case where a long if/else check can be made into a simple one-liner. - Gaalidas
+			/*
+			if (dot < 0) // below 0 means the engine is on the left side of the craft
             {
                 corrector = -1;
             }
@@ -37,6 +35,8 @@ namespace KerbalFoundries
             {
                 corrector = 1;
             }
+			*/
+			corrector = dot < 0 ? -1 : 1;
             return corrector;
         }
 
