@@ -13,7 +13,6 @@ namespace KerbalFoundries
 {
     public class AlphaRepulsor : PartModule
     {
-
         public JointSpring userspring;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Repulsor Settings")]
         public string settings = "";

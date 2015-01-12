@@ -97,14 +97,15 @@ namespace KerbalFoundries
             }
         }
 
+        // I noticed that "Gear" and "brakes" were swapped, so I changed the functions around so it makes sense. - Gaalidas
         [KSPAction("Gear", KSPActionGroup.Gear)]
-        public void brakes(KSPActionParam param)
+        public void Gear(KSPActionParam param)
         {
                 PlayAnimation();
         }
 
         [KSPAction("Brakes", KSPActionGroup.Brakes)]
-        public void Gear(KSPActionParam param)
+        public void brakes(KSPActionParam param)
         {
             if (param.type == KSPActionType.Activate)
             {
