@@ -26,7 +26,7 @@ namespace KerbalFoundries
                 {
                     repulsorCount++;
                 }
-                foreach (AlphaRepulsor RA in PA.GetComponentsInChildren<AlphaRepulsor>())
+                foreach (Repulsor RA in PA.GetComponentsInChildren<Repulsor>())
                 {
                     repulsorCount++;
                 }
@@ -39,7 +39,7 @@ namespace KerbalFoundries
             
             if (repulsorCount > 0)
             {
-                FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterSlider");
+                FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterSlider"); 
             }
         }
     }

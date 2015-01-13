@@ -50,7 +50,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlphaRepulsor.cs" />
+    <Compile Include="Repulsor.cs" />
     <Compile Include="APUController.cs" />
     <Compile Include="DozerBlade.cs" />
     <Compile Include="GoldenShower.cs" />
