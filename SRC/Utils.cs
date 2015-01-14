@@ -39,7 +39,7 @@ namespace KerbalFoundries
 				case "X":
                 	index = 0;
 					break;
-				case "y":
+				case "y": 
 				case "Y":
                 	index = 1;
 					break;

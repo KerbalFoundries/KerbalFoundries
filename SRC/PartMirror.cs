@@ -17,7 +17,7 @@ namespace KerbalFoundries
         const string rotate = "rotate";
         const string scale = "scale";
         [KSPField(isPersistant = true)] 
-        public string flightSide;
+        public string flightSide; 
         [KSPField(isPersistant = true)]
         public string cloneSide;
         [KSPField(isPersistant = true)]
@@ -31,7 +31,7 @@ namespace KerbalFoundries
         [KSPField]
         public string rootObjectName;
         [KSPField]
-        public int objectAxisIndex = 0;
+        public int objectAxisIndex = 0; //default X
         [KSPField]
         public string mode = "mirror"; 
         [KSPField]
@@ -47,10 +47,12 @@ namespace KerbalFoundries
             //rootObject = this.part.transform;
             if(rootObject == null)
                 print("did not find root part");
-
-            _scale = this.part.transform.localScale;
-            if(!alreadyConfigured)
+            _scale = rootObject.transform.localScale;
+            if (!alreadyConfigured)
+            {
+                
                 initialPosition = rootObject.transform.localPosition;
+            }
             alreadyConfigured = true;
 
             if (flightSide == "") //check to see if we have a value in persistence
@@ -155,8 +157,8 @@ namespace KerbalFoundries
                 {
                     _scale[objectAxisIndex] = Math.Abs(_scale[objectAxisIndex]); // make sure it's positive
                     print(_scale);
-                    //this.part.transform.localScale = _scale;
                     rootObject.transform.localScale = _scale;
+                    //rootObject.transform.localScale = _scale;
                 }
                 else if (mode == move)
                 {
@@ -172,10 +174,10 @@ namespace KerbalFoundries
             {
                 if (mode == scale)
                 {
-                    _scale[objectAxisIndex] = -Math.Abs(_scale[objectAxisIndex]); // make sure it's positive
+                    _scale[objectAxisIndex] = -Math.Abs(_scale[objectAxisIndex]); // make sure it's negative
                     print(_scale);
-                    //this.part.transform.localScale = _scale;
                     rootObject.transform.localScale = _scale;
+                    //rootObject.transform.localScale = _scale;
                 }
                 else if (mode == move)
                 {
