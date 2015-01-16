@@ -82,7 +82,7 @@ namespace KerbalFoundries
         {
             _KFModuleWheel = this.part.GetComponentInChildren<KFModuleWheel>();
             tweakScaleCorrector = _KFModuleWheel.tweakScaleCorrector;
-
+            
             if (!isConfigured)
             {
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
@@ -96,20 +96,22 @@ namespace KerbalFoundries
                     }
                     else
                     {
-                        //Debug.LogError("Wheel Collider" + _wheelCollider + " not found. Disabling module");
+                        Debug.LogError("Wheel Collider" + _wheelCollider + " not found. Disabling module");
                     }
                 }
             }
+
             else
             {
                 Debug.LogError("Already configured - skipping");
             }
+            
 
             if (HighLogic.LoadedSceneIsEditor)
             {
             }
             
-            if (HighLogic.LoadedSceneIsFlight && isConfigured)
+            if (HighLogic.LoadedSceneIsFlight)
             {
 
                 GameEvents.onGamePause.Add(new EventVoid.OnEvent(this.OnPause));

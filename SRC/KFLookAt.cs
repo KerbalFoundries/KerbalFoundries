@@ -41,9 +41,24 @@ namespace KerbalFoundries
         }
         public void SetupObjects()
         {
-            _rotator = transform.Search(rotatorsName);
-            _target = transform.Search(targetName);
-            _mirrorObject = transform.Search(mirrorObjectName);
+            //_rotator = transform.Search(rotatorsName);
+            //_target = transform.Search(targetName);
+            //_mirrorObject = transform.Search(mirrorObjectName);
+            foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
+            {
+                if (tr.name.StartsWith(rotatorsName, StringComparison.Ordinal))
+                {
+                    _rotator = tr;
+                }
+                if (tr.name.StartsWith(targetName, StringComparison.Ordinal))
+                {
+                    _target = tr;
+                }
+                if (tr.name.StartsWith(mirrorObjectName, StringComparison.Ordinal))
+                {
+                    _mirrorObject = tr;
+                }
+            }
 
             if (_mirrorObject.transform.localScale.x < 0 || _mirrorObject.transform.localScale.y < 0 || _mirrorObject.transform.localScale.z < 0)
             {

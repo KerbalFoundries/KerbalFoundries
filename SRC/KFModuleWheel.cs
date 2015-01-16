@@ -107,10 +107,10 @@ namespace KerbalFoundries
         public override void OnStart(PartModule.StartState start)  //when started
         {
             base.OnStart(start);
-            print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version); 
+            print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
-            /* SharpDevelop reports that these two "if" checks can be replaced with single line checks. - Gaalidas
-			if (startRetracted)
+            
+            if (startRetracted)
             {
                 isRetracted = true;
             }
@@ -118,11 +118,12 @@ namespace KerbalFoundries
                 currentRideHeight = rideHeight; //set up correct values from persistence
             else
                 currentRideHeight = 0;
-			*/
-			isRetracted |= startRetracted;
-			currentRideHeight = !isRetracted ? rideHeight : 0;
+            /* SharpDevelop reports that these two "if" checks can be replaced with single line checks. - Gaalidas WRONG
+            isRetracted |= startRetracted;
+            currentRideHeight = !isRetracted ? rideHeight : 0;
             smoothedRideHeight = currentRideHeight;
             appliedRideHeight = smoothedRideHeight / 100;
+             * */
             //print(appliedRideHeight);
            
             if (HighLogic.LoadedSceneIsEditor)
