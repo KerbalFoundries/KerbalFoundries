@@ -50,6 +50,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="KEMeccanumWheel.cs" />
     <Compile Include="Repulsor.cs" />
     <Compile Include="APUController.cs" />
     <Compile Include="DozerBlade.cs" />

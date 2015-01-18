@@ -15,6 +15,9 @@ Mono.Security.dll
 TDx.TDxInput.dll
 UnityEngine.dll
 
+#KF stuff
+_Dev/
+
 
 # Build results
 # [Dd]ebug/
