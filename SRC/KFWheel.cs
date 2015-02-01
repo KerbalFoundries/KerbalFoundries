@@ -94,10 +94,6 @@ namespace KerbalFoundries
                         //Debug.LogError("suspensionDistance is" + suspensionDistance);
                         isConfigured = true;
                     }
-                    else
-                    {
-                        Debug.LogError("Wheel Collider" + _wheelCollider + " not found. Disabling module");
-                    }
                 }
             }
 

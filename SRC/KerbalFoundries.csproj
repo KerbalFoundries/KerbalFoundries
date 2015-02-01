@@ -51,7 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="KEMeccanumWheel.cs" />
+    <Compile Include="KFCouplingHitch.cs" />
     <Compile Include="KFModuleMirror.cs" />
+    <Compile Include="OrientationMarker.cs" />
     <Compile Include="Repulsor.cs" />
     <Compile Include="APUController.cs" />
     <Compile Include="DozerBlade.cs" />
