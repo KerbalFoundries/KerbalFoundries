@@ -10,7 +10,9 @@ namespace KerbalFoundries
     public class KFCouplingHitch : PartModule
     {
         bool isReady;
-        bool isHitched;
+        bool sentOnRails;
+        //[KSPField(isPersistant = true)]
+        public bool isHitched;
         [KSPField]
         public string hitchObjectName;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Coupling Force"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
@@ -31,11 +33,19 @@ namespace KerbalFoundries
         public Vector3 hitchRotation;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Debug"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool isDebug = false;
+        [KSPField(isPersistant = true)]
+        public string _flightID;
+        [KSPField(isPersistant = true)]
+        public bool _savedHitchState;
         public bool hitchCooloff;
 
         GameObject _targetObject;
+        [KSPField(isPersistant = true,guiActive = true, guiName = "Target Object Name")]
+        public string _targetObjectName;
         Rigidbody _rb;
-        Part _part;
+        Part _targetPart;
+        Vessel _targetVessel;
+        
         GameObject _hitchObject;
         GameObject _couplingObject;
         GameObject _Link;
@@ -53,13 +63,56 @@ namespace KerbalFoundries
 
         private LineRenderer line = null;
 
-        IEnumerator HitchCooloffTimer() //coroutine for tracked wheels (all rotate the same speed in the part) 
+        IEnumerator HitchCooloffTimer()  
         {
-            //_wheel.transform.Rotate(_wheelRotation, _KFModuleWheel.degreesPerTick * directionCorrector * rotationCorrection); //rotate wheel
-            print(Time.time);
+            //print(Time.time);
             yield return new WaitForSeconds(10);
-            print(Time.time);
+            print("Hitch Active");
             hitchCooloff = false;
+        }
+
+        public void VesselPack(Vessel vessel)
+        {
+            if (vessel == this.vessel)
+            {
+                sentOnRails = true;
+                _savedHitchState = isHitched;
+            }
+        }
+
+        public void VesselUnPack(Vessel vessel)
+        {
+            Debug.LogWarning("FlightChecker started");
+            //were we previously hitched, is this the vessel this part is attached to firing the event, were we sent on rails without setting up fresh and needing to hitch again.
+            if (_savedHitchState && vessel == this.vessel && !sentOnRails) 
+            {
+                Debug.LogWarning("Was previously hitched at last save");
+                print("Taget flightID " + _flightID);
+                print("Compare ID with flight ID " + uint.Parse(_flightID));
+                foreach (Part pa in FindObjectsOfType(typeof(Part)) as Part[])
+                {
+                    print("found part with flight ID " + pa.flightID);
+
+                    if (pa.flightID.Equals(uint.Parse(_flightID)))
+                    {
+                        UnHitch(); //just in case, by some miracle, we're hitched already
+                        _targetPart = pa;
+                        
+                        Debug.LogWarning("Found part from persistence");
+                        _targetObject = pa.transform.Search(_targetObjectName).gameObject;
+                        Debug.LogWarning("Found hitchObject from persistence");
+                        _targetObject.transform.position = _hitchObject.transform.position;
+                        Debug.LogWarning("Put objects in correct position");
+                        RayCast(0.3f);
+
+                        Hitch();
+                        Debug.LogWarning("Hitched");
+                    }
+
+                }
+
+            }
+            isReady = true;
         }
 
         [KSPEvent(guiActive = true, guiName = "Hitch", active = true)]
@@ -70,6 +123,20 @@ namespace KerbalFoundries
                 isHitched = true;
                 Debug.LogWarning("Start of method...");
                 _couplingObject = _targetObject;
+                _targetObjectName = _targetObject.name.ToString();
+
+                _targetPart = _targetObject.GetComponentInParent<Part>() as Part;
+                _flightID = _targetPart.flightID.ToString();
+                print("Target flight ID " + _flightID);
+                //print(_targetPart.launchID);
+                //print(_targetPart.name);
+
+
+                _targetVessel = _targetPart.vessel;
+                print("Vessel ID " + _targetVessel.GetInstanceID().ToString());
+
+                Debug.LogWarning("Set up vessel and part stuff");
+
                 //_hitchObject.transform.rotation = _couplingObject.transform.rotation;
                 _rbLink = _Link.gameObject.AddComponent<Rigidbody>();
                 _rbLink.mass = 0.01f;
@@ -77,8 +144,9 @@ namespace KerbalFoundries
                 _HitchJoint = this.part.gameObject.AddComponent<ConfigurableJoint>();
                 _LinkJoint = _Link.gameObject.AddComponent<ConfigurableJoint>();
 
-
+#if Debug
                 Debug.LogWarning("Created joint...");
+#endif
                 _LinkJoint.xMotion = ConfigurableJointMotion.Locked;
                 _LinkJoint.yMotion = ConfigurableJointMotion.Locked;
                 _LinkJoint.zMotion = ConfigurableJointMotion.Locked;
@@ -87,9 +155,9 @@ namespace KerbalFoundries
                 _HitchJoint.yMotion = ConfigurableJointMotion.Locked;
                 _HitchJoint.zMotion = ConfigurableJointMotion.Locked;
 
-
+#if Debug
                 Debug.LogWarning("Configured linear...");
-                //set up X limits
+#endif               //set up X limits
                 SoftJointLimit sjl;
                 sjl = _HitchJoint.highAngularXLimit;
                 sjl.limit = xLimitHigh;
@@ -109,8 +177,9 @@ namespace KerbalFoundries
                 _HitchJoint.angularZLimit = sjl;
 
 
-
+#if Debug
                 Debug.LogWarning("Configured linear...");
+#endif                
                 _HitchJoint.angularXMotion = ConfigurableJointMotion.Limited;
                 _HitchJoint.angularYMotion = ConfigurableJointMotion.Limited;
                 _HitchJoint.angularZMotion = ConfigurableJointMotion.Limited;
@@ -122,22 +191,23 @@ namespace KerbalFoundries
                 _LinkJoint.angularZMotion = ConfigurableJointMotion.Locked;
                 _LinkJoint.projectionMode = JointProjectionMode.PositionOnly;
                 _LinkJoint.projectionDistance = 0.05f;
-
+#if Debug
                 Debug.LogWarning("Configured joint...");
-
+#endif
                 _HitchJoint.anchor = new Vector3(0, 0.4f, 0); //this seems to make a springy joint
 
                 // Set correct axis
                 //_HitchJoint.axis = new Vector3(1, 0, 0);
                 //_HitchJoint.secondaryAxis = new Vector3(0, 0, 1);
-
+#if Debug
                 Debug.LogWarning("Configured axis...");
+                #endif
                 _HitchJoint.connectedBody = _rbLink;
 
                 _Link.transform.rotation = _couplingObject.transform.rotation;
-
+#if Debug
                 Debug.LogWarning("Connected joint...");
-
+#endif
 
                 print("Target object is " + _couplingObject.name);
                 _couplingObject.transform.position = _hitchObject.transform.position;
@@ -198,7 +268,7 @@ namespace KerbalFoundries
                     angleZ *= -1;
             }
 
-            /*
+#if Debug
             if (isDebug)
             {
                 print("normalVector" + normalvectorX);
@@ -207,28 +277,35 @@ namespace KerbalFoundries
                 
                 Debug.LogWarning("Rotate " + hitchRotation);
             }
-             * */
+#endif
             Vector3 couplingRotation = new Vector3(angleX, angleY, angleZ);
 
             return couplingRotation;
 
         }
 
-
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
+            GameEvents.onVesselGoOffRails.Add(VesselUnPack);
+            GameEvents.onVesselGoOnRails.Add(VesselPack);
             _hitchObject = transform.Search(hitchObjectName).gameObject;
             _Link = transform.Search(hitchLinkName).gameObject;
             _LinkRotation = _Link.transform.localEulerAngles;
+
+            
+
             if (HighLogic.LoadedSceneIsFlight)
             {
-                isReady = true;
+                
                 // First of all, create a GameObject to which LineRenderer will be attached.
                 //GameObject obj = _hitchObject.gameObject;
 
                 // Then create renderer itself...
                 DebugLine(_hitchObject.gameObject, _hitchObject.transform.forward, Color.black);
+                //StartCoroutine("FlightChecker");
+                
+                
 
             }
         }
@@ -256,30 +333,24 @@ namespace KerbalFoundries
             if (!isReady || hitchCooloff)
                 return;
             RayCast(rayDistance);
-            if (_couplingObject != null)
-            {
-                //ShowJointRotation();
-            }
 
             if (_targetObject != null && !isHitched)
             {
 
-                if (_targetObject.name.Equals("EyeTarget", StringComparison.Ordinal) || _targetObject.name.Equals("EyePoint", StringComparison.Ordinal) && !isHitched)
+                if (_targetObject.name.Equals("EyeTarget", StringComparison.Ordinal) || _targetObject.name.Equals("EyePoint", StringComparison.Ordinal))
                 {
                     Vector3 forceVector = -(_targetObject.transform.position - _hitchObject.transform.position).normalized;
 
                     Vector3 forcePlane = forceVector - (_hitchObject.transform.forward) * Vector3.Dot(forceVector, _hitchObject.transform.forward);
                     Vector3 force = forcePlane * forceMultiplier * Mathf.Clamp((1 / (_targetObject.transform.position - _hitchObject.transform.position).magnitude), -maxForce, maxForce); //(1 / (_targetObject.transform.position - _hitchObject.transform.position).magnitude) *
-                    //Debug.Log("force is " + force);
-                    //Debug.Log((1 / (_targetObject.transform.position - _hitchObject.transform.position).magnitude));
                     _rb.rigidbody.AddForceAtPosition(force, _targetObject.transform.position);
+                    this.part.rigidbody.AddForceAtPosition(-force, _hitchObject.transform.position);
                 }
-                //else
-                //Debug.Log("Not EyeTarget");
 
-                if (_targetObject.name.Equals("EyePoint", StringComparison.Ordinal) && !isHitched)
+
+                if (_targetObject.name.Equals("EyePoint", StringComparison.Ordinal))
                 {
-                    //RayCast(0.2f);
+                    
                     if (Vector3.Distance(_targetObject.transform.position, _hitchObject.transform.position) < 0.1f)
                     {
                         Vector3 jointLimitCheck = JointRotation(_hitchObject.transform, _targetObject.transform, false);
@@ -297,7 +368,7 @@ namespace KerbalFoundries
                         }
                     }
                     else
-                        Debug.Log("Not close enough");
+                        Debug.Log("Not close enough to couple");
 
                     //Debug.Log("Found HitchPoint, hitching");
                 }
@@ -322,7 +393,7 @@ namespace KerbalFoundries
                 ravInfo = hit.collider.gameObject.name.ToString();
                 try
                 {
-                    _part = Part.FromGO(hit.rigidbody.gameObject);
+                    _targetPart = Part.FromGO(hit.rigidbody.gameObject);
                     _rb = (hit.rigidbody);
                     //if(p.vessel != this.vessel)
                     //{
