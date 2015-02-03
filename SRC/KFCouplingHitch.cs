@@ -103,10 +103,12 @@ namespace KerbalFoundries
                         
                         Debug.LogWarning("Found part from persistence");
                         _targetObject = pa.transform.Search(_targetObjectName).gameObject;
+                        _rb = pa.rigidbody;
+                       
                         Debug.LogWarning("Found hitchObject from persistence");
                         _targetObject.transform.position = _hitchObject.transform.position;
                         Debug.LogWarning("Put objects in correct position");
-                        RayCast(0.3f);
+                        //RayCast(0.3f);
 
                         Hitch();
                         Debug.LogWarning("Hitched");
@@ -300,10 +302,10 @@ namespace KerbalFoundries
             //GameEvents.onVesselGoOnRails.Remove(VesselPack);
         }
 
-        public void OnDestroy()
+        void OnDestroy()
         {
             
-            Debug.LogWarning("OnDestroy");
+            Debug.LogError("OnDestroy");
             GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
             GameEvents.onVesselGoOnRails.Remove(VesselPack);
         }
