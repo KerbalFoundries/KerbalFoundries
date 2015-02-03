@@ -77,6 +77,10 @@ namespace KerbalFoundries
             {
                 sentOnRails = true;
                 _savedHitchState = isHitched;
+                var probe = this.part.FindModuleImplementing<ModuleCommand>();
+                Debug.LogError("Vessel Pack");
+                //GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
+                //GameEvents.onVesselGoOnRails.Remove(VesselPack);
             }
         }
 
@@ -92,7 +96,6 @@ namespace KerbalFoundries
                 foreach (Part pa in FindObjectsOfType(typeof(Part)) as Part[])
                 {
                     print("found part with flight ID " + pa.flightID);
-
                     if (pa.flightID.Equals(uint.Parse(_flightID)))
                     {
                         UnHitch(); //just in case, by some miracle, we're hitched already
@@ -108,9 +111,7 @@ namespace KerbalFoundries
                         Hitch();
                         Debug.LogWarning("Hitched");
                     }
-
                 }
-
             }
             isReady = true;
         }
@@ -284,16 +285,43 @@ namespace KerbalFoundries
 
         }
 
+        public override void OnActive()
+        {
+            base.OnActive();
+            Debug.LogError("Adding Hooks");
+            
+        }
+
+        public override void OnInactive()
+        {
+            base.OnInactive();
+            Debug.LogError("Removing Hooks");
+            //GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
+            //GameEvents.onVesselGoOnRails.Remove(VesselPack);
+        }
+
+        public void OnDestroy()
+        {
+            
+            Debug.LogWarning("OnDestroy");
+            GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
+            GameEvents.onVesselGoOnRails.Remove(VesselPack);
+        }
+
+            //GameEvents.onVesselGoOffRails.Add(VesselUnPack);
+            //GameEvents.onVesselGoOnRails.Add(VesselPack);
+
+
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
+
             GameEvents.onVesselGoOffRails.Add(VesselUnPack);
             GameEvents.onVesselGoOnRails.Add(VesselPack);
+            
             _hitchObject = transform.Search(hitchObjectName).gameObject;
             _Link = transform.Search(hitchLinkName).gameObject;
             _LinkRotation = _Link.transform.localEulerAngles;
-
-            
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -333,6 +361,14 @@ namespace KerbalFoundries
             if (!isReady || hitchCooloff)
                 return;
             RayCast(rayDistance);
+            bool brakesOn = FlightGlobals.ActiveVessel.ActionGroups[KSPActionGroup.Brakes];
+
+            if(isHitched)
+            {
+
+                _targetVessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brakesOn);
+
+            }
 
             if (_targetObject != null && !isHitched)
             {
