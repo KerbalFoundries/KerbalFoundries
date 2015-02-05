@@ -36,7 +36,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true)]
         public string _flightID;
         [KSPField(isPersistant = true)]
-        public bool _savedHitchState;
+        public bool savedHitchState;
         public bool hitchCooloff;
 
         GameObject _targetObject;
@@ -76,19 +76,22 @@ namespace KerbalFoundries
             if (vessel == this.vessel)
             {
                 sentOnRails = true;
-                _savedHitchState = isHitched;
-                var probe = this.part.FindModuleImplementing<ModuleCommand>();
-                Debug.LogError("Vessel Pack");
+                Debug.LogError("hitch state" + isHitched);
+                //savedHitchState = isHitched;
                 //GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
                 //GameEvents.onVesselGoOnRails.Remove(VesselPack);
             }
         }
 
-        public void VesselUnPack(Vessel vessel)
+        private IEnumerator WaitAndAttach() //Part partToAttach, Vector3 position, Quaternion rotation, Part toPart = null
         {
-            Debug.LogWarning("FlightChecker started");
-            //were we previously hitched, is this the vessel this part is attached to firing the event, were we sent on rails without setting up fresh and needing to hitch again.
-            if (_savedHitchState && vessel == this.vessel && !sentOnRails) 
+
+            Debug.Log("Wait for FixedUpdate");
+            yield return new WaitForFixedUpdate();
+            Debug.LogError("saved hitch state" + savedHitchState);
+            
+            
+            if (savedHitchState)
             {
                 Debug.LogWarning("Was previously hitched at last save");
                 print("Taget flightID " + _flightID);
@@ -96,34 +99,57 @@ namespace KerbalFoundries
                 foreach (Part pa in FindObjectsOfType(typeof(Part)) as Part[])
                 {
                     print("found part with flight ID " + pa.flightID);
+                    
+
                     if (pa.flightID.Equals(uint.Parse(_flightID)))
                     {
-                        UnHitch(); //just in case, by some miracle, we're hitched already
+                        //UnHitch(); //just in case, by some miracle, we're hitched already
                         _targetPart = pa;
-                        
+
                         Debug.LogWarning("Found part from persistence");
                         _targetObject = pa.transform.Search(_targetObjectName).gameObject;
                         _rb = pa.rigidbody;
-                       
+
                         Debug.LogWarning("Found hitchObject from persistence");
                         _targetObject.transform.position = _hitchObject.transform.position;
                         Debug.LogWarning("Put objects in correct position");
                         //RayCast(0.3f);
 
                         Hitch();
-                        Debug.LogWarning("Hitched");
+                        Debug.LogError("Hitched");
+
                     }
                 }
             }
+            else //string is nullorempty
+                Debug.LogError("not previously hitched");
             isReady = true;
         }
 
-        [KSPEvent(guiActive = true, guiName = "Hitch", active = true)]
+                
+
+        
+
+        public void VesselUnPack(Vessel vessel)
+        {
+            Debug.LogWarning("FlightChecker started");
+            if(vessel == this.vessel)
+                StartCoroutine("WaitAndAttach");
+            //were we previously hitched, is this the vessel this part is attached to firing the event, were we sent on rails without setting up fresh and needing to hitch again.
+            if (savedHitchState && vessel == this.vessel && !sentOnRails) 
+            {
+                
+            }
+            
+        }
+
+        //[KSPEvent(guiActive = true, guiName = "Hitch", active = true)]
         void Hitch()
         {
             if (_targetObject != null)
             {
                 isHitched = true;
+                savedHitchState = true;
                 Debug.LogWarning("Start of method...");
                 _couplingObject = _targetObject;
                 _targetObjectName = _targetObject.name.ToString();
@@ -220,7 +246,7 @@ namespace KerbalFoundries
                 Debug.LogWarning("No target");
         }
 
-        [KSPEvent(guiActive = true, guiName = "Un-Hitch", active = true)]
+        [KSPEvent(guiActive = true, guiName = "Un-Hitch", active = true, guiActiveUnfocused = true, unfocusedRange = 40f)]
         void UnHitch()
         {
             if (_LinkJoint != null)
@@ -232,8 +258,10 @@ namespace KerbalFoundries
                 GameObject.Destroy(_HitchJoint);
                 _Link.transform.localEulerAngles = _LinkRotation;
                 isHitched = false;
+                savedHitchState = false;
                 hitchCooloff = true;
                 _couplingObject = null;
+                _flightID = string.Empty;
                 StartCoroutine("HitchCooloffTimer");
             }
             else
@@ -308,10 +336,15 @@ namespace KerbalFoundries
             Debug.LogError("OnDestroy");
             GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
             GameEvents.onVesselGoOnRails.Remove(VesselPack);
-        }
+            Debug.LogError("Hitch State destroy" + isHitched);
+            //savedHitchState = isHitched;
 
-            //GameEvents.onVesselGoOffRails.Add(VesselUnPack);
-            //GameEvents.onVesselGoOnRails.Add(VesselPack);
+            //Debug.LogError("Vessel Pack");
+            if (isHitched)
+            {
+
+            }
+        }
 
 
         public override void OnStart(PartModule.StartState state)
@@ -400,9 +433,8 @@ namespace KerbalFoundries
 
                         if (rotationCorrect)
                         {
-                            Hitch();
-
                             Debug.Log("Rotation within limits, hitching");
+                            Hitch();
                         }
                     }
                     else

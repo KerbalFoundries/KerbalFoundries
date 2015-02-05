@@ -50,6 +50,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArmMagnet.cs" />
     <Compile Include="KEMeccanumWheel.cs" />
     <Compile Include="KFCouplingHitch.cs" />
     <Compile Include="KFModuleMirror.cs" />
