@@ -33,6 +33,8 @@ namespace KerbalFoundries
         public Vector3 hitchRotation;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Debug"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool isDebug = false;
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Joint Damper"), UI_FloatRange(minValue = 0, maxValue = 1f, stepIncrement = 0.1f)]
+        public float jointDamper = 1;
         [KSPField(isPersistant = true)]
         public string _flightID;
         [KSPField(isPersistant = true)]
@@ -220,6 +222,11 @@ namespace KerbalFoundries
                 _LinkJoint.angularZMotion = ConfigurableJointMotion.Locked;
                 _LinkJoint.projectionMode = JointProjectionMode.PositionOnly;
                 _LinkJoint.projectionDistance = 0.05f;
+
+
+                SetJointDamper();
+
+
 #if Debug
                 Debug.LogWarning("Configured joint...");
 #endif
@@ -244,6 +251,27 @@ namespace KerbalFoundries
             }
             else
                 Debug.LogWarning("No target");
+        }
+
+        [KSPEvent(guiActive = true, guiName = "Update Damper", active = true, guiActiveUnfocused = true, unfocusedRange = 40f)]
+        void SetJointDamper()
+        {
+            if (_HitchJoint != null)
+            {
+                _HitchJoint.rotationDriveMode = RotationDriveMode.XYAndZ;
+                JointDrive X = _HitchJoint.angularXDrive;
+                X.mode = JointDriveMode.Position;
+                X.positionDamper = jointDamper;
+                _HitchJoint.angularXDrive = X;
+                JointDrive YZ = _HitchJoint.angularYZDrive;
+                YZ.mode = JointDriveMode.Position;
+                YZ.positionDamper = jointDamper;
+                _HitchJoint.angularYZDrive = YZ;
+            }
+            else
+            {
+                Debug.LogError("No joint to update!");
+            }
         }
 
         [KSPEvent(guiActive = true, guiName = "Un-Hitch", active = true, guiActiveUnfocused = true, unfocusedRange = 40f)]
