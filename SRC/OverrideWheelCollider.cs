@@ -6,6 +6,9 @@ namespace KerbalFoundries
 {
     public class OverrideWheelCollider : PartModule
     {
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - OverrideWheelCollider]: ";
+		
         [KSPField]
         public string colliderName = "wheelCollider";
         [KSPField]
@@ -64,7 +67,7 @@ namespace KerbalFoundries
                 if (wc.name.Equals(colliderName, StringComparison.Ordinal))
                     _wheelCollider = wc;
                 else
-                    Debug.LogError("wheel collider not found");
+					Debug.LogError(string.Format("{0}Wheel collider not found", logprefix));
             }
 
             if(HighLogic.LoadedSceneIsFlight)

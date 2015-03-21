@@ -56,6 +56,9 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiName = "Rotation Angle", guiFormat = "F1")]
         public float rotationAngle;
 
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - HeavyCrawler]: ";
+
         //begin start
         public override void OnStart(PartModule.StartState start)  //when started
         {
@@ -68,13 +71,13 @@ namespace KerbalFoundries
             //print(steeringFound);
             smoothSteering = transform.Search("smoothSteering");
 
-            print("start called");
+			print(string.Format("{0}Start called", logprefix));
 
             if (HighLogic.LoadedSceneIsEditor)
             {
                 if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
                 {
-                    print("part creation");
+				print(string.Format("{0}part creation", logprefix));
                     //thiswheelCollider = part.gameObject.GetComponentInChildren<WheelCollider>();   //find the 'wheelCollider' gameobject named by KSP convention.
                     //mywc = thiswheelCollider.GetComponent<WheelCollider>();     //pull collider properties
                     userspring = mywc.suspensionSpring;         //set up jointspring to modify spring property

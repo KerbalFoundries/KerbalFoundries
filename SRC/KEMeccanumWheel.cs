@@ -18,6 +18,9 @@ namespace KerbalFoundries
         bool isReady;
         KFModuleWheel _ModuleWheel;
 
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - KFMeccanumWheel]: ";
+
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
@@ -29,7 +32,7 @@ namespace KerbalFoundries
                     {
                         _wheel = tr;
                         isReady = true;
-                        print("Found Wheel transform");
+						print(string.Format("{0}Found Wheel transform", logprefix));
                     }
                 }
             }

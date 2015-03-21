@@ -37,26 +37,30 @@ namespace KerbalFoundries
         [KSPField]
         public string rightRotatorsName;
 
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - KFModuleMirror]: ";
+
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
 
-            if (leftObjectName == "")
+			if (Equals(leftObjectName, string.Empty))
                 leftObjectName = "Left";
-            if (rightObjectName == "")
-                leftObjectName = "Right";
+			if (Equals(rightObjectName, string.Empty))
+                //leftObjectName = "Right"; // shouldn't this be "rightObjectName" instead?
+            	rightObjectName = "Right";
 
             foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
             {
                 if (tr.name.Equals(leftObjectName, StringComparison.Ordinal))
                 {
-                    print("Found left");
+					print(string.Format("{0}Found left", logprefix));
                     leftObject = tr;
                 }
 
                 if (tr.name.Equals(rightObjectName, StringComparison.Ordinal))
                 {
-                    print("Found right");
+					print(string.Format("{0}Found right", logprefix));
                     rightObject = tr;
                 }
             }
@@ -64,10 +68,10 @@ namespace KerbalFoundries
             if (HighLogic.LoadedSceneIsFlight)
             {
                 //SetSide(flightSide); 
-                print("Loaded scene is flight");
-                if (flightSide == left)
+				print(string.Format("{0}Loaded scene is flight", logprefix));
+				if (Equals(flightSide, left))
                 {
-                    print("Destroying Right object");
+					print(string.Format("{0}Destroying Right object", logprefix));
                     leftObject.gameObject.SetActive(true);
                     GameObject.Destroy(rightObject.gameObject);
                     //this.part.AddModule("FXModuleLookAtConstraint");
@@ -77,32 +81,32 @@ namespace KerbalFoundries
 
                 if (flightSide == right)
                 {
-                    print("Destroying left object"); 
+					print(string.Format("{0}Destroying left object", logprefix)); 
                     rightObject.gameObject.SetActive(true);
                     GameObject.Destroy(leftObject.gameObject);
                 }
             }
 
-            print("Loaded scene is editor");
+			print(string.Format("{0}Loaded scene is editor", logprefix));
             print(flightSide);
 
             FindClone();
             if (clone != null)
             {
-                print("Part is clone");
+				print(string.Format("{0}Part is clone", logprefix));
                 //FindClone(); //make sure we have the clone. No harm in checking again
                 SetSide(clone.cloneSide);
             }
 
             if (flightSide == "") //check to see if we have a value in persistence
             {
-                print("No flightSide value in persistence. Sertting default");
+				print(string.Format("{0}No flightSide value in persistence. Sertting default", logprefix));
                 //print(this.part.isClone);
                 LeftSide();
             }
             else //flightSide has a value, so set it.
             {
-                print("Setting value from persistence");
+				print(string.Format("{0}Setting value from persistence", logprefix));
                 SetSide(flightSide);
             }
 
@@ -134,7 +138,7 @@ namespace KerbalFoundries
 
         public void SetSide(string side) //accepts the string value
         {
-            if (side == left)
+			if (Equals(side, left))
             {
                 rightObject.gameObject.SetActive(false);
                 leftObject.gameObject.SetActive(true);
@@ -143,7 +147,7 @@ namespace KerbalFoundries
                 Events["LeftSide"].active = false;
                 Events["RightSide"].active = true;
             }
-            if (side == right)
+			if (Equals(side, right))
             {
                 rightObject.gameObject.SetActive(true);
                 leftObject.gameObject.SetActive(false);
@@ -162,7 +166,7 @@ namespace KerbalFoundries
                 if (potentialMaster != null) //or we'll get a null-ref
                 {
                     clone = potentialMaster.Modules.OfType<KFModuleMirror>().FirstOrDefault();
-                    //print("found my clone");
+					//print(string.Format("{0}Found my clone", logprefix));
                 }
             }
         }

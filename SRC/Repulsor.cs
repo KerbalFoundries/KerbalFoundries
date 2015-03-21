@@ -16,7 +16,7 @@ namespace KerbalFoundries
 
         public JointSpring userspring;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Repulsor Settings")]
-        public string settings = "";
+		public string settings = string.Empty; //Not used anywhere, it seems. - Gaalidas
         [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
         public string status = "Nominal";
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
@@ -31,6 +31,18 @@ namespace KerbalFoundries
         public bool deployed;
         [KSPField]
         public bool lowEnergy;
+
+		public override string GetInfo ()
+		{
+			return "This part enables the vessel to hover.";
+		}
+		
+		//Moved these here, easier to change if necessary. - Gaalidas
+		public const string lowCharge = "Low Charge";
+		public const string nominal = "Nominal";
+		
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - Repulsor]: ";
 
         float effectPower; 
         float effectPowerMax;
@@ -51,7 +63,7 @@ namespace KerbalFoundries
         public override void OnStart(PartModule.StartState start)  //when started
         {
             // degub only: print("onstart");
-            base.OnStart(start);
+			base.OnStart(state);
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
             //this.part.AddModule("ModuleWaterSlider");
@@ -83,7 +95,7 @@ namespace KerbalFoundries
                 {
                     _MWS = mws;
                 }
-                print("water slider height is" + _MWS.colliderHeight);
+				//print(string.Format("Water slider height is{0}", _MWS.colliderHeight));
             }
             DestroyBounds();
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
@@ -94,11 +106,11 @@ namespace KerbalFoundries
         public void DestroyBounds()
         {
             Transform bounds = transform.Search("Bounds");
-            if (bounds != null)
+			if (!Equals(bounds, null))
             {
                 GameObject.Destroy(bounds.gameObject);
                 //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
-                print("destroying Bounds");
+				print(string.Format("{0}Destroying Bounds", logprefix));
             }
         }
 
@@ -128,19 +140,19 @@ namespace KerbalFoundries
 
                 if (electricCharge < (chargeConsumption * 0.5f))
                 {
-                    print("Retracting due to low Electric Charge");
+					print(string.Format("{0}Retracting due to low Electric Charge", logprefix));
                     lowEnergy = true;
                     Rideheight = 0;
                     UpdateHeight();
-                    status = "Low Charge";
+					status = lowCharge;
                 }
                 else
                 {
                     lowEnergy = false;
-                    status = "Nominal";
+					status = nominal;
                 }
 
-                if (appliedRideHeight == 0 || lowEnergy) //disable the colliders if there is not enough energy or height slips below the threshold
+				if (Equals(appliedRideHeight, 0) || lowEnergy) //disable the colliders if there is not enough energy or height slips below the threshold
                 {
                     deployed = false;
                     DisableColliders();
@@ -188,7 +200,7 @@ namespace KerbalFoundries
             if (Rideheight > 0)
             {
                 Rideheight -= 5f;
-                print("Retracting");
+				print(string.Format("{0}Retracting", logprefix));
                 UpdateHeight();
             }
         }//End Retract
@@ -199,7 +211,7 @@ namespace KerbalFoundries
             if (Rideheight < 100)
             {
                 Rideheight += 5f;
-                print("Extending");
+				print(string.Format("{0}Extending", logprefix));
                 UpdateHeight();
             }
         }//end Deploy

@@ -26,6 +26,9 @@ namespace KerbalFoundries
         [KSPField(isPersistant = false, guiActive = true, guiName = "Battery Ratio", guiFormat = "F8")]
         public float batteryRatio = .5f;
 
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - KFModuleWheel]: ";
+
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
@@ -60,7 +63,7 @@ namespace KerbalFoundries
         {
             foreach (ModuleEngines me in this.part.GetComponentsInChildren<ModuleEngines>())
             {
-                print("Found an engine");
+				print(string.Format("{0}Found an engine", logprefix));
                 thisEngine = me;
             }
         }
@@ -71,7 +74,7 @@ namespace KerbalFoundries
             if (throttleSetting < 100)
             {
                 throttleSetting += 5f;
-                print("Increasing APU Output");
+				print(string.Format("{0}Increasing APU Output", logprefix));
             }
         }//End Retract
 
@@ -81,7 +84,7 @@ namespace KerbalFoundries
             if (throttleSetting > 0)
             {
                 throttleSetting -= 5f;
-                print("Decreasing APU Output");
+				print(string.Format("{0}Decreasing APU Output", logprefix));
             }
         }//End Retract
 
@@ -89,21 +92,22 @@ namespace KerbalFoundries
         public void ShutdownAPU(KSPActionParam param)
         {
             throttleSetting = 0f;
-            print("Shutting down APU");
-        }//End Retract
+			print(string.Format("{0}Shutting down APU", logprefix));
+		}
+		//End Retract
 
         [KSPAction("APU Automatic")]
         public void AutoAPU(KSPActionParam param)
         {
             autoThrottle = true;
-            print("APU Automatic");
+			print(string.Format("{0}APU Automatic", logprefix));
         }
 
         [KSPAction("APU Manual")]
         public void ManualAPU(KSPActionParam param)
         {
             autoThrottle = false;
-            print("APU Manual");
+			print(string.Format("{0}APU Manual", logprefix));
         }
     }
 }

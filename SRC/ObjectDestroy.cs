@@ -6,6 +6,9 @@ namespace KerbalFoundries
 {
     public class ObjectDestroy : PartModule
     {
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - ObjectDestroy]: ";
+		
         [KSPField]
         public string objectName;
 
@@ -17,10 +20,10 @@ namespace KerbalFoundries
             {
                 GameObject.Destroy(destroyedObject.gameObject);
                 //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
-                print("destroying " + objectName);
+				print(string.Format("{0}Destroying {1}", logprefix, objectName));
             }
             else
-                Debug.LogWarning("could not find object named " + objectName); 
+				Debug.LogWarning(string.Format("{0}Could not find object named {1}", logprefix, objectName));
         }
     }
 }

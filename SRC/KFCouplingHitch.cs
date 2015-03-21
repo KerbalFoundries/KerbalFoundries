@@ -60,6 +60,9 @@ namespace KerbalFoundries
         [KSPField(guiName = "Ray", guiActive = true)]
         public string ravInfo;
 
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - KFCouplingHitch]: ";
+
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Distance"), UI_FloatRange(minValue = 0, maxValue = 5f, stepIncrement = 0.2f)]
         public float rayDistance = 1;
 
@@ -69,7 +72,7 @@ namespace KerbalFoundries
         {
             //print(Time.time);
             yield return new WaitForSeconds(10);
-            print("Hitch Active");
+			print(string.Format("{0}Hitch Active", logprefix));
             hitchCooloff = false;
         }
 
@@ -78,7 +81,7 @@ namespace KerbalFoundries
             if (vessel == this.vessel)
             {
                 sentOnRails = true;
-                Debug.LogError("hitch state" + isHitched);
+				Debug.LogError(string.Format("{0}Hitch state: {1}", logprefix, isHitched));
                 //savedHitchState = isHitched;
                 //GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
                 //GameEvents.onVesselGoOnRails.Remove(VesselPack);
@@ -88,19 +91,19 @@ namespace KerbalFoundries
         private IEnumerator WaitAndAttach() //Part partToAttach, Vector3 position, Quaternion rotation, Part toPart = null
         {
 
-            Debug.Log("Wait for FixedUpdate");
+			Debug.Log(string.Format("{0}Wait for FixedUpdate", logprefix));
             yield return new WaitForFixedUpdate();
-            Debug.LogError("saved hitch state" + savedHitchState);
+			Debug.LogError(string.Format("{0}Saved hitch state{1}", logprefix, savedHitchState));
             
             
             if (savedHitchState)
             {
-                Debug.LogWarning("Was previously hitched at last save");
-                print("Taget flightID " + _flightID);
-                print("Compare ID with flight ID " + uint.Parse(_flightID));
+				Debug.LogWarning(string.Format("{0}Was previously hitched at last save", logprefix));
+				print(string.Format("{0}Taget flightID: {1}", logprefix, _flightID));
+				print(string.Format("{0}Compare ID with flight ID: {1}", logprefix, uint.Parse(_flightID)));
                 foreach (Part pa in FindObjectsOfType(typeof(Part)) as Part[])
                 {
-                    print("found part with flight ID " + pa.flightID);
+					print(string.Format("{0}Found part with flight ID {1}", logprefix, pa.flightID));
                     
 
                     if (pa.flightID.Equals(uint.Parse(_flightID)))
@@ -108,23 +111,23 @@ namespace KerbalFoundries
                         //UnHitch(); //just in case, by some miracle, we're hitched already
                         _targetPart = pa;
 
-                        Debug.LogWarning("Found part from persistence");
+						Debug.LogWarning(string.Format("{0}Found part from persistence", logprefix));
                         _targetObject = pa.transform.Search(_targetObjectName).gameObject;
                         _rb = pa.rigidbody;
 
-                        Debug.LogWarning("Found hitchObject from persistence");
+						Debug.LogWarning(string.Format("{0}Found hitchObject from persistence", logprefix));
                         _targetObject.transform.position = _hitchObject.transform.position;
-                        Debug.LogWarning("Put objects in correct position");
+						Debug.LogWarning(string.Format("{0}Put objects in correct position", logprefix));
                         //RayCast(0.3f);
 
                         Hitch();
-                        Debug.LogError("Hitched");
+						Debug.LogError(string.Format("{0}Hitched", logprefix));
 
                     }
                 }
             }
             else //string is nullorempty
-                Debug.LogError("not previously hitched");
+				Debug.LogError(string.Format("{0}Not previously hitched", logprefix));
             isReady = true;
         }
 
@@ -134,7 +137,7 @@ namespace KerbalFoundries
 
         public void VesselUnPack(Vessel vessel)
         {
-            Debug.LogWarning("FlightChecker started");
+            Debug.LogWarning(string.Format("{0}FlightChecker started", logprefix));
             if(vessel == this.vessel)
                 StartCoroutine("WaitAndAttach");
             //were we previously hitched, is this the vessel this part is attached to firing the event, were we sent on rails without setting up fresh and needing to hitch again.
@@ -152,21 +155,21 @@ namespace KerbalFoundries
             {
                 isHitched = true;
                 savedHitchState = true;
-                Debug.LogWarning("Start of method...");
+				Debug.LogWarning(string.Format("{0}Start of method...", logprefix));
                 _couplingObject = _targetObject;
                 _targetObjectName = _targetObject.name.ToString();
 
                 _targetPart = _targetObject.GetComponentInParent<Part>() as Part;
                 _flightID = _targetPart.flightID.ToString();
-                print("Target flight ID " + _flightID);
+				print(string.Format("{0}Target flight ID {1}", logprefix, _flightID));
                 //print(_targetPart.launchID);
                 //print(_targetPart.name);
 
 
                 _targetVessel = _targetPart.vessel;
-                print("Vessel ID " + _targetVessel.GetInstanceID().ToString());
+				print(string.Format("{0}Vessel ID {1}", logprefix, _targetVessel.GetInstanceID()));
 
-                Debug.LogWarning("Set up vessel and part stuff");
+				Debug.LogWarning(string.Format("{0}Set up vessel and part stuff", logprefix));
 
                 //_hitchObject.transform.rotation = _couplingObject.transform.rotation;
                 _rbLink = _Link.gameObject.AddComponent<Rigidbody>();
@@ -175,9 +178,9 @@ namespace KerbalFoundries
                 _HitchJoint = this.part.gameObject.AddComponent<ConfigurableJoint>();
                 _LinkJoint = _Link.gameObject.AddComponent<ConfigurableJoint>();
 
-#if Debug
-                Debug.LogWarning("Created joint...");
-#endif
+				#if Debug
+				Debug.LogWarning(string.Format("{0}Created joint...", logprefix));
+				#endif
                 _LinkJoint.xMotion = ConfigurableJointMotion.Locked;
                 _LinkJoint.yMotion = ConfigurableJointMotion.Locked;
                 _LinkJoint.zMotion = ConfigurableJointMotion.Locked;
@@ -186,9 +189,9 @@ namespace KerbalFoundries
                 _HitchJoint.yMotion = ConfigurableJointMotion.Locked;
                 _HitchJoint.zMotion = ConfigurableJointMotion.Locked;
 
-#if Debug
-                Debug.LogWarning("Configured linear...");
-#endif               //set up X limits
+				#if Debug
+				Debug.LogWarning(string.Format("{0}Configured linear...", logprefix));
+				#endif //set up X limits
                 SoftJointLimit sjl;
                 sjl = _HitchJoint.highAngularXLimit;
                 sjl.limit = xLimitHigh;
@@ -207,10 +210,10 @@ namespace KerbalFoundries
                 sjl.limit = zLimit;
                 _HitchJoint.angularZLimit = sjl;
 
+				#if Debug
+				Debug.LogWarning(string.Format("{0}Configured linear...", logprefix));
+				#endif
 
-#if Debug
-                Debug.LogWarning("Configured linear...");
-#endif                
                 _HitchJoint.angularXMotion = ConfigurableJointMotion.Limited;
                 _HitchJoint.angularYMotion = ConfigurableJointMotion.Limited;
                 _HitchJoint.angularZMotion = ConfigurableJointMotion.Limited;
@@ -226,31 +229,31 @@ namespace KerbalFoundries
 
                 SetJointDamper();
 
+				#if Debug
+				Debug.LogWarning(string.Format("{0}Configured joint...", logprefix));
+				#endif
 
-#if Debug
-                Debug.LogWarning("Configured joint...");
-#endif
                 _HitchJoint.anchor = new Vector3(0, 0.4f, 0); //this seems to make a springy joint
 
                 // Set correct axis
                 //_HitchJoint.axis = new Vector3(1, 0, 0);
                 //_HitchJoint.secondaryAxis = new Vector3(0, 0, 1);
-#if Debug
-                Debug.LogWarning("Configured axis...");
+				#if Debug
+				Debug.LogWarning(string.Format("{0}Configured axis...", logprefix));
                 #endif
                 _HitchJoint.connectedBody = _rbLink;
 
                 _Link.transform.rotation = _couplingObject.transform.rotation;
-#if Debug
-                Debug.LogWarning("Connected joint...");
-#endif
+				#if Debug
+				Debug.LogWarning(string.Format("{0}Connected joint...", logprefix));
+				#endif
 
-                print("Target object is " + _couplingObject.name);
+				print(string.Format("{0}Target object is {1}", logprefix, _couplingObject.name));
                 _couplingObject.transform.position = _hitchObject.transform.position;
                 _LinkJoint.connectedBody = _rb;
             }
             else
-                Debug.LogWarning("No target");
+				Debug.LogWarning(string.Format("{0}No target", logprefix));
         }
 
         [KSPEvent(guiActive = true, guiName = "Update Damper", active = true, guiActiveUnfocused = true, unfocusedRange = 40f)]
@@ -270,7 +273,7 @@ namespace KerbalFoundries
             }
             else
             {
-                Debug.LogError("No joint to update!");
+				Debug.LogError(string.Format("{0}No joint to update!", logprefix));
             }
         }
 
@@ -279,7 +282,7 @@ namespace KerbalFoundries
         {
             if (_LinkJoint != null)
             {
-                Debug.LogWarning("Unhitching...");
+				Debug.LogWarning(string.Format("{0}Unhitching...", logprefix));
                 //_joint.connectedBody = this.part.rigidbody;
                 GameObject.Destroy(_LinkJoint);
                 GameObject.Destroy(_rbLink);
@@ -293,7 +296,7 @@ namespace KerbalFoundries
                 StartCoroutine("HitchCooloffTimer");
             }
             else
-                Debug.LogWarning("Not hitched!!!!");
+				Debug.LogWarning(string.Format("{0}Not hitched!!!!", logprefix));
         }
 
 
@@ -327,16 +330,15 @@ namespace KerbalFoundries
                     angleZ *= -1;
             }
 
-#if Debug
+			#if Debug
             if (isDebug)
             {
-                print("normalVector" + normalvectorX);
-                print("normalVector" + normalvectorY);
-                print("normalVector" + normalvectorZ);
-                
-                Debug.LogWarning("Rotate " + hitchRotation);
+				print(string.Format("{0}normalVector: {1}", logprefix, normalvectorX));
+				print(string.Format("{0}normalVector: {1}", logprefix, normalvectorY));
+				print(string.Format("{0}normalVector: {1}", logprefix, normalvectorZ));
+				Debug.LogWarning(string.Format("{0}Rotate: {1}", logprefix, hitchRotation));
             }
-#endif
+			#endif
             Vector3 couplingRotation = new Vector3(angleX, angleY, angleZ);
 
             return couplingRotation;
@@ -346,28 +348,27 @@ namespace KerbalFoundries
         public override void OnActive()
         {
             base.OnActive();
-            Debug.LogError("Adding Hooks");
+			Debug.LogError(string.Format("{0}Adding Hooks", logprefix));
             
         }
 
         public override void OnInactive()
         {
             base.OnInactive();
-            Debug.LogError("Removing Hooks");
+			Debug.LogError(string.Format("{0}Removing Hooks", logprefix));
             //GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
             //GameEvents.onVesselGoOnRails.Remove(VesselPack);
         }
 
         void OnDestroy()
         {
-            
-            Debug.LogError("OnDestroy");
+			Debug.LogError(string.Format("{0}OnDestroy", logprefix));
             GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
             GameEvents.onVesselGoOnRails.Remove(VesselPack);
-            Debug.LogError("Hitch State destroy" + isHitched);
+			Debug.LogError(string.Format("{0}Hitch State destroy{1}", logprefix, isHitched));
             //savedHitchState = isHitched;
 
-            //Debug.LogError("Vessel Pack");
+			//Debug.LogError(string.Format("{0}Vessel Pack", logprefix));
             if (isHitched)
             {
 
@@ -457,23 +458,23 @@ namespace KerbalFoundries
                         if (jointLimitCheck[0] < xLimitHigh && jointLimitCheck[1] < yLimit && jointLimitCheck[2] < zLimit)
                             rotationCorrect = true;
                         else
-                            Debug.Log("Joint outside rotation limit");
+						Debug.Log(string.Format("{0}Joint outside rotation limit", logprefix));
 
                         if (rotationCorrect)
                         {
-                            Debug.Log("Rotation within limits, hitching");
+						Debug.Log(string.Format("{0}Rotation within limits, hitching", logprefix));
                             Hitch();
                         }
                     }
                     else
-                        Debug.Log("Not close enough to couple");
+                        Debug.Log(string.Format("{0}Not close enough to couple", logprefix));
 
-                    //Debug.Log("Found HitchPoint, hitching");
+                    //Debug.Log(string.Format("{0}Found HitchPoint, hitching", logprefix));
                 }
             }
 
 
-            //print(_joint.
+			//print(_joint.)
         }
 
         //[KSPEvent(guiActive = true, guiName = "Fire Ray", active = true)]

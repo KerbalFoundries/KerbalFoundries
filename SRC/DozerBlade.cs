@@ -39,7 +39,7 @@ namespace KerbalFoundries
         public float prefabScaleFactor = 1f;
         [KSPField]
         public float scaleFactor = 1f;
-        [KSPField(guiName = "Enable Rocks",guiActive = true), UI_Toggle(enabledText = "Enabled", disabledText = "disabled")]
+		[KSPField(guiName = "Enable Rocks", guiActive = true), UI_Toggle(enabledText = "Enabled", disabledText = "disabled")]
         public bool rocksEnabled;
         [KSPField(guiActive = true)]
         public string slip = " ";

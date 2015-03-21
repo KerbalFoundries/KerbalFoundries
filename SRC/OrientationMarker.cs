@@ -8,6 +8,9 @@ namespace KerbalFoundries
 {
     public class OrientationMarker : PartModule
     {
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - OrientationMarker]: ";
+		
         [KSPField]
         public string markerName;
         public Transform marker;
@@ -20,10 +23,10 @@ namespace KerbalFoundries
             if (markerName != null)
             {
                 marker.gameObject.SetActive(false);
-                Debug.LogWarning("Marker deactivated");
+                Debug.LogWarning(string.Format("{0}Marker destroyed", logprefix));
             }
             else
-                Debug.LogError("Marker not Found");
+                Debug.LogWarning(string.Format("{0}Marker not found", logprefix));
         }
         */
 
@@ -34,10 +37,10 @@ namespace KerbalFoundries
             if (markerName != null && HighLogic.LoadedSceneIsFlight)
             {
                 GameObject.Destroy(marker.gameObject);
-                Debug.LogWarning("Marker destroyed");
+                Debug.LogWarning(string.Format("{0}Marker destroyed", logprefix));
             }
             else
-                Debug.LogWarning("Marker not found");
+				Debug.LogWarning(string.Format("{0}Marker not found", logprefix));
         }
 
     }

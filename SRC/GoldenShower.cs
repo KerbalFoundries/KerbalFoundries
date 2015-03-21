@@ -4,12 +4,18 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
+	/// <summary>
+	/// This is what happens when the gods have to use the honey bucket... it rains cold hard cash.
+	/// </summary>
     //[KSPAddon(KSPAddon.Startup.Flight, false)]
     class GoldenShower : MonoBehaviour
     {
         private Rect _windowRect = new Rect(400, 400, 128f, 1f);
         private GameObject _coinPrefab;
         private const int ShowerCoinCount = 800;
+        
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - GoldenShower]: "; //The name of this module is really bad. - Gaalidas
 
         void Start()
         {
@@ -61,7 +67,7 @@ namespace KerbalFoundries
 
         private System.Collections.IEnumerator CoinShower()
         {
-            print("Let there be wealth!");
+			print(string.Format("{0}Let there be wealth!", logprefix));
             var vessel = FlightGlobals.ActiveVessel;
             float start = Time.realtimeSinceStartup;
 
@@ -85,7 +91,7 @@ namespace KerbalFoundries
                 while ((Time.realtimeSinceStartup - start) / 2f <= (float)i / ShowerCoinCount)
                     yield return 0;
             }
-            print("Wealth complete");
+			print(string.Format("{0}Wealth complete", logprefix));
         }
     }
 } 

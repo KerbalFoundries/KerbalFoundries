@@ -7,12 +7,20 @@ namespace KerbalFoundries
     {
         KFModuleWheel master;
 
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - ModulePropeller]: ";
+        
+        public override string GetInfo ()
+		{
+			return "This part is capable of propelling the vessel through water.";
+		}
+        
         [KSPField]
         public float propellerForce = 5;
 
         public override void OnStart(PartModule.StartState state)
         {
-            print("ModulePropeller called");
+        	print(string.Format("{0}ModulePropeller called", logprefix));
             base.OnStart(state);
             if (HighLogic.LoadedSceneIsFlight) 
             {

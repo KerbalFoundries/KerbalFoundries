@@ -39,14 +39,18 @@ namespace KerbalFoundries
         [KSPField]
         public float moveAmount = 0;
         
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - PartMirror]: ";
+
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
 
             rootObject = transform.Search(rootObjectName);
             //rootObject = this.part.transform;
-            if(rootObject == null)
-                print("did not find root part");
+			if (Equals(rootObject, null))
+				print(string.Format("{0}Did not find root part", logprefix));
+			
             _scale = rootObject.transform.localScale;
             if (!alreadyConfigured)
             {
@@ -55,15 +59,15 @@ namespace KerbalFoundries
             }
             alreadyConfigured = true;
 
-            if (flightSide == "") //check to see if we have a value in persistence
+			if (Equals(flightSide, string.Empty)) //check to see if we have a value in persistence
             {
-                print("No flightSide value in persistence. Setting default");
+				print(string.Format("{0}No flightSide value in persistence. Setting default", logprefix));
                 //print(this.part.isClone);
                 SetSide(left);
             }
             else //flightSide has a value, so set it.
             {
-                print("Setting value from persistence");
+				print(string.Format("{0}Setting value from persistence", logprefix));
                 SetSide(flightSide);
             }
 
@@ -71,37 +75,37 @@ namespace KerbalFoundries
             {
                 //SetSide(flightSide); 
                 print("Loaded scene is flight");
-                if (flightSide == left)
+				if (Equals(flightSide, left))
                 {
-                    print("Setting LHS");
+					print(string.Format("{0}Setting LHS", logprefix));
                     SetSide(left);
                 }
-                if (flightSide == right)
+				if (Equals(flightSide, right))
                 {
-                    print("Setting RHS");
+					print(string.Format("{0}Setting RHS", logprefix));
                     SetSide(right);
                 }
             }
-            print("Side is");
+            print(string.Format("{0}Side is", logprefix));
             print(flightSide);
 
             FindClone();
-            if (clone != null)
+			if (!Equals(clone, null))
             {
-                print("Part is clone");
+				print(string.Format("{0}Part is clone", logprefix));
                 //FindClone(); //make sure we have the clone. No harm in checking again
                 SetSide(clone.cloneSide);
             }
 
-            if (flightSide == "") //check to see if we have a value in persistence
+			if (Equals(flightSide, string.Empty)) //check to see if we have a value in persistence
             {
-                print("No flightSide value in persistence. Sertting default");
+				print(string.Format("{0}No flightSide value in persistence. Sertting default", logprefix));
                 //print(this.part.isClone);
                 LeftSide();
             }
             else //flightSide has a value, so set it.
             {
-                print("Setting value from persistence");
+				print(string.Format("{0}Setting value from persistence", logprefix));
                 SetSide(flightSide);
             }
                 /*
@@ -151,43 +155,44 @@ namespace KerbalFoundries
 
         public void SetSide(string side) //accepts the string value
         {
-            if (side == left)
+			switch (side)
             {
-                if (mode == scale)
-                {
-                    _scale[objectAxisIndex] = Math.Abs(_scale[objectAxisIndex]); // make sure it's positive
-                    print(_scale);
-                    rootObject.transform.localScale = _scale;
-                    //rootObject.transform.localScale = _scale;
-                }
-                else if (mode == move)
-                {
-                    rootObject.localPosition = initialPosition;
-                    rootObject.transform.Translate(moveAxis * -moveAmount);
-                }
-                flightSide = side;
-                cloneSide = right;
-                Events["LeftSide"].active = false;
-                Events["RightSide"].active = true;
-            }
-            if (side == right)
-            {
-                if (mode == scale)
-                {
-                    _scale[objectAxisIndex] = -Math.Abs(_scale[objectAxisIndex]); // make sure it's negative
-                    print(_scale);
-                    rootObject.transform.localScale = _scale;
-                    //rootObject.transform.localScale = _scale;
-                }
-                else if (mode == move)
-                {
-                    rootObject.localPosition = initialPosition;
-                    rootObject.transform.Translate(moveAxis * moveAmount);
-                }
-                flightSide = side;
-                cloneSide = left;
-                Events["LeftSide"].active = true;
-                Events["RightSide"].active = false;
+				case left:
+					switch (mode)
+                	{
+						case scale:
+							_scale[objectAxisIndex] = Math.Abs(_scale[objectAxisIndex]);
+                    		print(_scale);
+                    		rootObject.transform.localScale = _scale;
+							break;
+						case move:
+                    		rootObject.localPosition = initialPosition;
+                    		rootObject.transform.Translate(moveAxis * -moveAmount);
+							break;
+                	}
+                	flightSide = side;
+                	cloneSide = right;
+                	Events["LeftSide"].active = false;
+                	Events["RightSide"].active = true;
+					break;
+				case right:
+					switch (mode)
+            		{
+						case scale:
+							_scale[objectAxisIndex] = -Math.Abs(_scale[objectAxisIndex]);
+                    		print(_scale);
+                    		rootObject.transform.localScale = _scale;
+							break;
+						case move:
+                    		rootObject.localPosition = initialPosition;
+                    		rootObject.transform.Translate(moveAxis * moveAmount);
+							break;
+                	}
+                	flightSide = side;
+                	cloneSide = left;
+                	Events["LeftSide"].active = true;
+                	Events["RightSide"].active = false;
+					break;
             }
         }
     }//end class

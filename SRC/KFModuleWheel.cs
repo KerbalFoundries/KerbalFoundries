@@ -12,9 +12,15 @@ namespace KerbalFoundries
         public string forward = "forward";
         public string up = "up";
 
+		public override string GetInfo ()
+		{
+			return "This part has enhanced suspension and steering control.";
+		}
+
         //tweakables
         [KSPField(isPersistant = false, guiActive = true, guiName = "Wheel Settings")]
-        public string settings = "";
+		public string settings = string.Empty; //This doesn't seem to be referenced anywhere.  Why does it exist? - Gaalidas
+		
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
         public float groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Torque Ratio"), UI_FloatRange(minValue = 0, maxValue = 2f, stepIncrement = .25f)]
@@ -47,6 +53,9 @@ namespace KerbalFoundries
         public float brakingTorque;                     //torque to apply for brakes
         [KSPField]
         public float rollingResistance;                 //constant brake value aplpied to simulate rolling resistance
+		//Odd that is is initialized with the default of zero, and the only other reference is a spot where it's added to other values.
+		// With a value of zero, it's not doing anything... ever... - Gaalidas
+		
         [KSPField]
         public float smoothSpeed = 10;                  //steering speed
         [KSPField]
@@ -102,9 +111,18 @@ namespace KerbalFoundries
         public float currentRideHeight;
         public float smoothedRideHeight;
 
+		//I put these up here, makes it easier to find the strings if the need to change them comes up. - Gaalidas
+		public const string lowCharge = "Low Charge";
+		public const string revLimit = "Rev Limit";
+		public const string nominal = "Nominal";
+
         public List<WheelCollider> wcList = new List<WheelCollider>();
-        
-        public override void OnStart(PartModule.StartState start)  //when started
+		
+		//Log prefix to more easily identify this mod's log entries.
+		public const string logprefix = "[KF - KFModuleWheel]: ";
+
+		//This method was calling for "StartState start" but, apparently, it's better to call it "state" according to SharpDevelop. - Gaalidas
+		public override void OnStart(PartModule.StartState state)  //when started
         {
             base.OnStart(start);
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
@@ -141,6 +159,13 @@ namespace KerbalFoundries
             if (HighLogic.LoadedSceneIsFlight)
             {
                 maxRPM /= tweakScaleCorrector;
+				/*
+				 * Why is this devided by the tweakscaleCorrector?
+				 * As the corrector value goes up, the value of maxRPM will go down.
+				 * Thus, a really tiny wheel will have a ton of RPM, and a large one will have very little.
+				 * It doesn't match very well, and also explains why my attempt to scale maxRPM with an exponent
+				 *   scaler failed so miserably. - Gaalidas
+				 */
                 startRetracted = false;
                 if (!hasRetract)
                     Extensions.DisableAnimateButton(this.part);
@@ -228,16 +253,16 @@ namespace KerbalFoundries
                     if (electricCharge != chargeConsumption)
                     { 
                         motorTorque = 0;
-                        status = "Low Charge";
+						status = lowCharge;
                     }
                     else if (Math.Abs(averageTrackRPM) >= maxRPM)
                     {
                         motorTorque = 0;
-                        status = "Rev Limit";
+						status = revLimit;
                     }
                     else
                     {
-                        status = "Nominal";
+						status = nominal;
                     }
                     wcList[i].motorTorque = motorTorque;
                     wcList[i].brakeTorque = brakeTorque + brakeSteeringTorque + rollingResistance;
@@ -290,9 +315,9 @@ namespace KerbalFoundries
         {
             base.OnUpdate();
             commandId = this.vessel.referenceTransformId;
-            if (commandId != lastCommandId)
+			if (!Equals(commandId, lastCommandId))
             {
-                print("Control Axis Changed");
+				print(string.Format("{0}Control Axis Changed", logprefix));
                 GetControlAxis();
             }
             lastCommandId = commandId;
@@ -303,7 +328,8 @@ namespace KerbalFoundries
         public void UpdateColliders(string mode)
         {
 			// I am unsure if this is more efficient or what, but this format was suggested. - Gaalidas
-			switch (mode) {
+			switch (mode)
+			{
 				case "retract":
                 	isRetracted = true;
                 	currentRideHeight = 0;
@@ -367,7 +393,7 @@ namespace KerbalFoundries
             {
                 GameObject.Destroy(bounds.gameObject);
                 //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
-                print("destroying Bounds");
+				print(string.Format("{0}Destroying Bounds", logprefix));
             }
         }
 
@@ -476,7 +502,7 @@ namespace KerbalFoundries
         [KSPAction("Deploy")]
         public void Deploy(KSPActionParam param)
         {
-            if (isRetracted == true)
+			if (Equals(isRetracted, true))
             {
                 if(hasRetractAnimation)
                     PlayAnimation();
@@ -516,7 +542,7 @@ namespace KerbalFoundries
             ApplySettings(true);
         }//end increase
 
-        [KSPAction("Apply Wheel")]
+		[KSPAction("Apply Wheels")]
         public void ApplyWheelAction(KSPActionParam param)
         {
             ApplySettings(true);
