@@ -31,6 +31,10 @@ namespace KerbalFoundries
         public float zLimit = 20; 
         [KSPField(guiActive = true, guiUnits = "deg", guiName = "Hitch Angle", guiFormat = "F0")]
         public Vector3 hitchRotation;
+        [KSPField(guiActive = true, guiUnits = "deg", guiName = "Warp Rate", guiFormat = "F6")]
+        public float warpRate;
+        [KSPField(guiActive = true, guiUnits = "deg", guiName = "Warp index", guiFormat = "F0")]
+        public int warpIndex;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Debug"), UI_Toggle(disabledText = "Enabled", enabledText = "Disabled")]
         public bool isDebug = false;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Joint Damper"), UI_FloatRange(minValue = 0, maxValue = 1f, stepIncrement = 0.1f)]
@@ -40,21 +44,31 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true)]
         public bool savedHitchState;
         public bool hitchCooloff;
+        public bool inWarp = true;
+
+        [KSPField(isPersistant = true)]
+        public Vector3 _trailerPosition = new Vector3(0,0,0);
 
         GameObject _targetObject;
         [KSPField(isPersistant = true,guiActive = true, guiName = "Target Object Name")]
         public string _targetObjectName;
+        [KSPField]
+        public float moveSpeed = 1f;
         Rigidbody _rb;
         Part _targetPart;
+        //KFCouplingEye _couplingEye;
         Vessel _targetVessel;
         
         GameObject _hitchObject;
-        GameObject _couplingObject;
+        GameObject _coupledObject;
         GameObject _Link;
+        GameObject _trailerFix;
         ConfigurableJoint _LinkJoint;
         ConfigurableJoint _HitchJoint;
+        FixedJoint _StaticJoint;
         Rigidbody _rbLink;
         Vector3 _LinkRotation;
+        Vector3 tempPosition;
         [KSPField]
         public int layerMask = 0;
         [KSPField(guiName = "Ray", guiActive = true)]
@@ -63,7 +77,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Distance"), UI_FloatRange(minValue = 0, maxValue = 5f, stepIncrement = 0.2f)]
         public float rayDistance = 1;
 
-        private LineRenderer line = null;
+        //private LineRenderer lineX = null;
 
         IEnumerator HitchCooloffTimer()  
         {
@@ -78,11 +92,17 @@ namespace KerbalFoundries
             if (vessel == this.vessel)
             {
                 sentOnRails = true;
-                Debug.LogError("hitch state" + isHitched);
-                //savedHitchState = isHitched;
-                //GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
-                //GameEvents.onVesselGoOnRails.Remove(VesselPack);
+                Debug.LogError("hitch state is " + isHitched);
+                //_targetPart.rigidbody.isKinematic = true;
+                //_targetPart.transform.parent = this.part.transform;
             }
+        }
+
+        public void VesselUnPack(Vessel vessel)
+        {
+            Debug.LogWarning("FlightChecker started");
+            if (vessel == this.vessel)
+                StartCoroutine("WaitAndAttach");
         }
 
         private IEnumerator WaitAndAttach() //Part partToAttach, Vector3 position, Quaternion rotation, Part toPart = null
@@ -91,9 +111,13 @@ namespace KerbalFoundries
             Debug.Log("Wait for FixedUpdate");
             yield return new WaitForFixedUpdate();
             Debug.LogError("saved hitch state" + savedHitchState);
+
+            if (_Link.GetComponent<Rigidbody>() != null)
+                Debug.LogWarning("Link has rigidbody");
+            if (_Link.GetComponent<Rigidbody>() == null)
+                Debug.LogError("Link has no Rigidbosy");
             
-            
-            if (savedHitchState)
+            if (savedHitchState && _Link.GetComponent<Rigidbody>() == null)
             {
                 Debug.LogWarning("Was previously hitched at last save");
                 print("Taget flightID " + _flightID);
@@ -113,50 +137,106 @@ namespace KerbalFoundries
                         _rb = pa.rigidbody;
 
                         Debug.LogWarning("Found hitchObject from persistence");
+                        if(Vector3.Distance(_targetObject.transform.position, _hitchObject.transform.position) > 0.1f)
+                        {
+                            
+                        }
                         _targetObject.transform.position = _hitchObject.transform.position;
                         Debug.LogWarning("Put objects in correct position");
                         //RayCast(0.3f);
-
+                        pa.vessel.rigidbody.velocity = this.vessel.rigidbody.velocity;
                         Hitch();
                         Debug.LogError("Hitched");
-
                     }
                 }
             }
-            else //string is nullorempty
-                Debug.LogError("not previously hitched");
+            else //string is nullorempty 
+                Debug.LogError("Not previously hitched or hitch already in place");
             isReady = true;
         }
 
-                
+        public void CreateStaticJoint(Part coupledPart)
+        {
+            GameObject.Destroy(_LinkJoint);
+            GameObject.Destroy(_HitchJoint);
+            GameObject.Destroy(_rbLink);
+            _StaticJoint = coupledPart.gameObject.AddComponent<FixedJoint>();
+            _StaticJoint.breakForce = float.PositiveInfinity;
+            _StaticJoint.breakTorque = float.PositiveInfinity;
+            _StaticJoint.connectedBody = this.part.Rigidbody;
+        }
+
+        public void DestroyStaticJoint()
+        {
+            GameObject.Destroy(_StaticJoint);
+        }
+
+        public void OnWarpChange()
+        {
+            warpRate = TimeWarp.CurrentRate;
+            warpIndex = TimeWarp.CurrentRateIndex;
+            if (TimeWarp.CurrentRateIndex != 0)
+            {/*
+                print("warp rate changed and greater than one");
+                //UnHitch();
+                Part coupledPart = _coupledObject.GetComponentInParent<Part>();
+                print("Refound target part");
+                this.part.attachMethod = AttachNodeMethod.FIXED_JOINT;
+                Vessel vessel = this.vessel;
+
+                coupledPart.Couple(this.part);
+
+                FlightGlobals.ForceSetActiveVessel(vessel);
+
+                vessel.MakeActive(); 
+
+                CreateStaticJoint(coupledPart);
+                print("created static joint");
+              * */
+                //_targetVessel.flightIntegrator.enabled = false;
+
+                //FlightGlobals.overrideOrbit = true;
+
+                if (isHitched)
+                {
+                    _trailerFix = new GameObject("_trailerFix");
+                    _trailerFix.transform.position = _targetVessel.transform.position;
+                    _trailerFix.transform.parent = this.part.transform;
+                    FlightGlobals.overrideOrbit = true;
+                    //_trailerPosition = _targetVessel.transform.position;
+                    // Debug.LogError("Relative position " + _trailerPosition);
+                    DebugLine(_trailerFix.transform.position, _targetVessel.transform.right);
+                }
+                inWarp = true;
+            }
+            else if (TimeWarp.CurrentRateIndex == 0)
+            {
+                print("warp rate changed back to one");
+                inWarp = false;
+                FlightGlobals.overrideOrbit = false;
+                //DestroyStaticJoint();
+                //Hitch();
+            }
+        }
 
         
-
-        public void VesselUnPack(Vessel vessel)
-        {
-            Debug.LogWarning("FlightChecker started");
-            if(vessel == this.vessel)
-                StartCoroutine("WaitAndAttach");
-            //were we previously hitched, is this the vessel this part is attached to firing the event, were we sent on rails without setting up fresh and needing to hitch again.
-            if (savedHitchState && vessel == this.vessel && !sentOnRails) 
-            {
-                
-            }
-            
-        }
 
         //[KSPEvent(guiActive = true, guiName = "Hitch", active = true)]
         void Hitch()
         {
+            
             if (_targetObject != null)
             {
                 isHitched = true;
                 savedHitchState = true;
                 Debug.LogWarning("Start of method...");
-                _couplingObject = _targetObject;
+                _coupledObject = _targetObject;
                 _targetObjectName = _targetObject.name.ToString();
 
                 _targetPart = _targetObject.GetComponentInParent<Part>() as Part;
+                //_couplingEye = _targetObject.GetComponentInParent<KFCouplingEye>() as KFCouplingEye;
+                //_couplingEye.isHitched = true;
+                //_couplingEye._hitchObject = _Link.transform;
                 _flightID = _targetPart.flightID.ToString();
                 print("Target flight ID " + _flightID);
                 //print(_targetPart.launchID);
@@ -164,6 +244,7 @@ namespace KerbalFoundries
 
 
                 _targetVessel = _targetPart.vessel;
+                
                 print("Vessel ID " + _targetVessel.GetInstanceID().ToString());
 
                 Debug.LogWarning("Set up vessel and part stuff");
@@ -240,14 +321,16 @@ namespace KerbalFoundries
                 #endif
                 _HitchJoint.connectedBody = _rbLink;
 
-                _Link.transform.rotation = _couplingObject.transform.rotation;
+                _Link.transform.rotation = _coupledObject.transform.rotation;
 #if Debug
                 Debug.LogWarning("Connected joint...");
 #endif
-
-                print("Target object is " + _couplingObject.name);
-                _couplingObject.transform.position = _hitchObject.transform.position;
+                
+                print("Target object is " + _coupledObject.name);
+                _coupledObject.transform.position = _hitchObject.transform.position;
                 _LinkJoint.connectedBody = _rb;
+                print("Setting target parent");
+                _coupledObject.transform.parent = this.part.transform;
             }
             else
                 Debug.LogWarning("No target");
@@ -286,9 +369,10 @@ namespace KerbalFoundries
                 GameObject.Destroy(_HitchJoint);
                 _Link.transform.localEulerAngles = _LinkRotation;
                 isHitched = false;
+                //_couplingEye.isHitched = false;
                 savedHitchState = false;
                 hitchCooloff = true;
-                _couplingObject = null;
+                _coupledObject = null;
                 _flightID = string.Empty;
                 StartCoroutine("HitchCooloffTimer");
             }
@@ -343,20 +427,6 @@ namespace KerbalFoundries
 
         }
 
-        public override void OnActive()
-        {
-            base.OnActive();
-            Debug.LogError("Adding Hooks");
-            
-        }
-
-        public override void OnInactive()
-        {
-            base.OnInactive();
-            Debug.LogError("Removing Hooks");
-            //GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
-            //GameEvents.onVesselGoOnRails.Remove(VesselPack);
-        }
 
         void OnDestroy()
         {
@@ -381,6 +451,8 @@ namespace KerbalFoundries
 
             GameEvents.onVesselGoOffRails.Add(VesselUnPack);
             GameEvents.onVesselGoOnRails.Add(VesselPack);
+
+            GameEvents.onTimeWarpRateChanged.Add(OnWarpChange);
             
             _hitchObject = transform.Search(hitchObjectName).gameObject;
             _Link = transform.Search(hitchLinkName).gameObject;
@@ -393,7 +465,7 @@ namespace KerbalFoundries
                 //GameObject obj = _hitchObject.gameObject;
 
                 // Then create renderer itself...
-                DebugLine(_hitchObject.gameObject, _hitchObject.transform.forward, Color.black);
+                //DebugLine(_hitchObject.gameObject, _hitchObject.transform.forward, Color.black);
                 //StartCoroutine("FlightChecker");
                 
                 
@@ -401,23 +473,47 @@ namespace KerbalFoundries
             }
         }
 
-        void DebugLine(GameObject obj, Vector3 dir, Color c)
+        void DebugLine(Vector3 position, Vector3 rotation)
         {
-            line = obj.AddComponent<LineRenderer>();
-            //line.transform.parent = transform; // ...child to our part...
-            line.useWorldSpace = false; // ...and moving along with it (rather 
-            // than staying in fixed world coordinates)
-            //line.transform.localPosition = Vector3.zero;
-            //line.transform.localEulerAngles = Vector3.zero;
+            GameObject lineDebugX = new GameObject("lineDebug");
+            GameObject lineDebugY = new GameObject("lineDebug");
+            GameObject lineDebugZ = new GameObject("lineDebug");
+            lineDebugX.transform.position = position;
+            lineDebugY.transform.position = position;
+            lineDebugZ.transform.position = position;
+            LineRenderer lineX = lineDebugX.AddComponent<LineRenderer>();
+            LineRenderer lineY = lineDebugY.AddComponent<LineRenderer>();
+            LineRenderer lineZ = lineDebugZ.AddComponent<LineRenderer>();
+            //lineX.transform.parent = transform; // ...child to our part...
+            lineX.useWorldSpace = false; // ...and moving along with it (rather 
+            lineX.material = new Material(Shader.Find("Particles/Additive"));
+            lineX.SetColors(Color.red, Color.white);
+            lineX.SetWidth(0.1f, 0.1f);
+            lineX.SetVertexCount(2);
+            lineX.SetPosition(0, Vector3.zero);
+            lineX.SetPosition(1, Vector3.right * 10);
 
-            // Make it render a red to yellow triangle, 1 meter wide and 2 meters long
-            line.material = new Material(Shader.Find("Particles/Additive"));
-            line.SetColors(c, Color.white);
-            line.SetWidth(0.1f, 0.1f);
-            line.SetVertexCount(2);
-            line.SetPosition(0, Vector3.zero);
-            line.SetPosition(1, Vector3.forward * 2);
+            lineY.useWorldSpace = false; // ...and moving along with it (rather 
+            lineY.material = new Material(Shader.Find("Particles/Additive"));
+            lineY.SetColors(Color.green, Color.white);
+            lineY.SetWidth(0.1f, 0.1f);
+            lineY.SetVertexCount(2);
+            lineY.SetPosition(0, Vector3.zero);
+            lineY.SetPosition(1, Vector3.up * 10);
+
+            lineZ.useWorldSpace = false; // ...and moving along with it (rather 
+            lineZ.material = new Material(Shader.Find("Particles/Additive"));
+            lineZ.SetColors(Color.blue, Color.white);
+            lineZ.SetWidth(0.1f, 0.1f);
+            lineZ.SetVertexCount(2);
+            lineZ.SetPosition(0, Vector3.zero);
+            lineZ.SetPosition(1, Vector3.forward * 10);
         }
+        // than staying in fixed world coordinates)
+        //line.transform.localPosition = Vector3.zero;
+        //line.transform.localEulerAngles = Vector3.zero;
+
+        // Make it render a red to yellow triangle, 1 meter wide and 2 meters long
 
         public void FixedUpdate()
         {
@@ -430,8 +526,15 @@ namespace KerbalFoundries
             {
 
                 _targetVessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brakesOn);
+                _trailerPosition = _targetVessel.transform.position;
 
+                if (inWarp)
+                {
+                    _targetVessel.transform.position = _trailerFix.transform.position;
+                }
+                
             }
+
 
             if (_targetObject != null && !isHitched)
             {
@@ -465,10 +568,7 @@ namespace KerbalFoundries
                             Hitch();
                         }
                     }
-                    else
-                        Debug.Log("Not close enough to couple");
 
-                    //Debug.Log("Found HitchPoint, hitching");
                 }
             }
 
@@ -483,8 +583,8 @@ namespace KerbalFoundries
             RaycastHit hit;
             int tempLayerMask = ~layerMask;
             //Debug.DrawRay(_hitchObject.transform.position, _hitchObject.transform.up);
-            line.transform.rotation = _hitchObject.transform.rotation;
-            line.transform.position = _hitchObject.transform.position;
+            //lineX.transform.rotation = _hitchObject.transform.rotation;
+            //lineX.transform.position = _hitchObject.transform.position;
             if (Physics.Raycast(ray, out hit, rayLength, tempLayerMask))
             {
                 //targetObject = hit.collider.gameObject;

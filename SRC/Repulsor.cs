@@ -31,14 +31,17 @@ namespace KerbalFoundries
         public bool deployed;
         [KSPField]
         public bool lowEnergy;
+        [KSPField]
+        public string gridName;
 
         float effectPower; 
         float effectPowerMax;
         float appliedRideHeight;
         float smoothedRideHeight;
         float currentRideHeight;
-
         float maxRepulsorHeight = 8;
+
+        Transform _grid;
 
         public float repulsorCount = 0;
         [KSPField]
@@ -83,7 +86,9 @@ namespace KerbalFoundries
                 {
                     _MWS = mws;
                 }
-                print("water slider height is" + _MWS.colliderHeight);
+                //print("water slider height is" + _MWS.colliderHeight);
+
+                _grid = transform.Search(gridName);
             }
             DestroyBounds();
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
@@ -111,6 +116,10 @@ namespace KerbalFoundries
         {
             smoothedRideHeight = Mathf.Lerp(smoothedRideHeight, currentRideHeight, Time.deltaTime * 2);
             appliedRideHeight = smoothedRideHeight / 100;
+
+            //Vector3d oceanNormal = this.part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
+
+            _grid.transform.LookAt(FlightGlobals.ActiveVessel.mainBody.transform.position);
 
             for (int i = 0; i < wcList.Count(); i++)
             {

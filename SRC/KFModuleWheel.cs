@@ -46,7 +46,9 @@ namespace KerbalFoundries
         [KSPField]
         public float brakingTorque;                     //torque to apply for brakes
         [KSPField]
-        public float rollingResistance;                 //constant brake value aplpied to simulate rolling resistance
+        public FloatCurve rollingResistance = new FloatCurve();                 //constant brake value aplpied to simulate rolling resistance
+        [KSPField]
+        public FloatCurve loadCoefficient = new FloatCurve();                 //constant brake value aplpied to simulate rolling resistance
         [KSPField]
         public float smoothSpeed = 10;                  //steering speed
         [KSPField]
@@ -190,7 +192,7 @@ namespace KerbalFoundries
         {
             //User input
             float electricCharge;
-            
+            float unitLoad = 0;
             float forwardTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed /tweakScaleCorrector) * torque; //this is used a lot, so may as well calculate once
             float steeringTorque;
             float brakeSteeringTorque;
@@ -239,8 +241,18 @@ namespace KerbalFoundries
                     {
                         status = "Nominal";
                     }
+
+                    WheelHit hit;
+                    bool grounded = wcList[i].GetGroundHit(out hit); //set up to pass out wheelhit coordinates
+                    unitLoad += hit.force;
+                    unitLoad /= wcList.Count();
+                    unitLoad *= 10;
+                    print("unitLoad = " + unitLoad);
+                    var rollingFriction = rollingResistance.Evaluate((float)this.vessel.srfSpeed) * loadCoefficient.Evaluate((float)unitLoad); // 
+                    print("rollingfriction = "+ rollingFriction);
+
                     wcList[i].motorTorque = motorTorque;
-                    wcList[i].brakeTorque = brakeTorque + brakeSteeringTorque + rollingResistance;
+                    wcList[i].brakeTorque = brakeTorque + brakeSteeringTorque + rollingFriction;
 
                     if (wcList[i].isGrounded) //only count wheels in contact with the floor. Others will be freewheeling and will wreck the calculation. 
                     {
@@ -251,6 +263,9 @@ namespace KerbalFoundries
                     {
                         freeWheelRPM += wcList[i].rpm;
                     }
+
+                    
+
                     if(hasSteering)
                         wcList[i].steerAngle = steeringAngleSmoothed;
                 }

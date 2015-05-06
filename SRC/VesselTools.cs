@@ -26,7 +26,7 @@ namespace KerbalFoundries
                 {
                     repulsorCount++;
                 }
-                foreach (Repulsor RA in PA.GetComponentsInChildren<Repulsor>())
+                foreach (KFRepulsor RA in PA.GetComponentsInChildren<KFRepulsor>())
                 {
                     repulsorCount++;
                 }
