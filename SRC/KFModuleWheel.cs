@@ -243,11 +243,11 @@ namespace KerbalFoundries
                     }
 
                     WheelHit hit;
-                    bool grounded = wcList[i].GetGroundHit(out hit); //set up to pass out wheelhit coordinates
+                    bool grounded = wcList[i].GetGroundHit(out hit); //set up to pass out wheelhit coordinates 
                     unitLoad += hit.force;
-                    unitLoad /= wcList.Count();
-                    unitLoad *= 10;
-                    print("unitLoad = " + unitLoad);
+                    //unitLoad /= wcList.Count();
+                    //unitLoad *= 10;
+                    //print("unitLoad = " + unitLoad);
                     var rollingFriction = rollingResistance.Evaluate((float)this.vessel.srfSpeed) * loadCoefficient.Evaluate((float)unitLoad); // 
                     print("rollingfriction = "+ rollingFriction);
 
