@@ -65,6 +65,8 @@ namespace KerbalFoundries
         public string boundsName = "Bounds";
         [KSPField]
         public bool passivePart = false;
+        [KSPField]
+        public bool disableTweakables = false;
 
         //persistent fields
         [KSPField(isPersistant = true)]
@@ -111,6 +113,28 @@ namespace KerbalFoundries
             base.OnStart(start);
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
+            if (disableTweakables)
+            {
+                Debug.LogWarning("Disabling tweakables");
+                foreach (BaseField k in this.Fields)
+                {
+                    print("found " + k.guiName);
+                    k.guiActive = false;
+                    k.guiActiveEditor = false;
+                    
+                }
+                foreach (BaseAction a in this.Actions)
+                {
+                    print("found " + a.guiName);
+                    a.active = false;
+                }
+                foreach (BaseEvent e in this.Events)
+                {
+                    print("found " + e.guiName);
+                    e.active = false;
+                }
+                
+            }
             
             if (startRetracted)
             {

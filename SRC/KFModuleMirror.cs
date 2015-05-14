@@ -70,9 +70,6 @@ namespace KerbalFoundries
                     print("Destroying Right object");
                     leftObject.gameObject.SetActive(true);
                     GameObject.Destroy(rightObject.gameObject);
-                    //this.part.AddModule("FXModuleLookAtConstraint");
-                    //FXModuleLookAtConstraint _fx = this.part.GetComponentInChildren<FXModuleLookAtConstraint>();
-
                 }
 
                 if (flightSide == right)
