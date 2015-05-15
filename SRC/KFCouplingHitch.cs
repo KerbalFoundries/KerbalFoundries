@@ -10,7 +10,7 @@ namespace KerbalFoundries
     public class KFCouplingHitch : PartModule
     {
         bool isReady;
-        bool sentOnRails;
+        bool sentOnRails; // Reports that it is never used.
         //[KSPField(isPersistant = true)]
         public bool isHitched;
         [KSPField]
@@ -68,7 +68,7 @@ namespace KerbalFoundries
         FixedJoint _StaticJoint;
         Rigidbody _rbLink;
         Vector3 _LinkRotation;
-        Vector3 tempPosition;
+        Vector3 tempPosition; // Reports that it is never used.
         [KSPField]
         public int layerMask = 0;
         [KSPField(guiName = "Ray", guiActive = true)]

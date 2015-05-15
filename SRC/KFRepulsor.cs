@@ -40,7 +40,7 @@ namespace KerbalFoundries
         public string gridName;
         [KSPField]
         public string gimbalName;
-        bool isReady;
+        bool isReady; //Reports that it is never used.
         Transform _grid;
         Transform _gimbal;
 
@@ -146,7 +146,7 @@ namespace KerbalFoundries
                 _gimbal.transform.LookAt(FlightGlobals.ActiveVessel.mainBody.transform.position);
                 yield return null;
             }
-            Debug.LogWarning("Finished shrinking");
+            Debug.LogWarning("Finished shrinking"); // Unreachable code warning here.
         }
 
         public void DestroyBounds()
