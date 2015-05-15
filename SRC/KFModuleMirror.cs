@@ -10,8 +10,8 @@ namespace KerbalFoundries
     public class KFModuleMirror : PartModule
     {
 
-        public Transform leftObject;
-        public Transform rightObject;
+        //public Transform leftObject;
+        //public Transform rightObject;
         public string right = "right";
         public string left = "left";
         public string swap = "swap";
@@ -27,39 +27,45 @@ namespace KerbalFoundries
         [KSPField]
         public string rightObjectName;
 
-        [KSPField]
-        public string leftTargetName;
-        [KSPField]
-        public string leftRotatorsName;
+        List<Transform> leftObject = new List<Transform>();
+        List<Transform> rightObject = new List<Transform>();
+        private string[] rightList;
+        private string[] leftList;
 
-        [KSPField]
-        public string rightTargetName;
-        [KSPField]
-        public string rightRotatorsName;
 
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
 
-            if (leftObjectName == "")
-                leftObjectName = "Left";
-            if (rightObjectName == "")
-                leftObjectName = "Right";
+            leftList = leftObjectName.Split(new[] { ',', ' ', '|' }, StringSplitOptions.RemoveEmptyEntries); //Thanks, Mihara!
+            rightList = rightObjectName.Split(new[] { ',', ' ', '|' }, StringSplitOptions.RemoveEmptyEntries);
+            Debug.LogError(leftList[0] + " " + leftList.Count());
+            Debug.LogError(rightList[0]+ " " + rightList.Count());
 
-            foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
+            //some defaults
+            //if (leftObjectName == "")
+              //  leftObjectName = "Left";
+            //if (rightObjectName == "")
+              //  leftObjectName = "Right";
+
+            for (int i = 0; i < leftList.Count(); i++)
             {
-                if (tr.name.Equals(leftObjectName, StringComparison.Ordinal))
-                {
-                    print("Found left");
-                    leftObject = tr;
-                }
-
-                if (tr.name.Equals(rightObjectName, StringComparison.Ordinal))
-                {
-                    print("Found right");
-                    rightObject = tr;
-                }
+                leftObject.Add (transform.Search(leftList[i]));
+                print("iterated left " + i);
             }
+            for (int i = 0; i < rightList.Count(); i++)
+            {
+                rightObject.Add(transform.Search(rightList[i]));
+                print("iterated right " + i);
+            }
+
+            /*
+            if (tr[i].name.Equals(leftObjectName, StringComparison.Ordinal))
+            {
+                print("Found left");
+                leftObject = tr;
+            }
+            */
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -67,16 +73,24 @@ namespace KerbalFoundries
                 print("Loaded scene is flight");
                 if (flightSide == left)
                 {
-                    print("Destroying Right object");
-                    leftObject.gameObject.SetActive(true);
-                    GameObject.Destroy(rightObject.gameObject);
+                    
+                    for (int i = 0; i < rightObject.Count(); i++)
+                    {
+                        print("Destroying Right object " + rightList[i]);
+                        leftObject[i].gameObject.SetActive(true);
+                        GameObject.Destroy(rightObject[i].gameObject);
+                    }
                 }
 
                 if (flightSide == right)
                 {
-                    print("Destroying left object"); 
-                    rightObject.gameObject.SetActive(true);
-                    GameObject.Destroy(leftObject.gameObject);
+                    
+                    for (int i = 0; i < leftObject.Count(); i++)
+                    {
+                        print("Destroying left object "+ leftList[i]);
+                        rightObject[i].gameObject.SetActive(true);
+                        GameObject.Destroy(leftObject[i].gameObject);
+                    }
                 }
             }
 
@@ -133,8 +147,11 @@ namespace KerbalFoundries
         {
             if (side == left)
             {
-                rightObject.gameObject.SetActive(false);
-                leftObject.gameObject.SetActive(true);
+                for (int i = 0; i < leftList.Count(); i++)
+                {
+                    rightObject[i].gameObject.SetActive(false);
+                    leftObject[i].gameObject.SetActive(true);
+                }
                 cloneSide = right;
                 flightSide = side;
                 Events["LeftSide"].active = false;
@@ -142,8 +159,11 @@ namespace KerbalFoundries
             }
             if (side == right)
             {
-                rightObject.gameObject.SetActive(true);
-                leftObject.gameObject.SetActive(false);
+                for (int i = 0; i < leftList.Count(); i++)
+                {
+                    rightObject[i].gameObject.SetActive(true);
+                    leftObject[i].gameObject.SetActive(false);
+                }
                 cloneSide = left;
                 flightSide = side;
                 Events["LeftSide"].active = true;

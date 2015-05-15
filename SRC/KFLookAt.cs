@@ -72,11 +72,14 @@ namespace KerbalFoundries
         {
             while (true)
             {
-                _rotator.LookAt(_target.position, this.part.transform.forward);
-                if (invert == true)
-                {
-                    _rotator.Rotate(Vector3.right, 180 - mirrorOffset);
-                }
+                _rotator.LookAt(_target, _rotator.transform.up);
+
+                /*
+                  var relativeUp = _target.TransformDirection(Vector3.forward);
+                  var relativePos = _target.position - _rotator.transform.position;
+                
+                _rotator.transform.rotation = Quaternion.LookRotation(relativePos, relativeUp);
+                 * * */
                 yield return null;
             }
         }

@@ -273,7 +273,7 @@ namespace KerbalFoundries
                     //unitLoad *= 10;
                     //print("unitLoad = " + unitLoad);
                     var rollingFriction = rollingResistance.Evaluate((float)this.vessel.srfSpeed) * loadCoefficient.Evaluate((float)unitLoad); // 
-                    print("rollingfriction = "+ rollingFriction);
+                    //print("rollingfriction = "+ rollingFriction);
 
                     wcList[i].motorTorque = motorTorque;
                     wcList[i].brakeTorque = brakeTorque + brakeSteeringTorque + rollingFriction;
