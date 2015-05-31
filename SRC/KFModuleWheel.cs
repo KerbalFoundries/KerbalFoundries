@@ -31,6 +31,7 @@ namespace KerbalFoundries
         public bool startRetracted;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
         public string status = "Nominal";
+        
 
         //config fields
         [KSPField]
@@ -107,10 +108,25 @@ namespace KerbalFoundries
         public float smoothedRideHeight;
 
         public List<WheelCollider> wcList = new List<WheelCollider>();
+        public ModuleAnimateGeneric retractionAnimation;
         
         public override void OnStart(PartModule.StartState start)  //when started
         {
             base.OnStart(start);
+            if (hasRetractAnimation)
+            {
+                foreach (ModuleAnimateGeneric ma in this.part.FindModulesImplementing<ModuleAnimateGeneric>())
+                {
+                    ma.Actions["ToggleAction"].active = false;
+                    ma.Events["Toggle"].guiActive = false;
+                    ma.Events["Toggle"].guiActiveEditor = false;
+                }
+                setupAnimation();
+            }
+
+                
+
+
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
             if (disableTweakables)
@@ -346,7 +362,8 @@ namespace KerbalFoundries
 				case "retract":
                 	isRetracted = true;
                 	currentRideHeight = 0;
-                	Events["ApplySettings"].guiActive = false;
+                	Events["applySettingsGUI"].guiActive = false;
+                    Events["ApplySteeringSettings"].guiActive = false;
                 	Events["InvertSteering"].guiActive = false;
                 	Fields["rideHeight"].guiActive = false;
                 	Fields["torque"].guiActive = false;
@@ -358,8 +375,8 @@ namespace KerbalFoundries
 				case "deploy":
                 	isRetracted = false;
                 	currentRideHeight = rideHeight;
-                	Events["ApplySettings"].guiActive = true;
-                	Events["InvertSteering"].guiActive = true;
+                	Events["applySettingsGUI"].guiActive = true;
+                    Events["ApplySteeringSettings"].guiActive = true;
                 	Fields["rideHeight"].guiActive = true;
                 	Fields["torque"].guiActive = true;
                 	//Fields["springRate"].guiActive = true;
@@ -384,18 +401,23 @@ namespace KerbalFoundries
                 steeringCorrector = WheelUtils.GetCorrector(this.vessel.ReferenceTransform.up, this.vessel.rootPart.transform, rootIndexUp);
         }
 
+        public void setupAnimation()
+        {
+            retractionAnimation = part.FindModulesImplementing<ModuleAnimateGeneric>().SingleOrDefault();
+        }
+
         public void PlayAnimation()
         {
             // note: assumes one ModuleAnimateGeneric (or derived version) for this part
             // if this isn't the case, needs fixing
-            ModuleAnimateGeneric myAnimation = part.FindModulesImplementing<ModuleAnimateGeneric>().SingleOrDefault();
-            if (!myAnimation)
+            
+            if (!retractionAnimation)
             {
                 return; //the Log.Error line fails syntax check with 'The name 'Log' does not appear in the current context.
             }
             else
             {
-                myAnimation.Toggle();
+                retractionAnimation.Toggle();
             }
         }
 
@@ -517,8 +539,12 @@ namespace KerbalFoundries
         {
             if (isRetracted == true)
             {
-                if(hasRetractAnimation)
+                Debug.LogWarning("Deploying");
+                if (hasRetractAnimation)
+                {
+                    Debug.LogWarning("Playing deploy animation");
                     PlayAnimation();
+                }
                 UpdateColliders("deploy");
             }
         }//end Reploy
@@ -528,8 +554,12 @@ namespace KerbalFoundries
         {
             if (isRetracted == false)
             {
+                Debug.LogWarning("Retracting");
                 if (hasRetractAnimation)
+                {
+                    Debug.LogWarning("Playing retract animation");
                     PlayAnimation();
+                }
                 UpdateColliders("retract");
             }
         }//end Retract
