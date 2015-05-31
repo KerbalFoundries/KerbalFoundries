@@ -20,6 +20,20 @@ namespace KerbalFoundries
             return null;
         }
 
+        public static Transform SearchStartsWith(this Transform target, string name)
+        {
+            if (target.name.StartsWith(name, StringComparison.Ordinal)) return target;
+
+            for (int i = 0; i < target.childCount; ++i)
+            {
+                var result = SearchStartsWith(target.GetChild(i), name);
+
+                if (result != null) return result;
+            }
+            return null;
+        }
+        //tr.name.StartsWith(rotatorsName, StringComparison.Ordinal
+
         public static float GetBattery(Part part)
         {
             PartResourceDefinition resourceDefinitions = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");

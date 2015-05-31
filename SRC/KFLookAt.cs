@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine; 
 
 namespace KerbalFoundries
@@ -18,25 +20,45 @@ namespace KerbalFoundries
         [KSPField]
         public bool activeEditor = false;
 
+        List<Transform> rotators = new List<Transform>();
+        List<Transform> targets = new List<Transform>();
+
+        string[] rotatorList;
+        string[] targetList;
+
         Transform _target;
         Transform _rotator;
         Transform _mirrorObject;
 
-        bool invert = false;
+        int objectCount = 0;
+
+        bool countAgrees;
 
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
 
+            
+            
+            
+
+
+            rotatorList = rotatorsName.Split(new[] { ',', ' ', '|' }, StringSplitOptions.RemoveEmptyEntries); //Thanks, Mihara!
+            targetList = targetName.Split(new[] { ',', ' ', '|' }, StringSplitOptions.RemoveEmptyEntries);
+
+            
+
             if (HighLogic.LoadedSceneIsEditor && activeEditor)
             {
                 SetupObjects();
-                StartCoroutine(Rotator());
+                if(countAgrees)
+                    StartCoroutine(Rotator());
             }
             if (HighLogic.LoadedSceneIsFlight)
             {
                 SetupObjects();
-                StartCoroutine(Rotator());
+                if (countAgrees)
+                    StartCoroutine(Rotator());
             }
         }
         public void SetupObjects()
@@ -44,6 +66,25 @@ namespace KerbalFoundries
             //_rotator = transform.Search(rotatorsName);
             //_target = transform.Search(targetName);
             //_mirrorObject = transform.Search(mirrorObjectName);
+            print("setup objects");
+            for (int i = 0; i < rotatorList.Count(); i++)
+            {
+                rotators.Clear();
+                rotators.Add(transform.SearchStartsWith(rotatorList[i]));
+                print("iterated rotators " + rotatorList.Count());
+            }
+            for (int i = 0; i < targetList.Count(); i++)
+            {
+                targets.Clear();
+                targets.Add(transform.SearchStartsWith(targetList[i]));
+                print("iterated targets " + targetList.Count());
+            }
+            objectCount = rotators.Count();
+
+            if(objectCount == targets.Count())
+                countAgrees = true;
+
+            /*
             foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
             {
                 if (tr.name.StartsWith(rotatorsName, StringComparison.Ordinal))
@@ -59,20 +100,18 @@ namespace KerbalFoundries
                     _mirrorObject = tr;
                 }
             }
+            */
 
-            if (_mirrorObject.transform.localScale.x < 0 || _mirrorObject.transform.localScale.y < 0 || _mirrorObject.transform.localScale.z < 0)
-            {
-                invert = true;
-            }
-            else
-                invert = false;
         }
 
         IEnumerator Rotator()
         {
             while (true)
             {
-                _rotator.LookAt(_target, _rotator.transform.up);
+                for (int i = 0; i < objectCount; i++)
+                {
+                    rotators[i].LookAt(targets[i], rotators[i].transform.up);
+                }
 
                 /*
                   var relativeUp = _target.TransformDirection(Vector3.forward);
