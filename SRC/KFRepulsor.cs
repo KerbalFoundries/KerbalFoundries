@@ -14,6 +14,7 @@ namespace KerbalFoundries
 {
     public class KFRepulsor : PartModule
     {
+        // disable RedundantDefaultFieldInitializer
 
         public JointSpring userspring;
         [KSPField(isPersistant = false, guiActive = true, guiName = "Repulsor Settings")]
@@ -46,15 +47,12 @@ namespace KerbalFoundries
 
         Vector3 _gridScale;
         
-
         float effectPower; 
         float effectPowerMax;
         float appliedRideHeight;
         float smoothedRideHeight;
         float currentRideHeight;
-        float maxRepulsorHeight = 8;
-
-        
+        const float maxRepulsorHeight = 8;
 
         public float repulsorCount = 0;
         [KSPField]
@@ -64,20 +62,27 @@ namespace KerbalFoundries
         //public List<float> susDistList = new List<float>();
         ModuleWaterSlider _MWS;
 
-        public override void OnStart(PartModule.StartState start)  //when started
+        /// <summary>This is the info string that will display when the part info is shown.</summary>
+		/// <remarks>This can be overridden in the part config for this module.</remarks>
+		[KSPField]
+		public string strInfo = "This part allows the craft to hover above the ground.  Steering mechanism not included.";
+		
+        public override string GetInfo()
+		{
+			return strInfo;
+		}
+        
+        public override void OnStart(PartModule.StartState state)  //when started
         {
             // degub only: print("onstart");
-            base.OnStart(start);
+            base.OnStart(state);
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
             //this.part.AddModule("ModuleWaterSlider");
-            if (HighLogic.LoadedSceneIsGame)
+            if (HighLogic.LoadedSceneIsGame || HighLogic.LoadedSceneIsEditor)
             {
+            	// do absolutely nothing.
             }
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-            }
-
             if (HighLogic.LoadedSceneIsFlight)
             {
                 _grid = transform.Search(gridName);
@@ -139,6 +144,7 @@ namespace KerbalFoundries
             Debug.LogWarning("Finished growing");
         }
 
+        // disable once FunctionNeverReturns
         IEnumerator LookAt() //Coroutine for steering
         {
             while (true)
@@ -152,9 +158,9 @@ namespace KerbalFoundries
         public void DestroyBounds()
         {
             Transform bounds = transform.Search("Bounds");
-            if (bounds != null)
+			if (!Equals(bounds, null))
             {
-                GameObject.Destroy(bounds.gameObject);
+				UnityEngine.Object.Destroy(bounds.gameObject);
                 //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
                 print("destroying Bounds");
             }
@@ -203,7 +209,7 @@ namespace KerbalFoundries
                     status = "Nominal";
                 }
 
-                if (appliedRideHeight == 0 || lowEnergy) //disable the colliders if there is not enough energy or height slips below the threshold
+                if (Equals(appliedRideHeight, 0) || lowEnergy) //disable the colliders if there is not enough energy or height slips below the threshold
                 {
                     deployed = false;
                     DisableColliders();
@@ -289,7 +295,7 @@ namespace KerbalFoundries
         {
             foreach (KFRepulsor mt in this.vessel.FindPartModulesImplementing<KFRepulsor>())
             {
-                if (groupNumber != 0 && groupNumber == mt.groupNumber)
+                if (!Equals(groupNumber, 0) && Equals(groupNumber, mt.groupNumber))
                 {
                     mt.Rideheight = Rideheight;
                     currentRideHeight = Rideheight;

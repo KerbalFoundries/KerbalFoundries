@@ -13,44 +13,55 @@
  * 
  * The end state of this code has nearly been rewritten completely and integrated into the mod
  * that it was meant to be used with: Kerbal Foundries.
+ * 
+ * This specific file is a copy of the original DustFX code which will be modified to handle the
+ * enabled state of the repulsor field from the KFRepulsor module so that dust is only emitted
+ * when the repulsor is actively repulsing.  Possibility to alter dust by the field strength is
+ * on the wishlist... scratch that, now it's considered WIP.  "appliedRideheight" is now defined
+ * as "Rideheight" divided by two and is used as a multiplier in the min/max dust emission calculations
+ * and is clamped to 1 so that we do not actually lower the dust emission below the minimum and over-
+ * work the clamp method in the dust emission calculations.
  */
 
 using System;
 using UnityEngine;
+using KerbalFoundries;
 
-namespace KFDustFX
+namespace KerbalFoundries
 {
-	/// <summary>DustFX class which is based on, but heavily modified from, CollisionFX by pizzaoverload.</summary>
-	public class KFDustFX : PartModule
+	/// <summary>DustFX class which is based on, but heavily modified from, CollisionFX by pizzaoverload.  This is the repulsor version.</summary>
+	public class KFRepulsorDustFX : PartModule
 	{
+		/// <summary>Local definition for the KFRepulsor class.</summary>
+		KFRepulsor _KFRepulsor;
+		
+		/// <summary>Local copy of the Rideheight parameter in the KFRepulsor module.</summary>
+		/// <remarks>Maximum value this will ever be is 8, which is the constant maximum for the parameter in the repulsor module.</remarks>
+		public float Rideheight;
+		
 		// Class-wide disabled warnings in SharpDevelop
 		// disable AccessToStaticMemberViaDerivedType
 		// disable RedundantDefaultFieldInitializer
 		
 		/// <summary>Mostly unnecessary, since there is no other purpose to having the module active.</summary>
-		/// <remarks>Default is "true"</remarks>
+		/// <remarks>Set to false in order to temporarily disable the effect on a specific part.  Default is "true"</remarks>
 		[KSPField]
 		public bool dustEffects = true;
 		
-		/// <summary>Used to enable the impact audio effects.</summary>
-		/// <remarks>Default is "false"</remarks>
-		[KSPField]
-		public bool wheelImpact;
-		
 		/// <summary>Minimum scrape speed.</summary>
-		/// <remarks>Default is 1</remarks>
+		/// <remarks>Default is 0</remarks>
 		[KSPField]
-		public float minScrapeSpeed = 1f;
+		public float minScrapeSpeed = 0f;
 		
 		/// <summary>Minimum dust energy value.</summary>
-		/// <remarks>Default is 0</remarks>
+		/// <remarks>Default is 0.1</remarks>
 		[KSPField]
-		public float minDustEnergy = 0f;
+		public float minDustEnergy = 0.1f;
 		
 		/// <summary>Minimum emission value of the dust particles.</summary>
-		/// <remarks>Default is 0</remarks>
+		/// <remarks>Default is 0.1</remarks>
 		[KSPField]
-		public float minDustEmission = 0f;
+		public float minDustEmission = 0.1f;
 		
 		/// <summary>Maximum emission energy divisor.</summary>
 		/// <remarks>Default is 10</remarks>
@@ -67,55 +78,37 @@ namespace KFDustFX
 		[KSPField]
 		public float maxDustEmission = 35f;
 		
-		/// <summary>Path to the sound file that is to be used for impacts.</summary>
-		/// <remarks>Default is Empty.</remarks>
-		[KSPField]
-		public string wheelImpactSound = string.Empty;
-		
 		/// <summary>Used in the OnCollisionEnter/Stay methods to define the minimum velocity magnitude to check against.</summary>
-		/// <remarks>Default is 3</remarks>
+		/// <remarks>Default is 1</remarks>
 		[KSPField]
-		public float minVelocityMag = 3f;
-		
-		/// <summary>Pitch-range that is used to vary the sound pitch.</summary>
-		/// <remarks>Default is 0.3</remarks>
-		[KSPField]
-		public float pitchRange = 0.3f;
-		
-		/// <summary>Audio level for the doppler effect used in various audio calculations.</summary>
-		/// <remarks>Default is 0</remarks>
-		[KSPField]
-		public float dopplerEffectLevel = 0f;
+		public float minVelocityMag = 1f;
 		
 		/// <summary>KSP path to the effect being used here.  Made into a field so that it can be customized in the future.</summary>
 		/// <remarks>Default is "Effects/fx_smokeTrail_light"</remarks>
 		[KSPField]
-		public const string effectsfxsmokeTraillight = "Effects/fx_smokeTrail_light";
+		public const string dustEffectsObject = "Effects/fx_smokeTrail_light";
 		
 		/// <summary>Part Info that will be displayed when part details are shown.</summary>
 		/// <remarks>Can be overridden in the module config on a per-part basis.</remarks>
 		[KSPField]
-		public string partInfoString = "This part will throw up dust when rolling over the terrain.";
+		public string partInfoString = "This part will throw up dust when the repulsion field is actively repulsing.";
 		
-		/// <summary>FXGroup for the weel impact sound effect.</summary>
-		FXGroup WheelImpactSound;
-		
-		/// <summary>Prefix the logs with this to identify it.</summary>
+		/// <summary>Prefix the logs with this to identify it.  Will be obsolete soon(ish).</summary>
 		public string logprefix = "[DustFX - Main]: ";
 		
 		bool paused;
-		GameObject dustFx;
+		GameObject kfrepdustFx;
 		ParticleAnimator dustAnimator;
 		Color dustColor;
 		Color BiomeColor;
-
-		/// <summary>CollisionInfo class for the DustFX module.</summary>
+		
+		/// <summary>CollisionInfo class for the KFRepulsorDustFX module.</summary>
 		public class CollisionInfo
 		{
-			public KFDustFX DustFX;
-			public CollisionInfo (KFDustFX dustFX)
+			public KFRepulsorDustFX KFRepDustFX;
+			public CollisionInfo (KFRepulsorDustFX kfrepdustFX)
 			{
-				DustFX = dustFX;
+				KFRepDustFX = kfrepdustFX;
 			}
 		}
 		
@@ -126,12 +119,17 @@ namespace KFDustFX
 		
 		public override void OnStart ( StartState state )
 		{
+			_KFRepulsor = part.GetComponentInChildren<KFRepulsor>();
+				// This allows me to get the parameter value from the current active part.
+			Rideheight = _KFRepulsor.Rideheight;
+				// Public variable is set to the value of the remote variable here.
+			
 			if (Equals(state, StartState.Editor) || Equals(state, StartState.None))
 				return;
 			if (dustEffects)
 				SetupParticles();
-			if (wheelImpact && !string.IsNullOrEmpty(wheelImpactSound))
-				DustAudio();
+			
+			// Adding events to start and stop the emission on pause states.
 			GameEvents.onGamePause.Add(OnPause);
 			GameEvents.onGameUnpause.Add(OnUnpause);
 		}
@@ -142,15 +140,15 @@ namespace KFDustFX
 			const string locallog = "SetupParticles(): ";
 			if (!dustEffects)
 				return;
-			dustFx = (GameObject)GameObject.Instantiate(Resources.Load(effectsfxsmokeTraillight));
-			dustFx.transform.parent = part.transform;
-			dustFx.transform.position = part.transform.position;
-			dustFx.particleEmitter.localVelocity = Vector3.zero;
-			dustFx.particleEmitter.useWorldSpace = true;
-			dustFx.particleEmitter.emit = false;
-			dustFx.particleEmitter.minEnergy = minDustEnergy;
-			dustFx.particleEmitter.minEmission = minDustEmission;
-			dustAnimator = dustFx.particleEmitter.GetComponent<ParticleAnimator>();
+			kfrepdustFx = (GameObject)GameObject.Instantiate(Resources.Load(dustEffectsObject));
+			kfrepdustFx.transform.parent = part.transform;
+			kfrepdustFx.transform.position = part.transform.position;
+			kfrepdustFx.particleEmitter.localVelocity = Vector3.zero;
+			kfrepdustFx.particleEmitter.useWorldSpace = true;
+			kfrepdustFx.particleEmitter.emit = false;
+			kfrepdustFx.particleEmitter.minEnergy = minDustEnergy;
+			kfrepdustFx.particleEmitter.minEmission = minDustEmission;
+			dustAnimator = kfrepdustFx.particleEmitter.GetComponent<ParticleAnimator>();
 			Debug.Log(string.Format("{0}{1}Particles have been set up.", logprefix, locallog));
 		}
 		
@@ -158,13 +156,12 @@ namespace KFDustFX
 		/// <param name="col">The collider being referenced.</param>
 		public void OnCollisionEnter ( Collision col )
 		{
-			if (col.relativeVelocity.magnitude > minVelocityMag)
+			CollisionInfo cInfo;
+			if (col.relativeVelocity.magnitude >= minVelocityMag)
 			{
 				if (Equals(col.contacts.Length, 0))
 					return;
-				CollisionInfo cInfo = GetClosestChild(part, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
-				if (!Equals(cInfo.DustFX, null))
-					cInfo.DustFX.DustImpact();
+				cInfo = GetClosestChild(part, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
 			}
 		}
 		
@@ -172,11 +169,12 @@ namespace KFDustFX
 		/// <param name="col">The collider being referenced.</param>
 		public void OnCollisionStay ( Collision col )
 		{
-			if (paused || Equals(col.contacts.Length, 0))
+			CollisionInfo cInfo;
+			if (paused || Equals(col.contacts.Length, 0) || Equals(Rideheight, 0))
 				return;
-			CollisionInfo cInfo = KFDustFX.GetClosestChild(part, col.contacts[0].point + part.rigidbody.velocity * Time.deltaTime);
-			if (!Equals(cInfo.DustFX, null))
-				cInfo.DustFX.Scrape(col);
+			cInfo = KFRepulsorDustFX.GetClosestChild(part, col.contacts[0].point + part.rigidbody.velocity * Time.deltaTime);
+			if (!Equals(cInfo.KFRepDustFX, null))
+				cInfo.KFRepDustFX.Scrape(col);
 			Scrape(col);
 		}
 		
@@ -192,13 +190,13 @@ namespace KFDustFX
 		{
 			float parentDistance = Vector3.Distance(parent.transform.position, point);
 			float minDistance = parentDistance;
-			KFDustFX closestChild = null;
+			KFRepulsorDustFX closestChild = null;
 			foreach (Part child in parent.children)
 			{
 				if (!Equals(child, null) && !Equals(child.collider, null) && (Equals(child.physicalSignificance, Part.PhysicalSignificance.NONE)))
 				{
 					float childDistance = Vector3.Distance(child.transform.position, point);
-					var cfx = child.GetComponent<KFDustFX>();
+					var cfx = child.GetComponent<KFRepulsorDustFX>();
 					if (!Equals(cfx, null) && childDistance < minDistance)
 					{
 						minDistance = childDistance;
@@ -226,8 +224,9 @@ namespace KFDustFX
 		void DustParticles ( float speed, Vector3 contactPoint, Collider col )
 		{
 			const string locallog = "DustParticles(): ";
-			if (!dustEffects || speed < minScrapeSpeed || Equals(dustAnimator, null))
+			if (!dustEffects || speed < minScrapeSpeed || Equals(dustAnimator, null) || Equals(Rideheight, 0))
 				return;
+			float appliedRideHeight = Mathf.Clamp((Rideheight / 2), 1, 4);
 			BiomeColor = KFDustFXController.DustColors.GetDustColor(vessel.mainBody, col, vessel.latitude, vessel.longitude);
 			if (Equals(BiomeColor, null))
 				Debug.Log(string.Format("{0}{1}Color \"BiomeColor\" is null!", logprefix, locallog));
@@ -244,10 +243,10 @@ namespace KFDustFX
 					dustAnimator.colorAnimation = colors;
 					dustColor = BiomeColor;
 				}
-				dustFx.transform.position = contactPoint;
-				dustFx.particleEmitter.maxEnergy = speed / maxDustEnergyDiv;
-				dustFx.particleEmitter.maxEmission = Mathf.Clamp((speed * maxDustEmissionMult), minDustEmission, maxDustEmission);
-				dustFx.particleEmitter.Emit();
+				kfrepdustFx.transform.position = contactPoint;
+				kfrepdustFx.particleEmitter.maxEnergy = speed / maxDustEnergyDiv;
+				kfrepdustFx.particleEmitter.maxEmission = Mathf.Clamp((speed * (maxDustEmissionMult)), (minDustEmission * appliedRideHeight), (maxDustEmission * appliedRideHeight));
+				kfrepdustFx.particleEmitter.Emit();
 			}
 			return;
 		}
@@ -256,58 +255,21 @@ namespace KFDustFX
 		void OnPause ()
 		{
 			paused = true;
-			dustFx.particleEmitter.enabled = false;
-			if (!Equals(WheelImpactSound, null) && !Equals(WheelImpactSound.audio, null))
-				WheelImpactSound.audio.Stop();
+			kfrepdustFx.particleEmitter.enabled = false;
 		}
 		
 		/// <summary>Called when the game leaves a "paused" state.</summary>
 		void OnUnpause ()
 		{
 			paused = false;
-			dustFx.particleEmitter.enabled = true;
+			kfrepdustFx.particleEmitter.enabled = true;
 		}
 		
 		/// <summary>Called when the object being referenced is destroyed, or when the module instance is deactivated.</summary>
 		void OnDestroy ()
 		{
-			if (!Equals(WheelImpactSound, null) && !Equals(WheelImpactSound.audio, null))
-				WheelImpactSound.audio.Stop();
 			GameEvents.onGamePause.Remove(OnPause);
 			GameEvents.onGameUnpause.Remove(OnUnpause);
-		}
-
-		/// <summary>Gets the current volume setting for Ship sounds.</summary>
-		/// <returns>The volume value as a float.</returns>
-		static float GetShipVolume ()
-		{
-			return GameSettings.SHIP_VOLUME;
-		}
-
-		/// <summary>Sets up and maintains the audio effect which is, currently, not widely used.</summary>
-		void DustAudio ()
-		{
-			WheelImpactSound = new FXGroup ("WheelImpactSound");
-			part.fxGroups.Add(WheelImpactSound);
-			WheelImpactSound.audio = gameObject.AddComponent<AudioSource>();
-			WheelImpactSound.audio.clip = GameDatabase.Instance.GetAudioClip(wheelImpactSound);
-			WheelImpactSound.audio.dopplerLevel = dopplerEffectLevel;
-			WheelImpactSound.audio.rolloffMode = AudioRolloffMode.Logarithmic;
-			WheelImpactSound.audio.Stop();
-			WheelImpactSound.audio.loop = false;
-			WheelImpactSound.audio.volume = GetShipVolume();
-		}
-		
-		/// <summary>Called when the part impacts with a surface with enough magnitude to be audible.</summary>
-		public void DustImpact ()
-		{
-			if (Equals(WheelImpactSound, null) || Equals(wheelImpactSound, string.Empty))
-			{
-				WheelImpactSound.audio.Stop();
-				return;
-			}
-			WheelImpactSound.audio.pitch = UnityEngine.Random.Range(1 - pitchRange, 1 + pitchRange);
-			WheelImpactSound.audio.Play();
 		}
 	}
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace KFDustFX
+namespace KerbalFoundries
 {
 	public class KFBiomeDustColorInfo : IPersistenceLoad
 	{

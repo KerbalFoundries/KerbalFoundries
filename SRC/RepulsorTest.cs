@@ -37,10 +37,10 @@ namespace KerbalFoundries
         [KSPField]
         public float chargeConsumptionRate = 1f;
         //begin start
-        public override void OnStart(PartModule.StartState start)  //when started
+        public override void OnStart(PartModule.StartState state)  //when started
         {
             // degub only: print("onstart");
-            base.OnStart(start);
+            base.OnStart(state);
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
             if (HighLogic.LoadedSceneIsEditor)
@@ -49,7 +49,7 @@ namespace KerbalFoundries
                 {
                     userspring = b.suspensionSpring;
 
-                    if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
+					if (Equals(SpringRate, 0)) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
                     {
                         SpringRate = userspring.spring;                                    //pass to springrate to be used in the GUI
                         DamperRate = userspring.damper;
@@ -93,7 +93,7 @@ namespace KerbalFoundries
             Transform bounds = transform.Search("Bounds");
             if (bounds != null)
             {
-                GameObject.Destroy(bounds.gameObject);
+                UnityEngine.Object.Destroy(bounds.gameObject);
                 //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
                 print("destroying Bounds");
             }

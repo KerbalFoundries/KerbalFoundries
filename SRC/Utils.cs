@@ -22,13 +22,14 @@ namespace KerbalFoundries
 
         public static Transform SearchStartsWith(this Transform target, string name)
         {
-            if (target.name.StartsWith(name, StringComparison.Ordinal)) return target;
+            if (target.name.StartsWith(name, StringComparison.Ordinal))
+				return target;
 
             for (int i = 0; i < target.childCount; ++i)
             {
                 var result = SearchStartsWith(target.GetChild(i), name);
-
-                if (result != null) return result;
+                if (!Equals(result, null))
+					return result;
             }
             return null;
         }

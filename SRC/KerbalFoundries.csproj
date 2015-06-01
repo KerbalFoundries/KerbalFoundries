@@ -51,11 +51,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArmMagnet.cs" />
-    <Compile Include="BiomeDustColorInfo.cs" />
-    <Compile Include="DustColorDefinitions.cs" />
-    <Compile Include="DustColorFileWriter.cs" />
-    <Compile Include="DustFX.cs" />
-    <Compile Include="DustFXController.cs" />
+    <Compile Include="DustFX\BiomeDustColorInfo.cs" />
+    <Compile Include="DustFX\DustColorDefinitions.cs" />
+    <Compile Include="DustFX\DustColorFileWriter.cs" />
+    <Compile Include="DustFX\DustFX.cs" />
+    <Compile Include="DustFX\DustFXController.cs" />
+    <Compile Include="DustFX\RepulsorDustFX.cs" />
+    <Compile Include="KFLogUtils.cs" />
     <Compile Include="KEMeccanumWheel.cs" />
     <Compile Include="KFCouplingEye.cs" />
     <Compile Include="KFCouplingHitch.cs" />
@@ -82,6 +84,9 @@
     <Compile Include="Utils.cs" />
     <Compile Include="VesselTools.cs" />
     <Compile Include="WheelUtils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DustFX" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -17,12 +17,19 @@
 
 using System;
 using UnityEngine;
+using KerbalFoundries;
 
-namespace KFDustFX
+namespace KerbalFoundries
 {
 	/// <summary>DustFX class which is based on, but heavily modified from, CollisionFX by pizzaoverload.</summary>
 	public class KFDustFX : PartModule
 	{
+		/// <summary>Local definition of the KFModuleWheel class.</summary>
+		KFModuleWheel _KFModuleWheel;
+		
+		/// <summary>Local copy of the tweakScaleCorrector parameter in the KFModuleWheel module.</summary>
+		public float TSWheelCorrector;
+		
 		// Class-wide disabled warnings in SharpDevelop
 		// disable AccessToStaticMemberViaDerivedType
 		// disable RedundantDefaultFieldInitializer
@@ -38,7 +45,7 @@ namespace KFDustFX
 		public bool wheelImpact;
 		
 		/// <summary>Minimum scrape speed.</summary>
-		/// <remarks>Default is 1</remarks>
+		/// <remarks>Default is 1.  Repulsors should have this extremely low.</remarks>
 		[KSPField]
 		public float minScrapeSpeed = 1f;
 		
@@ -73,7 +80,7 @@ namespace KFDustFX
 		public string wheelImpactSound = string.Empty;
 		
 		/// <summary>Used in the OnCollisionEnter/Stay methods to define the minimum velocity magnitude to check against.</summary>
-		/// <remarks>Default is 3</remarks>
+		/// <remarks>Default is 3.  Would set very low for repulsors.</remarks>
 		[KSPField]
 		public float minVelocityMag = 3f;
 		
@@ -90,21 +97,21 @@ namespace KFDustFX
 		/// <summary>KSP path to the effect being used here.  Made into a field so that it can be customized in the future.</summary>
 		/// <remarks>Default is "Effects/fx_smokeTrail_light"</remarks>
 		[KSPField]
-		public const string effectsfxsmokeTraillight = "Effects/fx_smokeTrail_light";
+		public const string dustEffectObject = "Effects/fx_smokeTrail_light";
 		
 		/// <summary>Part Info that will be displayed when part details are shown.</summary>
 		/// <remarks>Can be overridden in the module config on a per-part basis.</remarks>
 		[KSPField]
 		public string partInfoString = "This part will throw up dust when rolling over the terrain.";
 		
-		/// <summary>FXGroup for the weel impact sound effect.</summary>
+		/// <summary>FXGroup for the wheel impact sound effect.</summary>
 		FXGroup WheelImpactSound;
 		
 		/// <summary>Prefix the logs with this to identify it.</summary>
 		public string logprefix = "[DustFX - Main]: ";
 		
 		bool paused;
-		GameObject dustFx;
+		GameObject kfdustFx;
 		ParticleAnimator dustAnimator;
 		Color dustColor;
 		Color BiomeColor;
@@ -112,10 +119,10 @@ namespace KFDustFX
 		/// <summary>CollisionInfo class for the DustFX module.</summary>
 		public class CollisionInfo
 		{
-			public KFDustFX DustFX;
-			public CollisionInfo (KFDustFX dustFX)
+			public KFDustFX KFDustFX;
+			public CollisionInfo (KFDustFX kfdustFX)
 			{
-				DustFX = dustFX;
+				KFDustFX = kfdustFX;
 			}
 		}
 		
@@ -126,6 +133,12 @@ namespace KFDustFX
 		
 		public override void OnStart ( StartState state )
 		{
+			const string locallog = "OnStart(): ";
+			_KFModuleWheel = part.GetComponentInChildren<KFModuleWheel>();
+			TSWheelCorrector = _KFModuleWheel.tweakScaleCorrector;
+			if (!Equals(TSWheelCorrector, 0))
+				Debug.Log(string.Format("{0}{1}TSWheelCorrector = {2}", logprefix, locallog, TSWheelCorrector));
+			
 			if (Equals(state, StartState.Editor) || Equals(state, StartState.None))
 				return;
 			if (dustEffects)
@@ -142,15 +155,15 @@ namespace KFDustFX
 			const string locallog = "SetupParticles(): ";
 			if (!dustEffects)
 				return;
-			dustFx = (GameObject)GameObject.Instantiate(Resources.Load(effectsfxsmokeTraillight));
-			dustFx.transform.parent = part.transform;
-			dustFx.transform.position = part.transform.position;
-			dustFx.particleEmitter.localVelocity = Vector3.zero;
-			dustFx.particleEmitter.useWorldSpace = true;
-			dustFx.particleEmitter.emit = false;
-			dustFx.particleEmitter.minEnergy = minDustEnergy;
-			dustFx.particleEmitter.minEmission = minDustEmission;
-			dustAnimator = dustFx.particleEmitter.GetComponent<ParticleAnimator>();
+			kfdustFx = (GameObject)GameObject.Instantiate(Resources.Load(dustEffectObject));
+			kfdustFx.transform.parent = part.transform;
+			kfdustFx.transform.position = part.transform.position;
+			kfdustFx.particleEmitter.localVelocity = Vector3.zero;
+			kfdustFx.particleEmitter.useWorldSpace = true;
+			kfdustFx.particleEmitter.emit = false;
+			kfdustFx.particleEmitter.minEnergy = minDustEnergy;
+			kfdustFx.particleEmitter.minEmission = minDustEmission;
+			dustAnimator = kfdustFx.particleEmitter.GetComponent<ParticleAnimator>();
 			Debug.Log(string.Format("{0}{1}Particles have been set up.", logprefix, locallog));
 		}
 		
@@ -158,13 +171,13 @@ namespace KFDustFX
 		/// <param name="col">The collider being referenced.</param>
 		public void OnCollisionEnter ( Collision col )
 		{
-			if (col.relativeVelocity.magnitude > minVelocityMag)
+			if (col.relativeVelocity.magnitude >= minVelocityMag)
 			{
 				if (Equals(col.contacts.Length, 0))
 					return;
 				CollisionInfo cInfo = GetClosestChild(part, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
-				if (!Equals(cInfo.DustFX, null))
-					cInfo.DustFX.DustImpact();
+				if (!Equals(cInfo.KFDustFX, null))
+					cInfo.KFDustFX.DustImpact();
 			}
 		}
 		
@@ -175,8 +188,8 @@ namespace KFDustFX
 			if (paused || Equals(col.contacts.Length, 0))
 				return;
 			CollisionInfo cInfo = KFDustFX.GetClosestChild(part, col.contacts[0].point + part.rigidbody.velocity * Time.deltaTime);
-			if (!Equals(cInfo.DustFX, null))
-				cInfo.DustFX.Scrape(col);
+			if (!Equals(cInfo.KFDustFX, null))
+				cInfo.KFDustFX.Scrape(col);
 			Scrape(col);
 		}
 		
@@ -228,6 +241,9 @@ namespace KFDustFX
 			const string locallog = "DustParticles(): ";
 			if (!dustEffects || speed < minScrapeSpeed || Equals(dustAnimator, null))
 				return;
+			float correctionvalue = TSWheelCorrector;
+			if (Equals(TSWheelCorrector, 0) || TSWheelCorrector < 0)
+				correctionvalue = 1f;
 			BiomeColor = KFDustFXController.DustColors.GetDustColor(vessel.mainBody, col, vessel.latitude, vessel.longitude);
 			if (Equals(BiomeColor, null))
 				Debug.Log(string.Format("{0}{1}Color \"BiomeColor\" is null!", logprefix, locallog));
@@ -244,10 +260,10 @@ namespace KFDustFX
 					dustAnimator.colorAnimation = colors;
 					dustColor = BiomeColor;
 				}
-				dustFx.transform.position = contactPoint;
-				dustFx.particleEmitter.maxEnergy = speed / maxDustEnergyDiv;
-				dustFx.particleEmitter.maxEmission = Mathf.Clamp((speed * maxDustEmissionMult), minDustEmission, maxDustEmission);
-				dustFx.particleEmitter.Emit();
+				kfdustFx.transform.position = contactPoint;
+				kfdustFx.particleEmitter.maxEnergy = speed / (maxDustEnergyDiv * correctionvalue);
+				kfdustFx.particleEmitter.maxEmission = Mathf.Clamp((speed * (maxDustEmissionMult * correctionvalue)), minDustEmission, (maxDustEmission * correctionvalue));
+				kfdustFx.particleEmitter.Emit();
 			}
 			return;
 		}
@@ -256,7 +272,7 @@ namespace KFDustFX
 		void OnPause ()
 		{
 			paused = true;
-			dustFx.particleEmitter.enabled = false;
+			kfdustFx.particleEmitter.enabled = false;
 			if (!Equals(WheelImpactSound, null) && !Equals(WheelImpactSound.audio, null))
 				WheelImpactSound.audio.Stop();
 		}
@@ -265,7 +281,7 @@ namespace KFDustFX
 		void OnUnpause ()
 		{
 			paused = false;
-			dustFx.particleEmitter.enabled = true;
+			kfdustFx.particleEmitter.enabled = true;
 		}
 		
 		/// <summary>Called when the object being referenced is destroyed, or when the module instance is deactivated.</summary>
@@ -287,6 +303,8 @@ namespace KFDustFX
 		/// <summary>Sets up and maintains the audio effect which is, currently, not widely used.</summary>
 		void DustAudio ()
 		{
+			if (Equals(wheelImpactSound, string.Empty))
+				return;
 			WheelImpactSound = new FXGroup ("WheelImpactSound");
 			part.fxGroups.Add(WheelImpactSound);
 			WheelImpactSound.audio = gameObject.AddComponent<AudioSource>();

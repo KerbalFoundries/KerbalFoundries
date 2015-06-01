@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEngine;
 
-namespace KFDustFX
+namespace KerbalFoundries
 {
 	public class KFDustFXController : MonoBehaviour
 	{

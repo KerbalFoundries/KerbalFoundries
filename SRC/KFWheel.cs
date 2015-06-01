@@ -20,7 +20,8 @@ namespace KerbalFoundries
         [KSPField]
         public string steeringName;
         [KSPField]
-        public bool useDirectionCorrector = false; //make sure it's set to false if not specified in the config.
+		public bool useDirectionCorrector = false;
+		//make sure it's set to false if not specified in the config.
         [KSPField]
         public bool isSprocket = false;
         [KSPField]
@@ -30,7 +31,8 @@ namespace KerbalFoundries
         [KSPField]
         public float rotationCorrection = 1;
         [KSPField]
-        public bool trackedWheel = true; //default to tracked type (average of all colliders in contact with floor). This is OK for wheels, and will only need to be changed for multi wheeled parts that are not tracks.
+		public bool trackedWheel = true;
+		//default to tracked type (average of all colliders in contact with floor). This is OK for wheels, and will only need to be changed for multi wheeled parts that are not tracks.
             //wheel rotation axis
         [KSPField]
         public float wheelRotationX = 1;
@@ -96,15 +98,14 @@ namespace KerbalFoundries
                     }
                 }
             }
-
             else
             {
                 Debug.LogError("Already configured - skipping");
             }
             
-
             if (HighLogic.LoadedSceneIsEditor)
             {
+				// Do absolutely nothing!
             }
             
             if (HighLogic.LoadedSceneIsFlight)
@@ -116,25 +117,17 @@ namespace KerbalFoundries
                 foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     if (wc.name.StartsWith(colliderName, StringComparison.Ordinal))
-                    {
                         _wheelCollider = wc;
-                    }
                 }
                 foreach (Transform tr in this.part.GetComponentsInChildren<Transform>())
                 {
                     if (tr.name.StartsWith(wheelName, StringComparison.Ordinal))
-                    {
                         _wheel = tr;
-                    }
                     if (tr.name.StartsWith(steeringName, StringComparison.Ordinal))
-                    {
                         _trackSteering = tr;
-                    }
                     if (tr.name.StartsWith(sustravName, StringComparison.Ordinal))
-                    {
                         _susTrav = tr;
                     }
-                }
                 //end find named objects
 
                 initialPosition = _susTrav.localPosition;
@@ -152,7 +145,7 @@ namespace KerbalFoundries
 
                 _wheelRotation = new Vector3(wheelRotationX, wheelRotationY, wheelRotationZ);
 
-                if (lastFrameTraverse == 0) //check to see if we have a value in persistance
+				if (Equals(lastFrameTraverse, 0)) //check to see if we have a value in persistance
                 {
                     //Debug.LogError("Last frame = 0. Setting");
                     lastFrameTraverse = _wheelCollider.suspensionDistance;
@@ -170,26 +163,24 @@ namespace KerbalFoundries
                     //Debug.LogError("starting steering coroutine");
                 }
                 if (trackedWheel)
-                {
                     StartCoroutine("TrackedWheel");
-                }
                 else
-                {
                     StartCoroutine("IndividualWheel");
-                }
-                if(hasSuspension)
-                {
+				
+				if (hasSuspension)
                     StartCoroutine("Suspension");
-                }
+				
                 this.part.force_activate();
             }//end flight
             base.OnStart(state);
-        }//end OnStart
+		}
+		//end OnStart
+		
         //OnUpdate
-
+		// disable once FunctionNeverReturns
         IEnumerator Steering() //Coroutine for steering
         {
-            while(true)
+			while (true)
             {
             Vector3 newSteeringAngle = initialSteeringAngles;
             newSteeringAngle[steeringIndex] += _KFModuleWheel.steeringAngleSmoothed;
@@ -197,7 +188,9 @@ namespace KerbalFoundries
             yield return null;
             }
         }
-        IEnumerator TrackedWheel() //coroutine for tracked wheels (all rotate the same speed in the part) 
+		
+		/// <summary>Coroutine for tracked wheels (all rotate the same speed in the part).</summary>
+		IEnumerator TrackedWheel() 
         {
             while (couroutinesActive)
             {
@@ -205,7 +198,9 @@ namespace KerbalFoundries
                 yield return null;
             }
         }
-        IEnumerator IndividualWheel() //coroutine for individual wheels
+		
+		/// <summary>Coroutine for individual wheels.</summary>
+		IEnumerator IndividualWheel()
         {
             while (couroutinesActive)
             {
@@ -215,7 +210,8 @@ namespace KerbalFoundries
             }
         }
 
-        IEnumerator Suspension() //Coroutine for wheels with suspension.
+		/// <summary>Coroutine for wheels with suspension.</summary>
+		IEnumerator Suspension()
         {
             while (true)
             {
@@ -230,19 +226,15 @@ namespace KerbalFoundries
                     frameTraverse = -_wheelCollider.transform.InverseTransformPoint(hit.point).y + _KFModuleWheel.raycastError - _wheelCollider.radius; //calculate suspension travel using the collider raycast.
                     
                     if (frameTraverse > (_wheelCollider.suspensionDistance + _KFModuleWheel.raycastError)) //the raycast sometimes goes further than its max value. Catch and stop the mesh moving further
-                    {
                         frameTraverse = _wheelCollider.suspensionDistance;
-                    }
                     else if (frameTraverse < -0.1) //the raycast can be negative (!); catch this too
-                    {
                         frameTraverse = 0;
-                    }
+					
                     lastFrameTraverse = frameTraverse;
                 }
                 else
-                {
                     frameTraverse = lastFrameTraverse; //movement defaults back to last position when the collider is not grounded. Ungrounded collider returns suspension travel of zero!
-                }
+				
                 susTravel = frameTraverse; //debug only
 
                 //newTranslation = tempLastFrameTraverse - frameTraverse; // calculate the change of movement. Using Translate on susTrav, which is cumulative, not absolute.
@@ -256,7 +248,7 @@ namespace KerbalFoundries
 
         public void OnPause()
         {
-            couroutinesActive = false; //this will drop couroutines checking it out. StopCoroutine() will stop all instances, which is NOT good.
+			couroutinesActive = false; // This will drop couroutines checking it out. StopCoroutine() will stop all instances, which is NOT good.
         }
 
         public void OnUnPause()
@@ -266,24 +258,23 @@ namespace KerbalFoundries
             try
             {
                 if (trackedWheel)
-                {
                     StartCoroutine("TrackedWheel");
-                }
                 else
-                {
                     StartCoroutine("IndividualWheel");
-                }
             }
+			// disable once EmptyGeneralCatchClause
             catch
             {
             }
         }
 
-        public override void OnFixedUpdate()
-        {
-            base.OnFixedUpdate();
-            //not a lot in here since I moved it all into coroutines.
-        }//end OnFixedUpdate
+// Completely unnecessary override!		
+//		public override void OnFixedUpdate()
+//		{
+//			base.OnFixedUpdate();
+//			//not a lot in here since I moved it all into coroutines.
+//		}
+//end OnFixedUpdate
 
         public void MoveSuspension(int index, float movement, Transform movedObject) //susTrav Axis, amount to move, named object.
         {
@@ -292,5 +283,7 @@ namespace KerbalFoundries
             tempVector[index] = movement * tweakScaleCorrector;
             movedObject.transform.Translate(tempVector, Space.Self);
         }
-    }//end modele
-}//end class
+	}
+	//end modele
+}
+//end class
