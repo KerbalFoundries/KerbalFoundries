@@ -86,9 +86,7 @@ namespace KerbalFoundries
             //Wait a frame for GameObjects to be destroyed. This only happens at the end of a frame,
             //and will be handled by another module - usually KFPartMirror. If we don't wait
             //we will usually find the LHS objects before they are actually destroyed.
-            Debug.LogWarning("Waiting another frame " + Time.frameCount);
-            yield return null;
-            //wait another frame for good measure...
+
 
             SetupObjects();
             if (countAgrees)
@@ -125,12 +123,9 @@ namespace KerbalFoundries
                         rotateAngle *= -1;
                     }
 
-
-                    Debug.LogWarning("y  "+rotateAngle);
-
                     if (!float.IsNaN(rotateAngle))
                     {
-                        rotators[i].Rotate(Vector3.right, rotateAngle / 2);
+                        rotators[i].Rotate(Vector3.right, rotateAngle);
                     }
 
                 }
