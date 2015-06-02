@@ -14,10 +14,6 @@ namespace KerbalFoundries
         [KSPField]
         public string rotatorsName;
         [KSPField]
-        public string mirrorObjectName;
-        [KSPField]
-        public float mirrorOffset = 0;
-        [KSPField]
         public bool activeEditor = false;
 
         List<Transform> rotators = new List<Transform>();
@@ -27,12 +23,6 @@ namespace KerbalFoundries
         string[] targetList;
         List<float> rotationY = new List<float>();
         List<float> rotationZ = new List<float>();
-        float tempY;
-        float tempZ;    
-
-        Transform _target;
-        Transform _rotator;
-        Transform _mirrorObject;
 
         int objectCount = 0;
 
@@ -57,9 +47,7 @@ namespace KerbalFoundries
 
         public void SetupObjects()
         {
-            //_rotator = transform.Search(rotatorsName);
-            //_target = transform.Search(targetName);
-            //_mirrorObject = transform.Search(mirrorObjectName);
+
             print("setup objects");
             rotators.Clear();
             targets.Clear();
@@ -101,33 +89,19 @@ namespace KerbalFoundries
             {
                 for (int i = 0; i < objectCount; i++)
                 {
-                    
-                    Vector3 vectorBetween =  targets[i].position - rotators[i].position;
-
-                    Vector3 lookAtVector = rotators[i].transform.forward;// -(rotators[i].transform.right) * Vector3.Dot(rotators[i].transform.forward, rotators[i].transform.right);
+                    Vector3 vectorBetween = targets[i].position - rotators[i].position;
+                    Vector3 lookAtVector = rotators[i].transform.forward;
                     Vector3 vectorProject = vectorBetween - (rotators[i].transform.right) * Vector3.Dot(vectorBetween, rotators[i].transform.right);
                     
                     float rotateAngle = Mathf.Acos(Vector3.Dot(lookAtVector, vectorProject) / Mathf.Sqrt(Mathf.Pow(lookAtVector.magnitude, 2) * Mathf.Pow(vectorProject.magnitude, 2))) * Mathf.Rad2Deg;
 
-
                     Vector3 normalvectorY = Vector3.Cross(lookAtVector, vectorProject);
-                    /*
-                    if (normalvectorY[1] < 0.0f)
-                    {
-                        rotateAngle *= -1;
-                    }
-                     * */
 
                     if (Vector3.Dot(rotators[i].transform.up, vectorProject) > 0.0f)
-                    {
                         rotateAngle *= -1;
-                    }
 
                     if (!float.IsNaN(rotateAngle))
-                    {
                         rotators[i].Rotate(Vector3.right, rotateAngle);
-                    }
-
                 }
 
                 yield return null;
