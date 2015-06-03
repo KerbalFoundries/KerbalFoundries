@@ -18,6 +18,7 @@
 using System;
 using UnityEngine;
 using KerbalFoundries;
+using System.Collections.Generic;
 
 namespace KerbalFoundries
 {
@@ -169,17 +170,31 @@ namespace KerbalFoundries
 		
 		/// <summary>Contains information about what to do when the part enters a collided state.</summary>
 		/// <param name="col">The collider being referenced.</param>
+        /// 
+        /* I don't believe we're even using this...
 		public void OnCollisionEnter ( Collision col )
 		{
 			if (col.relativeVelocity.magnitude >= minVelocityMag)
 			{
 				if (Equals(col.contacts.Length, 0))
 					return;
-				CollisionInfo cInfo = GetClosestChild(part, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
+				//CollisionInfo cInfo = GetClosestChild(part, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
+
+                var collisions = new Vector3(0,0,0);
+                var collisionCount = 0;
+
+                foreach (ContactPoint cols in col.contacts)
+                {
+                    collisions += cols.point;
+                    collisionCount++;
+                }
+                Vector3 averageCollision = collisions / collisionCount;
+                CollisionInfo cInfo = GetClosestChild(part, averageCollision + (part.rigidbody.velocity * Time.deltaTime));
 				if (!Equals(cInfo.KFDustFX, null))
 					cInfo.KFDustFX.DustImpact();
 			}
 		}
+         * */
 		
 		/// <summary>Contains information about what to do when the part stays in the collided state over a period of time.</summary>
 		/// <param name="col">The collider being referenced.</param>
@@ -187,10 +202,21 @@ namespace KerbalFoundries
 		{
 			if (paused || Equals(col.contacts.Length, 0))
 				return;
-			CollisionInfo cInfo = KFDustFX.GetClosestChild(part, col.contacts[0].point + part.rigidbody.velocity * Time.deltaTime);
+			//CollisionInfo cInfo = KFDustFX.GetClosestChild(part, col.contacts[0].point + part.rigidbody.velocity * Time.deltaTime);
+
+            var collisions = new Vector3(0, 0, 0);
+            var collisionCount = 0;
+
+            foreach (ContactPoint cols in col.contacts)
+            {
+                collisions += cols.point;
+                collisionCount++;
+            }
+            Vector3 averageCollision = collisions / collisionCount;
+            CollisionInfo cInfo = GetClosestChild(part, averageCollision + (part.rigidbody.velocity * Time.deltaTime));
 			if (!Equals(cInfo.KFDustFX, null))
-				cInfo.KFDustFX.Scrape(col);
-			Scrape(col);
+				cInfo.KFDustFX.Scrape(col, averageCollision);
+			Scrape(col, averageCollision);
 		}
 		
 		/// <summary>Searches child parts for the nearest instance of this class to the given point.</summary>
@@ -224,12 +250,12 @@ namespace KerbalFoundries
 		
 		/// <summary>Called when the part is scraping over a surface.</summary>
 		/// <param name="col">The collider being referenced.</param>
-		public void Scrape ( Collision col )
+		public void Scrape ( Collision col, Vector3 position )
 		{
 			if ((paused || Equals(part, null)) || Equals(part.rigidbody, null) || Equals(col.contacts.Length, 0))
 				return;
 			float m = col.relativeVelocity.magnitude;
-			DustParticles(m, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime), col.collider);
+			DustParticles(m, position + (part.rigidbody.velocity * Time.deltaTime), col.collider);
 		}
 		
 		/// <summary>This creates and maintains the dust particles and their body/biome specific colors.</summary>
@@ -246,12 +272,12 @@ namespace KerbalFoundries
 				correctionvalue = 1f;
 			BiomeColor = KFDustFXController.DustColors.GetDustColor(vessel.mainBody, col, vessel.latitude, vessel.longitude);
 			if (Equals(BiomeColor, null))
-				Debug.Log(string.Format("{0}{1}Color \"BiomeColor\" is null!", logprefix, locallog));
+				Debug.Log(string.Format("{0}{1}Color \"BiomeColor\" is null!", logprefix, locallog)); 
 			if (speed >= minScrapeSpeed)
 			{
 				if (!Equals(BiomeColor, dustColor))
 				{
-					Color [] colors = dustAnimator.colorAnimation;
+					Color [] colors = dustAnimator.colorAnimation; 
 					colors[0] = BiomeColor;
 					colors[1] = BiomeColor;
 					colors[2] = BiomeColor;
