@@ -13,7 +13,7 @@ namespace KerbalFoundries
         GameObject _rockPrefab;
 
         // SharpDevelop really, really, wants to make this "read-only" for unknown reasons. - Gaalidas
-        List<Transform> _spawnPosition = new List<Transform>();
+		readonly List<Transform> _spawnPosition = new List<Transform>();
 
         [KSPField]
         public float spawnChance;
@@ -39,7 +39,7 @@ namespace KerbalFoundries
         public float prefabScaleFactor = 1f;
         [KSPField]
         public float scaleFactor = 1f;
-        [KSPField(guiName = "Enable Rocks",guiActive = true), UI_Toggle(enabledText = "Enabled", disabledText = "disabled")]
+		[KSPField(guiName = "Enable Rocks", guiActive = true), UI_Toggle(enabledText = "Enabled", disabledText = "disabled")]
         public bool rocksEnabled;
         [KSPField(guiActive = true)]
         public string slip = " ";
@@ -50,9 +50,9 @@ namespace KerbalFoundries
 
             _joint = this.part.transform.Search(jointName);
 
-            if(HighLogic.LoadedSceneIsFlight)
+			if (HighLogic.LoadedSceneIsFlight)
             {
-                foreach(WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
+				foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
                 {
                     _wcList.Add(wc);
                     wc.enabled = true;
@@ -70,9 +70,8 @@ namespace KerbalFoundries
                 return;
             float rotation = 0; 
             if (!FlightGlobals.ActiveVessel.ActionGroups[KSPActionGroup.RCS])
-            {
                 rotation = this.vessel.ctrlState.Z * rotationSpeed * Time.deltaTime;
-            }
+			
             _joint.transform.Rotate(rotationAxis, rotation);
 
             for (int i = 0; i < _wcList.Count(); i++)
@@ -86,14 +85,14 @@ namespace KerbalFoundries
                 var sideSlip = hit.sidewaysSlip;
                 var hitForce = hit.force;
                 
-                if ( (sideSlip < -0.1f)) //is it on the ground
+				if ((sideSlip < -0.1f)) //is it on the ground
                 {
                     if ((hitForce * UnityEngine.Random.Range(0, 100) > spawnChance) && rocksEnabled)
                     {
                         var randomScale = 1 + (UnityEngine.Random.Range(0.3f, 1f) * sideSlip) * scaleFactor;
                         SpawnRock(i, randomScale);
                     }
-                    this.part.rigidbody.AddForceAtPosition(-_wcList[i].transform.up * bladeForce * -sideSlip /10, _wcList[i].transform.position);
+					this.part.rigidbody.AddForceAtPosition(-_wcList[i].transform.up * bladeForce * -sideSlip / 10, _wcList[i].transform.position);
                 }
                 //print(-_wcList[i].transform.InverseTransformPoint(hit.point).y);
             }
@@ -107,9 +106,9 @@ namespace KerbalFoundries
                     Debug.LogWarning(spawnPoint + _wcList[i].name.GetLast(3));
                 _rockPrefab = GameDatabase.Instance.GetModel(spawnObject);
                 _rockPrefab.SetActive(true);
-                    Debug.LogWarning("Rock scale is" + _rockPrefab.transform.localScale);
+				Debug.LogWarning(string.Format("Rock scale is{0}", _rockPrefab.transform.localScale));
                 _rockPrefab.transform.localScale = new Vector3(prefabScaleFactor, prefabScaleFactor, prefabScaleFactor); 
-                    Debug.LogWarning("Rock scale is" + _rockPrefab.transform.localScale);
+				Debug.LogWarning(string.Format("Rock scale is{0}", _rockPrefab.transform.localScale));
 
                 var rb = _rockPrefab.AddComponent<Rigidbody>();
                 rb.mass = 0.01f;

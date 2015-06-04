@@ -9,14 +9,18 @@ namespace KerbalFoundries
 {
     public class KFCouplingHitch : PartModule
     {
+    	// disable ConvertToConstant.Local
+    	
         bool isReady;
         bool sentOnRails; // Reports that it is never used.
         //[KSPField(isPersistant = true)]
         public bool isHitched;
         [KSPField]
         public string hitchObjectName;
+        
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Coupling Force"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
         float forceMultiplier = 1;
+        
         [KSPField]
         public string hitchLinkName;
         [KSPField]
@@ -157,9 +161,9 @@ namespace KerbalFoundries
 
         public void CreateStaticJoint(Part coupledPart)
         {
-            GameObject.Destroy(_LinkJoint);
-            GameObject.Destroy(_HitchJoint);
-            GameObject.Destroy(_rbLink);
+            UnityEngine.Object.Destroy(_LinkJoint);
+            UnityEngine.Object.Destroy(_HitchJoint);
+            UnityEngine.Object.Destroy(_rbLink);
             _StaticJoint = coupledPart.gameObject.AddComponent<FixedJoint>();
             _StaticJoint.breakForce = float.PositiveInfinity;
             _StaticJoint.breakTorque = float.PositiveInfinity;
@@ -168,7 +172,7 @@ namespace KerbalFoundries
 
         public void DestroyStaticJoint()
         {
-            GameObject.Destroy(_StaticJoint);
+            UnityEngine.Object.Destroy(_StaticJoint);
         }
 
         public void OnWarpChange()
@@ -209,7 +213,7 @@ namespace KerbalFoundries
                 }
                 inWarp = true;
             }
-            else if (TimeWarp.CurrentRateIndex == 0)
+            else if (Equals(TimeWarp.CurrentRateIndex, 0))
             {
                 print("warp rate changed back to one");
                 inWarp = false;
@@ -219,13 +223,10 @@ namespace KerbalFoundries
             }
         }
 
-        
-
         //[KSPEvent(guiActive = true, guiName = "Hitch", active = true)]
         void Hitch()
         {
-            
-            if (_targetObject != null)
+			if (!Equals(_targetObject, null))
             {
                 isHitched = true;
                 savedHitchState = true;
@@ -238,14 +239,13 @@ namespace KerbalFoundries
                 //_couplingEye.isHitched = true;
                 //_couplingEye._hitchObject = _Link.transform;
                 _flightID = _targetPart.flightID.ToString();
-                print("Target flight ID " + _flightID);
+				print(string.Format("Target flight ID {0}", _flightID));
                 //print(_targetPart.launchID);
                 //print(_targetPart.name);
 
-
                 _targetVessel = _targetPart.vessel;
                 
-                print("Vessel ID " + _targetVessel.GetInstanceID().ToString());
+				print(string.Format("Vessel ID {0}", _targetVessel.GetInstanceID()));
 
                 Debug.LogWarning("Set up vessel and part stuff");
 
@@ -256,9 +256,9 @@ namespace KerbalFoundries
                 _HitchJoint = this.part.gameObject.AddComponent<ConfigurableJoint>();
                 _LinkJoint = _Link.gameObject.AddComponent<ConfigurableJoint>();
 
-#if Debug
+				#if Debug
                 Debug.LogWarning("Created joint...");
-#endif
+				#endif
                 _LinkJoint.xMotion = ConfigurableJointMotion.Locked;
                 _LinkJoint.yMotion = ConfigurableJointMotion.Locked;
                 _LinkJoint.zMotion = ConfigurableJointMotion.Locked;
@@ -267,9 +267,9 @@ namespace KerbalFoundries
                 _HitchJoint.yMotion = ConfigurableJointMotion.Locked;
                 _HitchJoint.zMotion = ConfigurableJointMotion.Locked;
 
-#if Debug
+				#if Debug
                 Debug.LogWarning("Configured linear...");
-#endif               //set up X limits
+				#endif //set up X limits
                 SoftJointLimit sjl;
                 sjl = _HitchJoint.highAngularXLimit;
                 sjl.limit = xLimitHigh;
@@ -277,7 +277,6 @@ namespace KerbalFoundries
                 sjl = _HitchJoint.lowAngularXLimit;
                 sjl.limit = -xLimitLow;
                 _HitchJoint.lowAngularXLimit = sjl;
-
 
                 //set up Y limits
                 sjl = _HitchJoint.angularYLimit;
@@ -288,10 +287,10 @@ namespace KerbalFoundries
                 sjl.limit = zLimit;
                 _HitchJoint.angularZLimit = sjl;
 
-
-#if Debug
+				#if Debug
                 Debug.LogWarning("Configured linear...");
-#endif                
+				#endif    
+
                 _HitchJoint.angularXMotion = ConfigurableJointMotion.Limited;
                 _HitchJoint.angularYMotion = ConfigurableJointMotion.Limited;
                 _HitchJoint.angularZMotion = ConfigurableJointMotion.Limited;
@@ -304,29 +303,27 @@ namespace KerbalFoundries
                 _LinkJoint.projectionMode = JointProjectionMode.PositionOnly;
                 _LinkJoint.projectionDistance = 0.05f;
 
-
                 SetJointDamper();
 
-
-#if Debug
+				#if Debug
                 Debug.LogWarning("Configured joint...");
-#endif
+				#endif
                 _HitchJoint.anchor = new Vector3(0, 0.4f, 0); //this seems to make a springy joint
 
                 // Set correct axis
                 //_HitchJoint.axis = new Vector3(1, 0, 0);
                 //_HitchJoint.secondaryAxis = new Vector3(0, 0, 1);
-#if Debug
+				#if Debug
                 Debug.LogWarning("Configured axis...");
                 #endif
                 _HitchJoint.connectedBody = _rbLink;
 
                 _Link.transform.rotation = _coupledObject.transform.rotation;
-#if Debug
+				#if Debug
                 Debug.LogWarning("Connected joint...");
-#endif
+				#endif
                 
-                print("Target object is " + _coupledObject.name);
+				print(string.Format("Target object is {0}", _coupledObject.name));
                 _coupledObject.transform.position = _hitchObject.transform.position;
                 _LinkJoint.connectedBody = _rb;
                 print("Setting target parent");
@@ -339,7 +336,7 @@ namespace KerbalFoundries
         [KSPEvent(guiActive = true, guiName = "Update Damper", active = true, guiActiveUnfocused = true, unfocusedRange = 40f)]
         void SetJointDamper()
         {
-            if (_HitchJoint != null)
+			if (!Equals(_HitchJoint, null))
             {
                 _HitchJoint.rotationDriveMode = RotationDriveMode.XYAndZ;
                 JointDrive X = _HitchJoint.angularXDrive;
@@ -352,21 +349,19 @@ namespace KerbalFoundries
                 _HitchJoint.angularYZDrive = YZ;
             }
             else
-            {
                 Debug.LogError("No joint to update!");
             }
-        }
 
         [KSPEvent(guiActive = true, guiName = "Un-Hitch", active = true, guiActiveUnfocused = true, unfocusedRange = 40f)]
         void UnHitch()
         {
-            if (_LinkJoint != null)
+			if (!Equals(_LinkJoint, null))
             {
                 Debug.LogWarning("Unhitching...");
                 //_joint.connectedBody = this.part.rigidbody;
-                GameObject.Destroy(_LinkJoint);
-                GameObject.Destroy(_rbLink);
-                GameObject.Destroy(_HitchJoint);
+				UnityEngine.Object.Destroy(_LinkJoint);
+				UnityEngine.Object.Destroy(_rbLink);
+				UnityEngine.Object.Destroy(_HitchJoint);
                 _Link.transform.localEulerAngles = _LinkRotation;
                 isHitched = false;
                 //_couplingEye.isHitched = false;
@@ -380,9 +375,8 @@ namespace KerbalFoundries
                 Debug.LogWarning("Not hitched!!!!");
         }
 
-
         //[KSPEvent(guiActive = true, guiName = "Show rotation", active = true)]
-        public Vector3 JointRotation(Transform hitch, Transform coupling, bool signed)
+        public static Vector3 JointRotation(Transform hitch, Transform coupling, bool signed)
         {
             //this projects vectors onto chosen 2D planes. planes are defined by their normals, in this case hitchObject.transform.forward.
             Vector3 hitchProjectX = hitch.transform.right - (hitch.transform.forward) * Vector3.Dot(hitch.transform.right, hitch.transform.forward);
@@ -411,26 +405,22 @@ namespace KerbalFoundries
                     angleZ *= -1;
             }
 
-#if Debug
+			#if Debug
             if (isDebug)
             {
-                print("normalVector" + normalvectorX);
-                print("normalVector" + normalvectorY);
-                print("normalVector" + normalvectorZ);
-                
-                Debug.LogWarning("Rotate " + hitchRotation);
+				print(string.Format("normalVector{0}", normalvectorX));
+				print(string.Format("normalVector{0}", normalvectorY));
+				print(string.Format("normalVector{0}", normalvectorZ));
+				Debug.LogWarning(string.Format("Rotate {0}", hitchRotation));
             }
-#endif
-            Vector3 couplingRotation = new Vector3(angleX, angleY, angleZ);
+			#endif
+            var couplingRotation = new Vector3(angleX, angleY, angleZ);
 
             return couplingRotation;
-
         }
-
 
         void OnDestroy()
         {
-            
             Debug.LogError("OnDestroy");
             GameEvents.onVesselGoOffRails.Remove(VesselUnPack);
             GameEvents.onVesselGoOnRails.Remove(VesselPack);
@@ -440,10 +430,9 @@ namespace KerbalFoundries
             //Debug.LogError("Vessel Pack");
             if (isHitched)
             {
-
+				// Do absolutely nothing, and do it right!
             }
         }
-
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -460,24 +449,19 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                
                 // First of all, create a GameObject to which LineRenderer will be attached.
                 //GameObject obj = _hitchObject.gameObject;
-
                 // Then create renderer itself...
                 //DebugLine(_hitchObject.gameObject, _hitchObject.transform.forward, Color.black);
                 //StartCoroutine("FlightChecker");
-                
-                
-
             }
         }
 
         void DebugLine(Vector3 position, Vector3 rotation)
         {
-            GameObject lineDebugX = new GameObject("lineDebug");
-            GameObject lineDebugY = new GameObject("lineDebug");
-            GameObject lineDebugZ = new GameObject("lineDebug");
+            var lineDebugX = new GameObject("lineDebug");
+            var lineDebugY = new GameObject("lineDebug");
+            var lineDebugZ = new GameObject("lineDebug");
             lineDebugX.transform.position = position;
             lineDebugY.transform.position = position;
             lineDebugZ.transform.position = position;
@@ -512,7 +496,6 @@ namespace KerbalFoundries
         // than staying in fixed world coordinates)
         //line.transform.localPosition = Vector3.zero;
         //line.transform.localEulerAngles = Vector3.zero;
-
         // Make it render a red to yellow triangle, 1 meter wide and 2 meters long
 
         public void FixedUpdate()
@@ -524,35 +507,25 @@ namespace KerbalFoundries
 
             if(isHitched)
             {
-
                 _targetVessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brakesOn);
                 _trailerPosition = _targetVessel.transform.position;
-
                 if (inWarp)
-                {
                     _targetVessel.transform.position = _trailerFix.transform.position;
                 }
                 
-            }
-
-
-            if (_targetObject != null && !isHitched)
+            if (!Equals(_targetObject, null) && !isHitched)
             {
-
                 if (_targetObject.name.Equals("EyeTarget", StringComparison.Ordinal) || _targetObject.name.Equals("EyePoint", StringComparison.Ordinal))
                 {
                     Vector3 forceVector = -(_targetObject.transform.position - _hitchObject.transform.position).normalized;
-
                     Vector3 forcePlane = forceVector - (_hitchObject.transform.forward) * Vector3.Dot(forceVector, _hitchObject.transform.forward);
                     Vector3 force = forcePlane * forceMultiplier * Mathf.Clamp((1 / (_targetObject.transform.position - _hitchObject.transform.position).magnitude), -maxForce, maxForce); //(1 / (_targetObject.transform.position - _hitchObject.transform.position).magnitude) *
                     _rb.rigidbody.AddForceAtPosition(force, _targetObject.transform.position);
                     this.part.rigidbody.AddForceAtPosition(-force, _hitchObject.transform.position);
                 }
 
-
                 if (_targetObject.name.Equals("EyePoint", StringComparison.Ordinal))
                 {
-                    
                     if (Vector3.Distance(_targetObject.transform.position, _hitchObject.transform.position) < 0.1f)
                     {
                         Vector3 jointLimitCheck = JointRotation(_hitchObject.transform, _targetObject.transform, false);
@@ -568,18 +541,15 @@ namespace KerbalFoundries
                             Hitch();
                         }
                     }
-
                 }
             }
-
-
             //print(_joint.
         }
 
         //[KSPEvent(guiActive = true, guiName = "Fire Ray", active = true)]
         void RayCast(float rayLength)
         {
-            Ray ray = new Ray(_hitchObject.transform.position, _hitchObject.transform.forward);
+            var ray = new Ray(_hitchObject.transform.position, _hitchObject.transform.forward);
             RaycastHit hit;
             int tempLayerMask = ~layerMask;
             //Debug.DrawRay(_hitchObject.transform.position, _hitchObject.transform.up);
@@ -598,10 +568,8 @@ namespace KerbalFoundries
                     _targetObject = hit.collider.gameObject;
                     //print("Hit " + hit.collider.gameObject.name);
                     //}
-
                 }
                 catch (NullReferenceException) { }
-
             }
             else
             {

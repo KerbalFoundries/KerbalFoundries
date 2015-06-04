@@ -29,6 +29,7 @@ namespace KerbalFoundries
             StartCoroutine(Steering());
         }
 
+        // disable FunctionNeverReturns
         IEnumerator Steering() //Coroutine for steering
         {
             while (true)

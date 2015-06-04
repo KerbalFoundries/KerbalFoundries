@@ -24,7 +24,6 @@ namespace KerbalFoundries
         ConfigurableJoint _joint;
         bool isReady;
 
-
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
@@ -36,20 +35,18 @@ namespace KerbalFoundries
                 isReady = true;
                 Debug.LogError("Test Arm started");
             }
-            
         }
 
         public void FixedUpdate()
         {
             if (!isReady)
                 return;
-
         }
 
         //[KSPEvent(guiActive = true, guiName = "Grab", active = true, guiActiveUnfocused = true, unfocusedRange = 40f)]
         public void CreateJoint()
         {
-            if (_arm != null && _base != null)
+			if (!Equals(_arm, null) && !Equals(_base, null))
             {
                 //_rb = _base.AddComponent<Rigidbody>();
                 //_rb.isKinematic = true;
@@ -68,11 +65,9 @@ namespace KerbalFoundries
                 _joint.angularZMotion = ConfigurableJointMotion.Free;
 
                 _joint.connectedBody = _targetRb;
-
             }
             else
                 Debug.LogError("GO not found ");
-
         }
     }
 }

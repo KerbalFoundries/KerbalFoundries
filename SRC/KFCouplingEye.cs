@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -13,6 +11,7 @@ namespace KerbalFoundries
         public Transform _hitchObject;
         public Transform _relativePostion;
         public Vector3 _relativeRotation;
+        
         [KSPField]
         public string eyeObjectName;
 
@@ -20,7 +19,7 @@ namespace KerbalFoundries
 
         public void VesselUnPack(Vessel vessel)
         {
-            if (vessel == this.vessel)
+			if (Equals(vessel, this.vessel))
             {
                 Debug.LogWarning("Unpacked and this vessel");
                 isPacked = false;
@@ -29,7 +28,7 @@ namespace KerbalFoundries
 
         public void VesselPack(Vessel vessel)
         {
-            if (vessel == this.vessel)
+			if (Equals(vessel, this.vessel))
             {
                 Debug.LogWarning("Packed and this vessel");
                 isPacked = true;
@@ -41,13 +40,12 @@ namespace KerbalFoundries
             base.OnStart(state);
             GameEvents.onVesselGoOffRails.Add(VesselUnPack);
             GameEvents.onVesselGoOnRails.Add(VesselPack);
-
             _eyeObject = this.part.transform.Search(eyeObjectName);
         }
 
         public void FixedUpdate()
         {
-            
+            // Nothing here?
         }
     }
 }

@@ -16,8 +16,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Repulsor Height %"), UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 5)]
         public float repulsorHeight = 50;
 
-        // SharpDevelop wants this to be a local constant.  I am reisting, just in case it could break something.
-        float replusorHeightMultiplier = 5;
+        const float replusorHeightMultiplier = 5;
 
         [KSPField(isPersistant = true)]
         public bool repulsorMode = false;
@@ -39,9 +38,9 @@ namespace KerbalFoundries
         KFModuleWheel _moduletrack;
 
         //begin start
-        public override void OnStart(PartModule.StartState start)  //when started
+        public override void OnStart(PartModule.StartState state)  //when started
         {
-            base.OnStart(start);
+            base.OnStart(state);
             
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -88,15 +87,10 @@ namespace KerbalFoundries
                     susDistList.Add(wcList[i].suspensionDistance);
                 }
 
-                if (repulsorMode == true) //is the deployed flag set? set the rideheight appropriately
-                {
+				if (repulsorMode) //is the deployed flag set? set the rideheight appropriately
                     UpdateColliders("repulsor");
-                }
-
-                if (repulsorMode == false)
-                {
+				if (!repulsorMode)
                     UpdateColliders("wheel");
-                }
                 effectPowerMax = 1 * chargeConsumptionRate * Time.deltaTime;
                 print(effectPowerMax);
             }//end isInFlight
@@ -200,7 +194,7 @@ namespace KerbalFoundries
             {
                 //if (!_moduletrack.isRetracted)   //normally the button would be disabled in the wheel is retracted.
                 //    _moduletrack.ApplySettings(); 
-                if (_moduletrack.groupNumber != 0 && _moduletrack.groupNumber == mt.groupNumber)
+                if (!Equals(_moduletrack.groupNumber, 0) && Equals(_moduletrack.groupNumber, mt.groupNumber))
                 {
                     if (repulsorMode)               //similiarly, only apply settings when inreplusor mode.
                     {
@@ -219,13 +213,9 @@ namespace KerbalFoundries
         public void AGToggleDeployed(KSPActionParam param)
         {
             if (repulsorMode)
-            {
                 toWheel(param);
-            }
             else
-            {
                 toRepulsor(param);
-            }
         }//End Deploy toggle
        
         public void PlayAnimation()
@@ -234,19 +224,14 @@ namespace KerbalFoundries
             // if this isn't the case, needs fixing
             ModuleAnimateGeneric myAnimation = part.FindModulesImplementing<ModuleAnimateGeneric>().SingleOrDefault();
             if (!myAnimation)
-            {
                 return; //the Log.Error line fails syntax check with 'The name 'Log' does not appear in the current context.
-            }
-            else
-            {
                     myAnimation.Toggle();
             }
-        }
 
         [KSPAction("Wheel Mode")]
         public void toWheel(KSPActionParam param)
         {
-            if (repulsorMode == true)
+			if (repulsorMode)
             {
                 PlayAnimation();
                 repulsorMode = false;
@@ -260,7 +245,7 @@ namespace KerbalFoundries
         {
             if (lowEnergy)
                 return;
-                if (repulsorMode == false)
+			if (!repulsorMode)
                 {
                     PlayAnimation();
                     repulsorMode = true;

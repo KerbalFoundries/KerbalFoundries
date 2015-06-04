@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace KerbalFoundries
 {
-    public class KFMeccanumWheel :PartModule
+    public class KFMeccanumWheel : PartModule
     {
         [KSPField]
         public string wheelName;
@@ -34,8 +34,8 @@ namespace KerbalFoundries
                 }
             }
             _ModuleWheel = this.part.GetComponentInChildren<KFModuleWheel>();
-
         }
+
         public void FixedUpdate()
         {
             if (!isReady)
@@ -44,6 +44,5 @@ namespace KerbalFoundries
             var _rotate = (this.vessel.ctrlState.wheelThrottle * - _ModuleWheel.directionCorrector) + this.vessel.ctrlState.wheelSteer;
             _wheel.transform.Rotate(rotationAxis, _rotate * rotationSpeed);
         }
-
     }
 }

@@ -7,12 +7,14 @@ namespace KerbalFoundries
 {
     public class KFModuleWheel : PartModule
     {
-        //name definitions
+		// disable RedundantDefaultFieldInitializer
+		
+		// Name definitions
         public string right = "right";
         public string forward = "forward";
         public string up = "up";
 
-        //tweakables
+		// Tweakables
         [KSPField(isPersistant = false, guiActive = true, guiName = "Wheel Settings")]
         public string settings = "";
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
@@ -32,40 +34,51 @@ namespace KerbalFoundries
         [KSPField(isPersistant = false, guiActive = true, guiName = "Status")]
         public string status = "Nominal";
         
-        //config fields
+		// Config fields
 		/// <summary>Torque applied to wheel colliders.</summary>
         [KSPField]
 		public FloatCurve torqueCurve = new FloatCurve();
+		
 		/// <summary>Degrees to turn wheels for rotational steering.</summary>
         [KSPField]
 		public FloatCurve steeringCurve = new FloatCurve();
+		
 		/// <summary>Toruqe applied to wheelcolliders for low speed tank steering.</summary>
         [KSPField]
 		public FloatCurve torqueSteeringCurve = new FloatCurve();
+		
 		/// <summary>Brake torque applied to wheel colliders for high speed tank steering.</summary>
         [KSPField]
 		public FloatCurve brakeSteeringCurve = new FloatCurve();
+		
 		/// <summary>This enables wheel (turn based) steering.</summary>
         [KSPField]
 		public bool hasSteering = false;
+		
 		/// <summary>Torque to apply for brakes.</summary>
         [KSPField]
 		public float brakingTorque;
+		
 		/// <summary>Constant brake value aplpied to simulate rolling resistance.</summary>
         [KSPField]
 		public FloatCurve rollingResistance = new FloatCurve();
+		
 		/// <summary>Constant brake value aplpied to simulate rolling resistance.</summary>
         [KSPField]
 		public FloatCurve loadCoefficient = new FloatCurve();
+		
 		/// <summary>Steering speed.</summary>
         [KSPField]
 		public float smoothSpeed = 10;
+		
 		/// <summary>Used to compensate for error in the raycast.</summary>
         [KSPField]
 		public float raycastError;
+		
 		/// <summary>Rev limiter. Stops freewheel runaway and sets a speed limit.</summary>
         [KSPField]
 		public float maxRPM = 350;
+		
 		/// <summary>How fast to consume ElectricCharge.</summary>
         [KSPField]
 		public float chargeConsumptionRate = 1f;
@@ -81,9 +94,10 @@ namespace KerbalFoundries
         public bool disableTweakables = false;
 
         //persistent fields
-		/// <summary>Will be minus one for inverted.</summary>
+		/// <summary>Will be negative one (-1) if inverted.</summary>
         [KSPField(isPersistant = true)]
 		public float steeringInvert = 1;
+		
 		/// <summary>Saves the brake state.</summary>
         [KSPField(isPersistant = true)]
 		public bool brakesApplied;
@@ -92,7 +106,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = false, guiName = "TS", guiFormat = "F1")] //debug only.
         public float tweakScaleCorrector = 1;
 
-        //global variables
+		// Global variables
         int rootIndexLong;      
         int rootIndexLat;
         int rootIndexUp;
@@ -106,7 +120,7 @@ namespace KerbalFoundries
         float effectPower;
         float trackRPM = 0;
 
-        //stuff deliberately made available to other modules:
+		// Stuff deliberately made available to other modules:
         public float steeringAngle;
         public float steeringAngleSmoothed;
         public float appliedRideHeight;
@@ -124,6 +138,8 @@ namespace KerbalFoundries
         public ModuleAnimateGeneric retractionAnimation;
         
 		/// <summary>This is the info string that will display when the part info is shown.</summary>
+		/// <remarks>This can be overridden in the config for this module in the part file.</remarks>
+		[KSPField]
 		public string strInfo = "This part comes with enhanced steering and suspension.";
 		public override string GetInfo()
 		{
@@ -167,20 +183,21 @@ namespace KerbalFoundries
                 }
             }
             
+            // disable once ConvertIfToOrExpression
             if (startRetracted)
-            {
                 isRetracted = true;
-            }
+			
+            // disable once ConvertIfStatementToConditionalTernaryExpression
             if (!isRetracted)
                 currentRideHeight = rideHeight; //set up correct values from persistence
             else
                 currentRideHeight = 0;
-            /* SharpDevelop reports that these two "if" checks can be replaced with single line checks. - Gaalidas WRONG
+			/* SharpDevelop reports that these two "if" checks can be replaced with single line checks. - Gaalidas ... WRONG ... actually, not wrong, but suppressing for now.
             isRetracted |= startRetracted;
             currentRideHeight = !isRetracted ? rideHeight : 0;
             smoothedRideHeight = currentRideHeight;
             appliedRideHeight = smoothedRideHeight / 100;
-             * */
+             */
             //print(appliedRideHeight);
            
 			if (HighLogic.LoadedSceneIsEditor && !hasRetract)
@@ -199,7 +216,7 @@ namespace KerbalFoundries
                 if (!hasRetract)
                     Extensions.DisableAnimateButton(this.part);
 
-                // wheel steering ratio setup
+				// Wheel steering ratio setup
                 rootIndexLong = WheelUtils.GetRefAxis(this.part.transform.forward, this.vessel.rootPart.transform); //Find the root part axis which matches each wheel axis.
                 rootIndexLat = WheelUtils.GetRefAxis(this.part.transform.right, this.vessel.rootPart.transform);
                 rootIndexUp = WheelUtils.GetRefAxis(this.part.transform.up, this.vessel.rootPart.transform);
@@ -211,8 +228,8 @@ namespace KerbalFoundries
                     torque /= 100;
 				
                 wheelCount = 0;
-                this.part.force_activate(); //force the part active or OnFixedUpate is not called
-                foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>()) //set colliders to values chosen in editor and activate
+				this.part.force_activate(); // Force the part active or OnFixedUpate is not called
+				foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>()) // Set colliders to values chosen in editor and activate
                 {
                     wheelCount++;
                     JointSpring userSpring = wc.suspensionSpring;
@@ -243,7 +260,7 @@ namespace KerbalFoundries
 
         public override void OnFixedUpdate()
         {
-            //User input
+			// User input
             float electricCharge;
             float unitLoad = 0;
 			float forwardTorque = torqueCurve.Evaluate((float)this.vessel.srfSpeed / tweakScaleCorrector) * torque; //this is used a lot, so may as well calculate once
@@ -396,9 +413,7 @@ namespace KerbalFoundries
             }
         }
 
-		/// <summary>
-		/// Sets up motor and steering direction direction.
-		/// </summary>
+		/// <summary>Sets up motor and steering direction direction.</summary>
         public void GetControlAxis()
         {
             controlAxisIndex = WheelUtils.GetRefAxis(this.part.transform.forward, this.vessel.ReferenceTransform); //grab current values for the part and the control module, which may ahve changed.
@@ -423,13 +438,11 @@ namespace KerbalFoundries
             
             if (!retractionAnimation)
                 return; //the Log.Error line fails syntax check with 'The name 'Log' does not appear in the current context.
-            else
-                retractionAnimation.Toggle();
+
+            retractionAnimation.Toggle();
         }
 
-		/// <summary>
-		/// Destroys the Bounds helper object if it is still in the model.
-		/// </summary>
+		/// <summary>Destroys the Bounds helper object if it is still in the model.</summary>
         public void DestroyBounds()
         {
             Transform bounds = transform.Search(boundsName);

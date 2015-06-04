@@ -24,11 +24,11 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
         public float groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 100f, stepIncrement = 5f)]
-        public float Rideheight = 25;        //this is what's tweaked by the line above
+        public float Rideheight = 25;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 6.00f, stepIncrement = 0.2f)]
-        public float SpringRate;        //this is what's tweaked by the line above
+        public float SpringRate;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.3f, stepIncrement = 0.05f)]
-        public float DamperRate;        //this is what's tweaked by the line above
+        public float DamperRate;
         [KSPField]
         public bool deployed;
         [KSPField]
@@ -41,7 +41,7 @@ namespace KerbalFoundries
         public string gridName;
         [KSPField]
         public string gimbalName;
-        bool isReady; //Reports that it is never used.
+        bool isReady;
         Transform _grid;
         Transform _gimbal;
 
@@ -105,11 +105,10 @@ namespace KerbalFoundries
                 UpdateHeight();
 
                 foreach (ModuleWaterSlider mws in this.vessel.FindPartModulesImplementing<ModuleWaterSlider>())
-                {
                     _MWS = mws;
-                }
+				
                 //print("water slider height is" + _MWS.colliderHeight);
-                if (pointDown && this.vessel == FlightGlobals.ActiveVessel)
+                if (pointDown && Equals(this.vessel, FlightGlobals.ActiveVessel))
                 {
                     StopAllCoroutines();
                     StartCoroutine("LookAt");
@@ -121,7 +120,8 @@ namespace KerbalFoundries
             //print(effectPowerMax);
         }//end start
 
-        IEnumerator Shrink() //Coroutine for steering
+        /// <summary>A "Shrink" coroutine for steering.</summary>
+        IEnumerator Shrink()
         {
             while (_grid.transform.localScale.x > 0.2f && _grid.transform.localScale.y > 0.2f && _grid.transform.localScale.z > 0.2f)
             {
@@ -132,7 +132,8 @@ namespace KerbalFoundries
             Debug.LogWarning("Finished shrinking");
         }
 
-        IEnumerator Grow() //Coroutine for steering
+        /// <summary>A "grow" coroutine for steering.</summary>
+        IEnumerator Grow()
         {
             while (_grid.transform.localScale.x < _gridScale.x && _grid.transform.localScale.y < _gridScale.y && _grid.transform.localScale.z < _gridScale.z)
             {
@@ -145,7 +146,8 @@ namespace KerbalFoundries
         }
 
         // disable once FunctionNeverReturns
-        IEnumerator LookAt() //Coroutine for steering
+        /// <summary>A "LookAt" coroutine for steering.</summary>
+        IEnumerator LookAt()
         {
             while (true)
             {
@@ -178,17 +180,13 @@ namespace KerbalFoundries
 
             //Vector3d oceanNormal = this.part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
 
-            
-
             for (int i = 0; i < wcList.Count(); i++)
-            {
                 wcList[i].suspensionDistance = maxRepulsorHeight * appliedRideHeight;
-            }
 
             if (deployed)
             {
                 _MWS.colliderHeight = -2.5f; //reset the height of the water collider that slips away every frame.
-                float chargeConsumption = appliedRideHeight * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate /4;
+				float chargeConsumption = appliedRideHeight * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate / 4;
                 effectPower = chargeConsumption / effectPowerMax;
 
                 float electricCharge = part.RequestResource("ElectricCharge", chargeConsumption);
@@ -217,9 +215,8 @@ namespace KerbalFoundries
                 }
             }
             else
-            {
                 effectPower = 0;
-            }
+			
             RepulsorSound();
             effectPower = 0;    //reset to make sure it doesn't play when it shouldn't.
             //print(effectPower);

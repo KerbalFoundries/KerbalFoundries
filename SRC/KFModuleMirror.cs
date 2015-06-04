@@ -9,7 +9,6 @@ namespace KerbalFoundries
     [KSPModule("ModuleMirror")]
     public class KFModuleMirror : PartModule
     {
-
         //public Transform leftObject;
         //public Transform rightObject;
         public string right = "right";
@@ -29,9 +28,8 @@ namespace KerbalFoundries
 
         List<Transform> leftObject = new List<Transform>();
         List<Transform> rightObject = new List<Transform>();
-        private string[] rightList;
-        private string[] leftList;
-
+        string[] rightList;
+        string[] leftList;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -71,25 +69,23 @@ namespace KerbalFoundries
             {
                 //SetSide(flightSide); 
                 print("Loaded scene is flight");
-                if (flightSide == left)
+				if (Equals(flightSide, left))
                 {
-                    
                     for (int i = 0; i < rightObject.Count(); i++)
                     {
-                        print("Destroying Right object " + rightList[i]);
+						print(string.Format("Destroying Right object {0}", rightList[i]));
                         leftObject[i].gameObject.SetActive(true);
-                        GameObject.Destroy(rightObject[i].gameObject);
+						UnityEngine.Object.Destroy(rightObject[i].gameObject);
                     }
                 }
-
-                if (flightSide == right)
+				if (Equals(flightSide, right))
                 {
                     
                     for (int i = 0; i < leftObject.Count(); i++)
                     {
-                        print("Destroying left object "+ leftList[i]);
+						print(string.Format("Destroying left object {0}", leftList[i]));
                         rightObject[i].gameObject.SetActive(true);
-                        GameObject.Destroy(leftObject[i].gameObject);
+						UnityEngine.Object.Destroy(leftObject[i].gameObject);
                     }
                 }
             }
@@ -98,14 +94,14 @@ namespace KerbalFoundries
             print(flightSide);
 
             FindClone();
-            if (clone != null)
+			if (!Equals(clone, null))
             {
                 print("Part is clone");
                 //FindClone(); //make sure we have the clone. No harm in checking again
                 SetSide(clone.cloneSide);
             }
 
-            if (flightSide == "") //check to see if we have a value in persistence
+			if (Equals(flightSide, "")) //check to see if we have a value in persistence
             {
                 print("No flightSide value in persistence. Sertting default");
                 //print(this.part.isClone);
@@ -116,36 +112,30 @@ namespace KerbalFoundries
                 print("Setting value from persistence");
                 SetSide(flightSide);
             }
-
-
         }//end OnStart
 
+        /// <summary>Sets this side to left and clone to right.</summary>
         [KSPEvent(guiName = "Left", guiActive = false, guiActiveEditor = true)]
-        public void LeftSide() //sets this side to left and clone to right
+        public void LeftSide()
         {
             FindClone();
             SetSide(left);
-
             if (clone)
-            {
                 clone.SetSide(right);
             }
-        }
+        /// <summary>Sets this side to right and clone to left.</summary>
         [KSPEvent(guiName = "Right", guiActive = false, guiActiveEditor = true)]
         public void RightSide()
         {
             FindClone();
             SetSide(right);
-
             if (clone)
-            {
                 clone.SetSide(left);
             }
-        }
 
         public void SetSide(string side) //accepts the string value
         {
-            if (side == left)
+			if (Equals(side, left))
             {
                 for (int i = 0; i < leftList.Count(); i++)
                 {
@@ -157,7 +147,7 @@ namespace KerbalFoundries
                 Events["LeftSide"].active = false;
                 Events["RightSide"].active = true;
             }
-            if (side == right)
+			if (Equals(side, right))
             {
                 for (int i = 0; i < leftList.Count(); i++)
                 {
@@ -169,14 +159,13 @@ namespace KerbalFoundries
                 Events["LeftSide"].active = true;
                 Events["RightSide"].active = false;
             }
-
         }
 
         public void FindClone()
         {
             foreach (Part potentialMaster in this.part.symmetryCounterparts) //search for parts that might be my symmetry counterpart
             {
-                if (potentialMaster != null) //or we'll get a null-ref
+				if (!Equals(potentialMaster, null)) //or we'll get a null-ref
                 {
                     clone = potentialMaster.Modules.OfType<KFModuleMirror>().FirstOrDefault();
                     //print("found my clone");

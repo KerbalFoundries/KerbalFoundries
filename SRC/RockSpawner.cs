@@ -35,9 +35,9 @@ namespace KerbalFoundries
 
             GameObject _rockPrefab = GameDatabase.Instance.GetModel(spawnObject);
             _rockPrefab.SetActive(true);
-                Debug.LogWarning("Rock scale is" + _rockPrefab.transform.localScale);
+			Debug.LogWarning(string.Format("Rock scale is{0}", _rockPrefab.transform.localScale));
             _rockPrefab.transform.localScale = new Vector3(scale, scale, scale); 
-                Debug.LogWarning("Rock scale is" + _rockPrefab.transform.localScale);
+			Debug.LogWarning(string.Format("Rock scale is{0}", _rockPrefab.transform.localScale));
 
             var rb = _rockPrefab.AddComponent<Rigidbody>();
             rb.mass = 0.01f;

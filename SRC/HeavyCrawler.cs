@@ -13,18 +13,20 @@ namespace KerbalFoundries
     [KSPModule("HeavyCrawler")]
     public class HeavyCrawler : PartModule
     {
-        public WheelCollider thiswheelCollider;        //container for wheelcollider we grab from wheelmodule
+    	/// <summary>Container for wheelcollider we grab from wheelmodule.</summary>
+        public WheelCollider thiswheelCollider;
         public WheelCollider mywc;
         public JointSpring userspring;
 
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Ride Height"), UI_FloatRange(minValue = 0, maxValue = 2.00f, stepIncrement = 0.25f)]
-        public float Rideheight;        //this is what's tweaked by the line above
+        public float Rideheight;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Spring strength"), UI_FloatRange(minValue = 0, maxValue = 3.00f, stepIncrement = 0.2f)]
-        public float SpringRate;        //this is what's tweaked by the line above
+        public float SpringRate;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 1.00f, stepIncrement = 0.025f)]
-        public float DamperRate;        //this is what's tweaked by the line above
+        public float DamperRate;
 
         public float TargetPosition;
+        
         //steeringstuff
         public Transform steeringFound;
         public Transform smoothSteering;
@@ -57,13 +59,13 @@ namespace KerbalFoundries
         public float rotationAngle;
 
         //begin start
-        public override void OnStart(PartModule.StartState start)  //when started
+        public override void OnStart(PartModule.StartState state)  //when started
         {
             thiswheelCollider = part.gameObject.GetComponentInChildren<WheelCollider>();   //find the 'wheelCollider' gameobject named by KSP convention.
             mywc = thiswheelCollider.GetComponent<WheelCollider>();
             userspring = mywc.suspensionSpring;
             // degub only: print("onstart");
-            base.OnStart(start);
+            base.OnStart(state);
             
             //print(steeringFound);
             smoothSteering = transform.Search("smoothSteering");
@@ -72,7 +74,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsEditor)
             {
-                if (SpringRate == 0) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
+				if (Equals(SpringRate, 0)) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
                 {
                     print("part creation");
                     //thiswheelCollider = part.gameObject.GetComponentInChildren<WheelCollider>();   //find the 'wheelCollider' gameobject named by KSP convention.

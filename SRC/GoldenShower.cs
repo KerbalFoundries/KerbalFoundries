@@ -7,9 +7,9 @@ namespace KerbalFoundries
     //[KSPAddon(KSPAddon.Startup.Flight, false)]
     class GoldenShower : MonoBehaviour
     {
-        private Rect _windowRect = new Rect(400, 400, 128f, 1f);
-        private GameObject _coinPrefab;
-        private const int ShowerCoinCount = 800;
+        Rect _windowRect = new Rect(400, 400, 128f, 1f);
+        GameObject _coinPrefab;
+        const int ShowerCoinCount = 800;
 
         void Start()
         {
@@ -43,23 +43,24 @@ namespace KerbalFoundries
             _windowRect = KSPUtil.ClampRectToScreen(GUILayout.Window(123, _windowRect, DrawWindow, "Menu"));
         }
 
-        private void DrawWindow(int winid)
+        void DrawWindow(int winid)
         {
             GUILayout.BeginVertical();
             //GUILayout.Label(string.Format("Gravity: {0}"));
             GUILayout.Label(string.Format("Accel: {0}", Physics.gravity.magnitude));
             if (GUILayout.Button("Increase monetary wealth?"))
                 StartCoroutine(CoinShower());
+            
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
 
-        private float Random360()
+        float Random360()
         {
             return UnityEngine.Random.Range(0f, 360f);
         }
 
-        private System.Collections.IEnumerator CoinShower()
+        System.Collections.IEnumerator CoinShower()
         {
             print("Let there be wealth!");
             var vessel = FlightGlobals.ActiveVessel;

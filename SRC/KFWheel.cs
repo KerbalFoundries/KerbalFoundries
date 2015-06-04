@@ -177,7 +177,7 @@ namespace KerbalFoundries
 		//end OnStart
 		
         //OnUpdate
-		// disable once FunctionNeverReturns
+		// disable FunctionNeverReturns
         IEnumerator Steering() //Coroutine for steering
         {
 			while (true)
@@ -268,13 +268,14 @@ namespace KerbalFoundries
             }
         }
 
-// Completely unnecessary override!		
-//		public override void OnFixedUpdate()
-//		{
-//			base.OnFixedUpdate();
-//			//not a lot in here since I moved it all into coroutines.
-//		}
-//end OnFixedUpdate
+		// Completely unnecessary override!
+		/*public override void OnFixedUpdate()
+		 *{
+		 *	base.OnFixedUpdate();
+		 *	//not a lot in here since I moved it all into coroutines.
+		 *}
+		 * //end OnFixedUpdate
+		 */
 
         public void MoveSuspension(int index, float movement, Transform movedObject) //susTrav Axis, amount to move, named object.
         {

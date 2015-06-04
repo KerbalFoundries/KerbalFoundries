@@ -17,6 +17,16 @@ namespace KerbalFoundries
 	public class KFLogUtil
 	{
 		// disable MemberCanBeMadeStatic.Local
+		
+		public void testlog()
+		{
+			var frame = new System.Diagnostics.StackFrame(1);
+			var method = frame.GetMethod();
+        	var classname = method.DeclaringType;
+        	var methodname = method.Name;
+        	string logprefix = string.Format("[{0} - {1}]: ", classname, methodname);
+		}
+		
 		/// <summary>
 		/// A standard-level log utility that prefixes the logged text with the name of the mod it is being sent from.
 		/// </summary>
@@ -25,7 +35,7 @@ namespace KerbalFoundries
 		/// <param name="strClassName">(Optional) Name of the specific class that is being logged from.  Does not show if not specified.</param>
 		/// <param name="strMethodName">(Optional) "classname" parameter must be specified!  Name of a specific method being logged from.  Does not show if not specified.</param>
 		/// <remarks>Standard log entry.</remarks>
-		public void KFLog (string strText, string strModName = "Kerbal Foundries", string strClassName = "", string strMethodName = "")
+		public void KFLog(string strText, string strModName = "Kerbal Foundries", string strClassName = "", string strMethodName = "")
 		{
 			string strOutput = string.Format("[{0}", strModName);
 			if (!Equals(strClassName, ""))
@@ -46,7 +56,7 @@ namespace KerbalFoundries
 		/// <param name="strClassName">(Optional) Name of the specific class that is being logged from.  Does not show if not specified.</param>
 		/// <param name="strMethodName">(Optional) "classname" parameter must be specified!  Name of a specific method being logged from.  Does not show if not specified.</param>
 		/// <remarks>Warning log entry.</remarks>
-		public void KFLogWarning (string strText, string strModName = "Kerbal Foundries", string strClassName = "", string strMethodName = "")
+		public void KFLogWarning(string strText, string strModName = "Kerbal Foundries", string strClassName = "", string strMethodName = "")
 		{
 			string strOutput = string.Format("[{0}", strModName);
 			if (!Equals(strClassName, ""))
@@ -67,7 +77,7 @@ namespace KerbalFoundries
 		/// <param name="strClassName">(Optional) Name of the specific class that is being logged from.  Does not show if not specified.</param>
 		/// <param name="strMethodName">(Optional) "classname" parameter must be specified!  Name of a specific method being logged from.  Does not show if not specified.</param>
 		/// <remarks>Error log entry.</remarks>
-		public void KFLogError (string strText, string strModName = "Kerbal Foundries", string strClassName = "", string strMethodName = "")
+		public void KFLogError(string strText, string strModName = "Kerbal Foundries", string strClassName = "", string strMethodName = "")
 		{
 			string strOutput = string.Format("[{0}", strModName);
 			if (!Equals(strClassName, ""))
@@ -87,7 +97,7 @@ namespace KerbalFoundries
 		/// <param name="iLogtype">(Optional) The type of log being posted.  Defaults to 0 (standard-level log entry).</param>
 		/// <param name="bFormatted">(Optional) Boolean that tells this method if the text has already been formatted.  Leave empty if you don't know what to do with it.</param>
 		/// <remarks>"logtype" can be an integer of 0, 1, or 2 which corresponds with standard, warning, or error logs respectively.</remarks>
-		public void KFLogIt (string strText, int iLogtype = 0, bool bFormatted = false)
+		public void KFLogIt(string strText, int iLogtype = 0, bool bFormatted = false)
 		{
 			string strOutput;
 			strOutput = !bFormatted ? string.Format("[Kerbal Foundries]: {0}", strText) : strText;
@@ -118,7 +128,7 @@ namespace KerbalFoundries
 		/// <param name="strMethodName">Name of the method to tag this entry for.</param>
 		/// <param name="bTimeStamp">Do we want a time stamp on this line?</param>
 		/// <param name="bOverwriteOldLog">Are we wanting to overwrite any old logs that may be present?</param>
-		public void KFLogToFile (string strText, string strFileName, string strModName = "Kerbal Foundries", string strClassName = "", string strMethodName = "", bool bTimeStamp = false, bool bOverwriteOldLog = false)
+		public void KFLogToFile(string strText, string strFileName, string strModName = "Kerbal Foundries", string strClassName = "", string strMethodName = "", bool bTimeStamp = false, bool bOverwriteOldLog = false)
 		{
 			if (Equals(strFileName, null))
 				strFileName = string.Format("Log-{0}", strModName);

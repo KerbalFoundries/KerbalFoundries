@@ -32,10 +32,8 @@ namespace KerbalFoundries
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
             FindEngine(); 
             if (HighLogic.LoadedSceneIsFlight)
-            {
                 this.part.force_activate();
             }
-        }
 
         public override void OnFixedUpdate()
         { 
@@ -45,16 +43,14 @@ namespace KerbalFoundries
                 batteryRatio = Extensions.GetBattery(this.part);
                 usageAdjustment = (lastRatio - batteryRatio) * reactionSpeed;
                 ratioAdjustment = Mathf.Clamp((targetBatteryRatio - batteryRatio), -0.001f, 0.001f);
-                float tempThrottle = Mathf.Clamp(autoThrottleSetting + ratioAdjustment + usageAdjustment, 0.01f ,1);
+				float tempThrottle = Mathf.Clamp(autoThrottleSetting + ratioAdjustment + usageAdjustment, 0.01f, 1);
                 autoThrottleSetting = tempThrottle;
                 thisEngine.currentThrottle = autoThrottleSetting;
                 lastRatio = batteryRatio;
             }
             else
-            {
                 thisEngine.currentThrottle = Mathf.Lerp((throttleSetting / 100), thisEngine.currentThrottle, Time.deltaTime * 40f);
             }
-        }
 
         public void FindEngine()
         {
@@ -73,7 +69,8 @@ namespace KerbalFoundries
                 throttleSetting += 5f;
                 print("Increasing APU Output");
             }
-        }//End Retract
+		}
+		//End Retract
 
         [KSPAction("APU - output")]
         public void DecreaseAPU(KSPActionParam param)
@@ -83,14 +80,16 @@ namespace KerbalFoundries
                 throttleSetting -= 5f;
                 print("Decreasing APU Output");
             }
-        }//End Retract
+		}
+		//End Retract
 
         [KSPAction("APU Shutdown")]
         public void ShutdownAPU(KSPActionParam param)
         {
             throttleSetting = 0f;
             print("Shutting down APU");
-        }//End Retract
+		}
+		//End Retract
 
         [KSPAction("APU Automatic")]
         public void AutoAPU(KSPActionParam param)

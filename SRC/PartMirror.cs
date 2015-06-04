@@ -71,12 +71,12 @@ namespace KerbalFoundries
             {
                 //SetSide(flightSide); 
                 print("Loaded scene is flight");
-                if (flightSide == left)
+				if (Equals(flightSide, left))
                 {
                     print("Setting LHS");
                     SetSide(left);
                 }
-                if (flightSide == right)
+				if (Equals(flightSide, right))
                 {
                     print("Setting RHS");
                     SetSide(right);
@@ -86,14 +86,14 @@ namespace KerbalFoundries
             print(flightSide);
 
             FindClone();
-            if (clone != null)
+			if (!Equals(clone, null))
             {
                 print("Part is clone");
                 //FindClone(); //make sure we have the clone. No harm in checking again
                 SetSide(clone.cloneSide);
             }
 
-            if (flightSide == "") //check to see if we have a value in persistence
+			if (Equals(flightSide, "")) //check to see if we have a value in persistence
             {
                 print("No flightSide value in persistence. Sertting default");
                 //print(this.part.isClone);
@@ -119,7 +119,7 @@ namespace KerbalFoundries
         {
             foreach (Part potentialMaster in this.part.symmetryCounterparts) //search for parts that might be my symmetry counterpart
             {
-                if (potentialMaster != null) //or we'll get a null-ref
+				if (!Equals(potentialMaster, null)) //or we'll get a null-ref
                 {
                     clone = potentialMaster.Modules.OfType<PartMirror>().FirstOrDefault();
                     //print("found my clone");
@@ -133,10 +133,8 @@ namespace KerbalFoundries
             FindClone();
             SetSide(right);
             if (clone)
-            {
                 clone.SetSide(left);
             }
-        }
 
         [KSPEvent(guiName = "Left", guiActive = false, guiActiveEditor = true)]
         public void LeftSide() //sets this side to left and clone to right
@@ -144,23 +142,21 @@ namespace KerbalFoundries
             FindClone();
             SetSide(left);
             if (clone)
-            {
                 clone.SetSide(right);
             }
-        }
 
         public void SetSide(string side) //accepts the string value
         {
-            if (side == left)
+			if (Equals(side, left))
             {
-                if (mode == scale)
+				if (Equals(mode, scale))
                 {
                     _scale[objectAxisIndex] = Math.Abs(_scale[objectAxisIndex]); // make sure it's positive
                     print(_scale);
                     rootObject.transform.localScale = _scale;
                     //rootObject.transform.localScale = _scale;
                 }
-                else if (mode == move)
+				else if (Equals(mode, move))
                 {
                     rootObject.localPosition = initialPosition;
                     rootObject.transform.Translate(moveAxis * -moveAmount);
@@ -170,16 +166,16 @@ namespace KerbalFoundries
                 Events["LeftSide"].active = false;
                 Events["RightSide"].active = true;
             }
-            if (side == right)
+			if (Equals(side, right))
             {
-                if (mode == scale)
+				if (Equals(mode, scale))
                 {
                     _scale[objectAxisIndex] = -Math.Abs(_scale[objectAxisIndex]); // make sure it's negative
                     print(_scale);
                     rootObject.transform.localScale = _scale;
                     //rootObject.transform.localScale = _scale;
                 }
-                else if (mode == move)
+				else if (Equals(mode, move))
                 {
                     rootObject.localPosition = initialPosition;
                     rootObject.transform.Translate(moveAxis * moveAmount);
