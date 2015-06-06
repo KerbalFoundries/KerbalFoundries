@@ -28,7 +28,9 @@ namespace KerbalFoundries
 		KFModuleWheel _KFModuleWheel;
 		
 		/// <summary>Local copy of the tweakScaleCorrector parameter in the KFModuleWheel module.</summary>
-		public float TSWheelCorrector;
+		private float TSWheelCorrector;
+
+        private int colCount;
 		
 		// Class-wide disabled warnings in SharpDevelop
 		// disable AccessToStaticMemberViaDerivedType
@@ -135,6 +137,7 @@ namespace KerbalFoundries
 		{
 			const string locallog = "OnStart(): ";
 			_KFModuleWheel = part.GetComponentInChildren<KFModuleWheel>();
+            colCount = _KFModuleWheel.wcList.Count;
 			TSWheelCorrector = _KFModuleWheel.tweakScaleCorrector;
 			if (!Equals(TSWheelCorrector, 0))
 				Debug.Log(string.Format("{0}{1}TSWheelCorrector = {2}", logprefix, locallog, TSWheelCorrector));
@@ -199,6 +202,24 @@ namespace KerbalFoundries
 			if (paused || Equals(col.contacts.Length, 0))
 				return;
 
+            int collisionCount = 0;
+            Vector3 collisionAverage = new Vector3(0,0,0); 
+
+            for (int i = 0; i < colCount; i++)
+            {
+                WheelHit hit;
+                bool grounded = _KFModuleWheel.wcList[i].GetGroundHit(out hit);
+                if (grounded)
+                {
+                    collisionAverage += hit.point;
+                    collisionCount++;
+                }
+            }
+            collisionAverage /= collisionCount;
+
+
+			//CollisionInfo cInfo = KFDustFX.GetClosestChild(part, col.contacts[0].point + part.rigidbody.velocity * Time.deltaTime);
+            /*
             var collisions = new Vector3(0, 0, 0);
             var collisionCount = 0;
 
@@ -211,7 +232,10 @@ namespace KerbalFoundries
             CollisionInfo cInfo = GetClosestChild(part, averageCollision + (part.rigidbody.velocity * Time.deltaTime));
 			if (!Equals(cInfo.KFDustFX, null))
 				cInfo.KFDustFX.Scrape(col, averageCollision);
-			Scrape(col, averageCollision);
+             * */
+
+
+            Scrape(col, collisionAverage);
 		}
 		
 		/// <summary>Searches child parts for the nearest instance of this class to the given point.</summary>
