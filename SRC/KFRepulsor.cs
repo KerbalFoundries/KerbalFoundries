@@ -100,7 +100,7 @@ namespace KerbalFoundries
                     wcList.Add(b);
                 }
                 
-                this.part.force_activate(); //force the part active or OnFixedUpate is not called.
+				this.part.force_activate(); // Force the part active or OnFixedUpate is not called.
                 currentRideHeight = Rideheight;
                 UpdateHeight();
 
@@ -118,7 +118,8 @@ namespace KerbalFoundries
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
             //print("max effect power");
             //print(effectPowerMax);
-        }//end start
+		}
+		// End start
 
         /// <summary>A "Shrink" coroutine for steering.</summary>
         IEnumerator Shrink()
@@ -163,7 +164,7 @@ namespace KerbalFoundries
 			if (!Equals(bounds, null))
             {
 				UnityEngine.Object.Destroy(bounds.gameObject);
-                //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
+				//boundsDestroyed = true; // Remove the bounds object to let the wheel colliders take over
                 print("destroying Bounds");
             }
         }
@@ -185,7 +186,7 @@ namespace KerbalFoundries
 
             if (deployed)
             {
-                _MWS.colliderHeight = -2.5f; //reset the height of the water collider that slips away every frame.
+				_MWS.colliderHeight = -2.5f; // Reset the height of the water collider that slips away every frame.
 				float chargeConsumption = appliedRideHeight * (1 + SpringRate) * repulsorCount * Time.deltaTime * chargeConsumptionRate / 4;
                 effectPower = chargeConsumption / effectPowerMax;
 
@@ -266,7 +267,7 @@ namespace KerbalFoundries
                 print("Retracting");
                 UpdateHeight();
             }
-        }//End Retract
+		}
 
         [KSPAction("Extend")]
         public void Extend(KSPActionParam param)
@@ -277,15 +278,13 @@ namespace KerbalFoundries
                 print("Extending");
                 UpdateHeight();
             }
-        }//end Deploy
+		}
 
-		//Addons by Gaalidas
 		[KSPAction("Apply Settings")]
 		public void ApplySettingsAction(KSPActionParam param)
 		{
 			ApplySettings();
-		}//end apply action
-		//End Addons by Gaalidas
+		}
 		
         [KSPEvent(guiActive = true, guiName = "Apply Settings", active = true)]
         public void ApplySettings()
@@ -302,5 +301,7 @@ namespace KerbalFoundries
             }
             UpdateHeight();
         }
-    } //end class
-} //end namespace
+	}
+	// End class
+}
+// End namespace

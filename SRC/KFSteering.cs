@@ -30,7 +30,7 @@ namespace KerbalFoundries
         }
 
         // disable FunctionNeverReturns
-        IEnumerator Steering() //Coroutine for steering
+		IEnumerator Steering() // Coroutine for steering
         {
             while (true)
             {

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine; 
 
 namespace KerbalFoundries
@@ -35,56 +34,48 @@ namespace KerbalFoundries
             rotatorList = rotatorsName.Split(new[] { ',', ' ', '|' }, StringSplitOptions.RemoveEmptyEntries); //Thanks, Mihara!
             targetList = targetName.Split(new[] { ',', ' ', '|' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (HighLogic.LoadedSceneIsEditor && activeEditor)
-            {
+			if ((HighLogic.LoadedSceneIsEditor && activeEditor) || HighLogic.LoadedSceneIsFlight)
                 StartCoroutine(Setup());
             }
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                StartCoroutine(Setup());
-            }
-        }
 
         public void SetupObjects()
         {
-
             print("setup objects");
             rotators.Clear();
             targets.Clear();
             for (int i = 0; i < rotatorList.Count(); i++)
             {
                 rotators.Add(transform.SearchStartsWith(rotatorList[i]));
-                print("iterated rotators " + rotatorList.Count());
+				print(string.Format("iterated rotators {0}", rotatorList.Count()));
             }
             for (int i = 0; i < targetList.Count(); i++)
             {
                 targets.Add(transform.SearchStartsWith(targetList[i]));
-                print("iterated targets " + targetList.Count());
+				print(string.Format("iterated targets {0}", targetList.Count()));
             }
             objectCount = rotators.Count();
 
-            if(objectCount == targets.Count())
-                countAgrees = true;
+			countAgrees |= Equals(objectCount, targets.Count());
         }
 
         IEnumerator Setup()
         {
-            Debug.LogWarning("Waiting a frame " + Time.frameCount);
+			Debug.LogWarning(string.Format("Waiting a frame {0}", Time.frameCount));
             yield return null;
             //Wait a frame for GameObjects to be destroyed. This only happens at the end of a frame,
             //and will be handled by another module - usually KFPartMirror. If we don't wait
             //we will usually find the LHS objects before they are actually destroyed.
 
-
             SetupObjects();
             if (countAgrees)
                 StartCoroutine(Rotator());
+			
             yield break;
         }
 
+		// disable once FunctionNeverReturns
         IEnumerator Rotator()
         {
-                        
             while (true)
             {
                 for (int i = 0; i < objectCount; i++)
@@ -103,7 +94,6 @@ namespace KerbalFoundries
                     if (!float.IsNaN(rotateAngle))
                         rotators[i].Rotate(Vector3.right, rotateAngle);
                 }
-
                 yield return null;
             }
         }

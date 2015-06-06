@@ -11,17 +11,17 @@ namespace KerbalFoundries
         [KSPField]
         public string susTravName = "suspensionTraverse";
         [KSPField]
-        public float mass = 0; //no default
+		public float mass = 0;
         [KSPField]
-        public float radius = 0; //no default
+		public float radius = 0;
         [KSPField]
-        public float suspensionDistance = 0; //no default
+		public float suspensionDistance = 0;
         [KSPField]
-        public float spring = 0; //no default
+		public float spring = 0;
         [KSPField]
-        public float damper = 0; //no default
+		public float damper = 0;
         [KSPField]
-        public float targetPosition = 0; //no default
+		public float targetPosition = 0;
         
         [KSPField]
         public float forExtSlip = 1;
@@ -67,7 +67,7 @@ namespace KerbalFoundries
                     Debug.LogError("wheel collider not found");
             }
 
-            if(HighLogic.LoadedSceneIsFlight)
+			if (HighLogic.LoadedSceneIsFlight)
             {
                 if (moveCollider)
                 {
@@ -80,27 +80,27 @@ namespace KerbalFoundries
                 }
             }
 
-            if (_wheelCollider != null)
+			if (!Equals(_wheelCollider, null))
             {
-                if(mass != 0)
+				if (!Equals(mass, 0))
                     _wheelCollider.mass = mass;
-                if(radius != 0)
+				if (!Equals(radius, 0))
                     _wheelCollider.radius = radius;
-                if (suspensionDistance != 0)
+				if (!Equals(suspensionDistance, 0))
                     _wheelCollider.suspensionDistance = suspensionDistance;
-                if (spring != 0)
+				if (!Equals(spring, 0))
                 {
                     JointSpring js = _wheelCollider.suspensionSpring;
                     js.spring = spring;
                     _wheelCollider.suspensionSpring = js;
                 }
-                if (damper != 0)
+				if (!Equals(damper, 0))
                 {
                     JointSpring js = _wheelCollider.suspensionSpring;
                     js.damper = damper;
                     _wheelCollider.suspensionSpring = js;
                 }
-                if (targetPosition != 0)
+				if (!Equals(targetPosition, 0))
                 { 
                     JointSpring js = _wheelCollider.suspensionSpring;
                     js.targetPosition = targetPosition;

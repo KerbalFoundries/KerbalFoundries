@@ -106,18 +106,18 @@ namespace KerbalFoundries
 		public class CollisionInfo
 		{
 			public KFRepulsorDustFX KFRepDustFX;
-			public CollisionInfo (KFRepulsorDustFX kfrepdustFX)
+			public CollisionInfo(KFRepulsorDustFX kfrepdustFX)
 			{
 				KFRepDustFX = kfrepdustFX;
 			}
 		}
 		
-		public override string GetInfo ()
+		public override string GetInfo()
 		{
 			return partInfoString;
 		}
 		
-		public override void OnStart ( StartState state )
+		public override void OnStart(StartState state)
 		{
 			_KFRepulsor = part.GetComponentInChildren<KFRepulsor>();
 				// This allows me to get the parameter value from the current active part.
@@ -135,7 +135,7 @@ namespace KerbalFoundries
 		}
 		
 		/// <summary>Defines the particle effects used in this module.</summary>
-		void SetupParticles ()
+		void SetupParticles()
 		{
 			const string locallog = "SetupParticles(): ";
 			if (!dustEffects)
@@ -152,41 +152,37 @@ namespace KerbalFoundries
 			Debug.Log(string.Format("{0}{1}Particles have been set up.", logprefix, locallog));
 		}
 		
-		/// <summary>Contains information about what to do when the part enters a collided state.</summary>
-		/// <param name="col">The collider being referenced.</param>
-		public void OnCollisionEnter ( Collision col )
-		{
-			CollisionInfo cInfo;
-			if (col.relativeVelocity.magnitude >= minVelocityMag)
-			{
-				if (Equals(col.contacts.Length, 0))
-					return;
-				cInfo = GetClosestChild(part, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
-			}
-		}
-		
 		/// <summary>Contains information about what to do when the part stays in the collided state over a period of time.</summary>
 		/// <param name="col">The collider being referenced.</param>
-		public void OnCollisionStay ( Collision col )
+		public void OnCollisionStay(Collision col)
 		{
-			CollisionInfo cInfo;
 			if (paused || Equals(col.contacts.Length, 0) || Equals(Rideheight, 0))
-				return;
-			cInfo = KFRepulsorDustFX.GetClosestChild(part, col.contacts[0].point + part.rigidbody.velocity * Time.deltaTime);
+					return;
+		
+			var collisions = new Vector3(0, 0, 0);
+			var collisionCount = 0;
+
+			foreach (ContactPoint cols in col.contacts)
+		{
+				collisions += cols.point;
+				collisionCount++;
+			}
+			Vector3 averageCollision = collisions / collisionCount;
+			CollisionInfo cInfo = GetClosestChild(part, averageCollision + (part.rigidbody.velocity * Time.deltaTime));
 			if (!Equals(cInfo.KFRepDustFX, null))
-				cInfo.KFRepDustFX.Scrape(col);
-			Scrape(col);
+				cInfo.KFRepDustFX.Scrape(col, averageCollision);
+			Scrape(col, averageCollision);
 		}
 		
 		/// <summary>Searches child parts for the nearest instance of this class to the given point.</summary>
 		/// <remarks>
-		/// Parts with "physicsSignificance = 1" have their collisions detected by the parent part.
+		/// Parts without physics have their collisions detected by the parent part.
 		/// To identify which part is the source of a collision, check which part the collision is closest to.
 		/// </remarks>
 		/// <param name="parent">The parent part whose children should be tested.</param>
 		/// <param name="point">The point to test the distance from.</param>
 		/// <returns>The nearest child part with a DustFX module, or null if the parent part is nearest.</returns>
-		static CollisionInfo GetClosestChild ( Part parent, Vector3 point )
+		static CollisionInfo GetClosestChild(Part parent, Vector3 point)
 		{
 			float parentDistance = Vector3.Distance(parent.transform.position, point);
 			float minDistance = parentDistance;
@@ -204,24 +200,25 @@ namespace KerbalFoundries
 					}
 				}
 			}
-			return new CollisionInfo (closestChild);
+			return new CollisionInfo(closestChild);
 		}
 		
 		/// <summary>Called when the part is scraping over a surface.</summary>
 		/// <param name="col">The collider being referenced.</param>
-		public void Scrape ( Collision col )
+		/// <param name="position">The position of this collision event.</param>
+		public void Scrape(Collision col, Vector3 position)
 		{
 			if ((paused || Equals(part, null)) || Equals(part.rigidbody, null) || Equals(col.contacts.Length, 0))
 				return;
-			float m = col.relativeVelocity.magnitude;
-			DustParticles(m, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime), col.collider);
+			float magnitude = col.relativeVelocity.magnitude;
+			DustParticles(magnitude, position + (part.rigidbody.velocity * Time.deltaTime), col.collider);
 		}
 		
 		/// <summary>This creates and maintains the dust particles and their body/biome specific colors.</summary>
 		/// <param name="speed">Speed of the part which is scraping.</param>
 		/// <param name="contactPoint">The point at which the collider and the scraped surface make contact.</param>
 		/// <param name="col">The collider being referenced.</param>
-		void DustParticles ( float speed, Vector3 contactPoint, Collider col )
+		void DustParticles(float speed, Vector3 contactPoint, Collider col)
 		{
 			const string locallog = "DustParticles(): ";
 			if (!dustEffects || speed < minScrapeSpeed || Equals(dustAnimator, null) || Equals(Rideheight, 0))
@@ -234,7 +231,7 @@ namespace KerbalFoundries
 			{
 				if (!Equals(BiomeColor, dustColor))
 				{
-					Color [] colors = dustAnimator.colorAnimation;
+					Color[] colors = dustAnimator.colorAnimation;
 					colors[0] = BiomeColor;
 					colors[1] = BiomeColor;
 					colors[2] = BiomeColor;
@@ -252,21 +249,21 @@ namespace KerbalFoundries
 		}
 		
 		/// <summary>Called when the game enters a "paused" state.</summary>
-		void OnPause ()
+		void OnPause()
 		{
 			paused = true;
 			kfrepdustFx.particleEmitter.enabled = false;
 		}
 		
 		/// <summary>Called when the game leaves a "paused" state.</summary>
-		void OnUnpause ()
+		void OnUnpause()
 		{
 			paused = false;
 			kfrepdustFx.particleEmitter.enabled = true;
 		}
 		
 		/// <summary>Called when the object being referenced is destroyed, or when the module instance is deactivated.</summary>
-		void OnDestroy ()
+		void OnDestroy()
 		{
 			GameEvents.onGamePause.Remove(OnPause);
 			GameEvents.onGameUnpause.Remove(OnUnpause);

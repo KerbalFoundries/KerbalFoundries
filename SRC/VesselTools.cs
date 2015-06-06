@@ -1,7 +1,7 @@
 ﻿/*
  * KSP [0.23.5] Anti-Grav Repulsor plugin by Lo-Fi
  * HUGE thanks to xEvilReeperx for this water code, along with gerneral coding help along the way!
- * 
+ * Still works in 1.0.2!
  */
 
 using System;
@@ -23,33 +23,25 @@ namespace KerbalFoundries
             {
                 partCount++;
                 foreach (RepulsorTest RA in PA.GetComponentsInChildren<RepulsorTest>())
-                {
                     repulsorCount++;
-                }
+
                 foreach (KFRepulsor RA in PA.GetComponentsInChildren<KFRepulsor>())
-                {
                     repulsorCount++;
-                }
 
                 foreach (RepulsorWheel RA in PA.GetComponentsInChildren<RepulsorWheel>())
-                {
                     repulsorCount++;
                 }
-            }
             
             if (repulsorCount > 0)
-            {
                 FlightGlobals.ActiveVessel.rootPart.AddModule("ModuleWaterSlider"); 
             }
         }
-    }
 
     public class ModuleWaterSlider : PartModule
     {
-        GameObject _collider = new GameObject("ModuleWaterSlider.Collider", typeof(BoxCollider), typeof(Rigidbody));
-        //SharpDevelop wants this to be turned into a local constant.
-		//I have resisted as I do not know how that would effect the code. - Gaalidas
-        float triggerDistance = 25f; // avoid moving every frame
+		readonly GameObject _collider = new GameObject("ModuleWaterSlider.Collider", typeof(BoxCollider), typeof(Rigidbody));
+		const float triggerDistance = 25f;
+		// Avoid moving every frame
 
         public float colliderHeight = -2.5f;
 
@@ -58,7 +50,7 @@ namespace KerbalFoundries
             print("WaterSlider start");
 
             var box = _collider.collider as BoxCollider;
-            box.size = new Vector3(300f, .5f, 300f); // probably should encapsulate other colliders in real code
+			box.size = new Vector3(300f, .5f, 300f); // Probably should encapsulate other colliders in real code
 			/*
 			The line above reports that a NullReferenceException will occur when "using memver of a null reference."
 			Might want to look into this.  I's the "box.size" part that it doesn't like, and gives no suggestions
@@ -80,13 +72,13 @@ namespace KerbalFoundries
 
         void UpdatePosition()
         {
-                Vector3d oceanNormal = this.part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
+            Vector3d oceanNormal = this.part.vessel.mainBody.GetSurfaceNVector(vessel.latitude, vessel.longitude);
                 
-                //print(colliderHeight);
-                Vector3 newPosition = (this.part.vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(this.part.vessel.ReferenceTransform.position)-colliderHeight));
-                //newPosition.x -= colliderHeight;
-                _collider.rigidbody.position = newPosition;
-                _collider.rigidbody.rotation = Quaternion.LookRotation(oceanNormal) * Quaternion.AngleAxis(90f, Vector3.right);
+            //print(colliderHeight);
+			Vector3 newPosition = (this.part.vessel.ReferenceTransform.position - oceanNormal * (FlightGlobals.getAltitudeAtPos(this.part.vessel.ReferenceTransform.position) - colliderHeight));
+            //newPosition.x -= colliderHeight;
+            _collider.rigidbody.position = newPosition;
+            _collider.rigidbody.rotation = Quaternion.LookRotation(oceanNormal) * Quaternion.AngleAxis(90f, Vector3.right);
         }
 
         void FixedUpdate()

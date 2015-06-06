@@ -19,11 +19,11 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Group Number"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
         public float groupNumber = 1;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Height"), UI_FloatRange(minValue = 0, maxValue = 32f, stepIncrement = 1f)]
-        public float Rideheight;        //this is what's tweaked by the line above
+		public float Rideheight;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Strength"), UI_FloatRange(minValue = 0, maxValue = 8.00f, stepIncrement = 0.5f)]
-        public float SpringRate;        //this is what's tweaked by the line above
+		public float SpringRate;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "Damping"), UI_FloatRange(minValue = 0, maxValue = 0.6f, stepIncrement = 0.05f)]
-        public float DamperRate;        //this is what's tweaked by the line above
+		public float DamperRate;
         [KSPField]
         public bool deployed;
         [KSPField]
@@ -36,26 +36,25 @@ namespace KerbalFoundries
         public float repulsorCount = 0;
         [KSPField]
         public float chargeConsumptionRate = 1f;
-        //begin start
-        public override void OnStart(PartModule.StartState state)  //when started
+		public override void OnStart(PartModule.StartState state)
         {
-            // degub only: print("onstart");
+			// Debug only: print("onstart");
             base.OnStart(state);
             print(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
             if (HighLogic.LoadedSceneIsEditor)
             {
-                foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
+				foreach (WheelCollider b in part.GetComponentsInChildren<WheelCollider>())
                 {
                     userspring = b.suspensionSpring;
 
-					if (Equals(SpringRate, 0)) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
+					if (Equals(SpringRate, 0)) // Check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
                     {
-                        SpringRate = userspring.spring;                                    //pass to springrate to be used in the GUI
+						SpringRate = userspring.spring; // Pass to springrate to be used in the GUI
                         DamperRate = userspring.damper;
                         Rideheight = b.suspensionDistance;
                     }
-                    else //set the values from those stored in persistance
+					else // Set the values from those stored in persistance
                     {
                         userspring.spring = SpringRate;
                         userspring.damper = DamperRate;
@@ -68,7 +67,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                foreach (WheelCollider b in this.part.GetComponentsInChildren<WheelCollider>())
+				foreach (WheelCollider b in part.GetComponentsInChildren<WheelCollider>())
                 {
                     repulsorCount += 1;
                     userspring = b.suspensionSpring;
@@ -86,12 +85,13 @@ namespace KerbalFoundries
             effectPowerMax = 1 * repulsorCount * chargeConsumptionRate * Time.deltaTime;
             print("max effect power");
             print(effectPowerMax);
+		}
+		// End start
 
-        }//end start 
         public void DestroyBounds()
         {
             Transform bounds = transform.Search("Bounds");
-            if (bounds != null)
+			if (!Equals(bounds, null))
             {
                 UnityEngine.Object.Destroy(bounds.gameObject);
                 //boundsDestroyed = true; //remove the bounds object to let the wheel colliders take over
@@ -129,9 +129,7 @@ namespace KerbalFoundries
                 }
             }
             else
-            {
                 effectPower = 0;
-            }
             RepulsorSound();
             print(effectPower);
         }
@@ -141,7 +139,6 @@ namespace KerbalFoundries
             foreach (WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
             {
                 wc.suspensionDistance = Rideheight;
-
                 if (Rideheight < 0.5f)
                 {
                     wc.enabled = false;
@@ -164,7 +161,8 @@ namespace KerbalFoundries
                 print("Retracting");
                 UpdateCollider();
             }
-        }//End Retract
+		}
+		// End Retract
 
         [KSPAction("Extend")]
         public void Extend(KSPActionParam param)
@@ -175,14 +173,15 @@ namespace KerbalFoundries
                 print("Extending");
                 UpdateCollider();
             }
-        }//end Deploy
+		}
+		// End Deploy
 
         [KSPEvent(guiActive = true, guiName = "Apply Settings", active = true)]
         public void ApplySettings()
         {
-            foreach (RepulsorTest mt in this.vessel.FindPartModulesImplementing<RepulsorTest>())
+			foreach (RepulsorTest mt in vessel.FindPartModulesImplementing<RepulsorTest>())
             {
-                if (groupNumber != 0 && groupNumber == mt.groupNumber)
+				if (!Equals(groupNumber, 0) && Equals(groupNumber, mt.groupNumber))
                 {
                     mt.Rideheight = Rideheight;
                     mt.UpdateCollider();
@@ -190,5 +189,7 @@ namespace KerbalFoundries
             }
             UpdateCollider();
         }
-    }//end class
-} //end namespace
+	}
+	// End class
+}
+// End namespace

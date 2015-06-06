@@ -27,7 +27,7 @@ namespace KerbalFoundries
 
         public float TargetPosition;
         
-        //steeringstuff
+		// Steeringstuff
         public Transform steeringFound;
         public Transform smoothSteering;
 
@@ -40,8 +40,8 @@ namespace KerbalFoundries
         public float frontToBack;
         public float midToFore;
         public float offset;
-        public float myPositionx; //debug only
-        public float myPositionz; //debug only
+		public float myPositionx;
+		public float myPositionz;
         public float myPosition;
         public float myAdjustedPosition;
 
@@ -50,7 +50,7 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiName = "Steering Ratio.Abs", guiFormat = "F1")]
         public float steeringRatioAbsolute;
         [KSPField]
-        public float angle=.5f;
+		public float angle = 0.5f;
         [KSPField(isPersistant = true, guiActive = true, guiName = "Steering Angle", guiFormat = "F1")]
         public float steeringAngle;
         [KSPField(isPersistant = true, guiActive = true, guiName = "Crab Angle", guiFormat = "F1")]
@@ -58,10 +58,10 @@ namespace KerbalFoundries
         [KSPField(isPersistant = true, guiActive = true, guiName = "Rotation Angle", guiFormat = "F1")]
         public float rotationAngle;
 
-        //begin start
-        public override void OnStart(PartModule.StartState state)  //when started
+		// Begin start
+		public override void OnStart(PartModule.StartState state)  // When started
         {
-            thiswheelCollider = part.gameObject.GetComponentInChildren<WheelCollider>();   //find the 'wheelCollider' gameobject named by KSP convention.
+			thiswheelCollider = part.gameObject.GetComponentInChildren<WheelCollider>();   // Find the 'wheelCollider' gameobject named by KSP convention.
             mywc = thiswheelCollider.GetComponent<WheelCollider>();
             userspring = mywc.suspensionSpring;
             // degub only: print("onstart");
@@ -74,7 +74,7 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsEditor)
             {
-				if (Equals(SpringRate, 0)) //check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
+				if (Equals(SpringRate, 0)) // Check if a value exists already. This is important, because if a wheel has been tweaked from the default value, we will overwrite it!
                 {
                     print("part creation");
                     //thiswheelCollider = part.gameObject.GetComponentInChildren<WheelCollider>();   //find the 'wheelCollider' gameobject named by KSP convention.
@@ -89,14 +89,14 @@ namespace KerbalFoundries
 
             if (HighLogic.LoadedSceneIsFlight)
             {
-                this.part.force_activate(); //force the part active or OnFixedUpate is not called
-                //Start of initial proportional steering routine
+				this.part.force_activate(); // Force the part active or OnFixedUpate is not called
+				// Start of initial proportional steering routine
 
                 myPosition = this.part.orgPos.y;
                 myPositionx = this.part.orgPos.x;
                 myPositionz = this.part.orgPos.z;
 
-                //find positions
+				// Find positions
                 frontWheel = this.part.orgPos.y; //values for forwe and aftmost wheels
                 rearWheel = this.part.orgPos.y;
 
@@ -114,7 +114,7 @@ namespace KerbalFoundries
                     }
                 }
 
-                //grab this one to compare
+				// Grab this one to compare
                 frontToBack = frontWheel - rearWheel; //distance front to back wheel
                 midToFore = frontToBack / 2;
                 offset = (frontWheel + rearWheel) / 2; //here is the problem
@@ -126,13 +126,15 @@ namespace KerbalFoundries
                 //{
                   //  steeringRatio /= -1; //if it's negative
                 //}
-            }//end isInFlight
-        }//end start
+			}
+			// End isInFlight
+		}
+		// End start
 
         public override void OnFixedUpdate()
         {
             //smoothSteering.transform.rotation = Quaternion.Lerp(steeringFound.transform.rotation, smoothSteering.transform.rotation, Time.deltaTime * smoothSpeed);
-            //above is original code for smoothing steering input. Depracated.
+			// Above is original code for smoothing steering input. Depracated.
             bool left = Input.GetKey(KeyCode.A);
             bool right = Input.GetKey(KeyCode.D);
             bool crabLeft = Input.GetKey(KeyCode.J);
@@ -158,10 +160,13 @@ namespace KerbalFoundries
                 crabAngle += angle;
                 //smoothSteering.transform.Rotate(Vector3.up, angle);
             }
-            rotationAngle = crabAngle + (((steeringAngle * (float)Math.Cos(Mathf.Deg2Rad * crabAngle)) *steeringRatio) + ((steeringAngle * (float)Math.Sin(Mathf.Deg2Rad * crabAngle) * 0.2f) )* steeringRatioAbsolute);
+			rotationAngle = crabAngle + (((steeringAngle * (float)Math.Cos(Mathf.Deg2Rad * crabAngle)) * steeringRatio) + ((steeringAngle * (float)Math.Sin(Mathf.Deg2Rad * crabAngle) * 0.2f)) * steeringRatioAbsolute);
             Vector3 tempVector = smoothSteering.transform.localEulerAngles;
             tempVector.y = rotationAngle;
             smoothSteering.transform.localEulerAngles = tempVector;
-        } //end OnFixedUpdate 
-    } //end class
-} //end namespace
+		}
+		// End OnFixedUpdate
+	}
+	// End class
+}
+// End namespace

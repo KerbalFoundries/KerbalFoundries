@@ -41,18 +41,18 @@ namespace KerbalFoundries
         public static float GetBattery(Part part)
         {
             PartResourceDefinition resourceDefinitions = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
-            var resources = new List<PartResource>(); // This was a suggestion from SharpDevelop. - Gaalidas
+			var resources = new List<PartResource>();
             //List<PartResource> resources = new List<PartResource>();
             part.GetConnectedResources(resourceDefinitions.id, resourceDefinitions.resourceFlowMode, resources);
-            var ratio = (float) resources.Sum(r => r.amount) /(float) resources.Sum(r => r.maxAmount);
+			var ratio = (float)resources.Sum(r => r.amount) / (float)resources.Sum(r => r.maxAmount);
             return ratio;
         }
 
         public static int SetAxisIndex(string axisString)
         {
-            int index = 1; //default to Y
-			// Apparently this is a more efficient way of handing this stuff. - Gaalidas
-			switch (axisString) {
+			int index = 1; // Default to Y
+			switch (axisString)
+			{
 				case "x":
 				case "X":
                 	index = 0;
@@ -65,13 +65,17 @@ namespace KerbalFoundries
 				case "Z":
                 	index = 2;
 					break;
+				default: // Supposedly it's a good idea to always provide a default in these switches. - Gaalidas
+					index = 1;
+					break;
 			}
             return index;
         }
 
-        public static void PlaySound(Part parta, string effectName, float effectPower)
+		// I had to rename "parta" to "thePart" so it wouldn't look so much like a typo.
+		public static void PlaySound(Part thePart, string effectName, float effectPower)
         {
-            parta.Effect(effectName, effectPower);
+			thePart.Effect(effectName, effectPower);
         }
 
         public static void DisableAnimateButton(Part part)
@@ -103,7 +107,6 @@ namespace KerbalFoundries
 
         public static string GetLast(this string source, int tail_length)
         {
-		// Another conversion to a single-line from a previous if/then/else check. - Gaalidas
 			return tail_length >= source.Length ? source : source.Substring(source.Length - tail_length);
         }
     }

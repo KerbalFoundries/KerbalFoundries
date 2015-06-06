@@ -9,17 +9,15 @@ namespace KerbalFoundries
 {
     public class KFCouplingHitch : PartModule
     {
-    	// disable ConvertToConstant.Local
-    	
         bool isReady;
-        bool sentOnRails; // Reports that it is never used.
+		bool sentOnRails;
         //[KSPField(isPersistant = true)]
         public bool isHitched;
         [KSPField]
         public string hitchObjectName;
         
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Coupling Force"), UI_FloatRange(minValue = 0, maxValue = 10f, stepIncrement = 1f)]
-        float forceMultiplier = 1;
+		const float forceMultiplier = 1;
         
         [KSPField]
         public string hitchLinkName;
@@ -51,10 +49,10 @@ namespace KerbalFoundries
         public bool inWarp = true;
 
         [KSPField(isPersistant = true)]
-        public Vector3 _trailerPosition = new Vector3(0,0,0);
+		public Vector3 _trailerPosition = new Vector3(0, 0, 0);
 
         GameObject _targetObject;
-        [KSPField(isPersistant = true,guiActive = true, guiName = "Target Object Name")]
+		[KSPField(isPersistant = true, guiActive = true, guiName = "Target Object Name")]
         public string _targetObjectName;
         [KSPField]
         public float moveSpeed = 1f;
@@ -72,7 +70,8 @@ namespace KerbalFoundries
         FixedJoint _StaticJoint;
         Rigidbody _rbLink;
         Vector3 _LinkRotation;
-        Vector3 tempPosition; // Reports that it is never used.
+		Vector3 tempPosition;
+		// Reports that it is never used.
         [KSPField]
         public int layerMask = 0;
         [KSPField(guiName = "Ray", guiActive = true)]
@@ -93,10 +92,10 @@ namespace KerbalFoundries
 
         public void VesselPack(Vessel vessel)
         {
-            if (vessel == this.vessel)
+			if (Equals(vessel, this.vessel))
             {
                 sentOnRails = true;
-                Debug.LogError("hitch state is " + isHitched);
+				Debug.LogError(string.Format("hitch state is {0}", isHitched));
                 //_targetPart.rigidbody.isKinematic = true;
                 //_targetPart.transform.parent = this.part.transform;
             }
@@ -105,32 +104,31 @@ namespace KerbalFoundries
         public void VesselUnPack(Vessel vessel)
         {
             Debug.LogWarning("FlightChecker started");
-            if (vessel == this.vessel)
+			if (Equals(vessel, this.vessel))
                 StartCoroutine("WaitAndAttach");
         }
 
-        private IEnumerator WaitAndAttach() //Part partToAttach, Vector3 position, Quaternion rotation, Part toPart = null
+		IEnumerator WaitAndAttach() //Part partToAttach, Vector3 position, Quaternion rotation, Part toPart = null
         {
 
             Debug.Log("Wait for FixedUpdate");
             yield return new WaitForFixedUpdate();
-            Debug.LogError("saved hitch state" + savedHitchState);
+			Debug.LogError(string.Format("saved hitch state{0}", savedHitchState));
 
-            if (_Link.GetComponent<Rigidbody>() != null)
+			if (!Equals(_Link.GetComponent<Rigidbody>(), null))
                 Debug.LogWarning("Link has rigidbody");
-            if (_Link.GetComponent<Rigidbody>() == null)
+			if (Equals(_Link.GetComponent<Rigidbody>(), null))
                 Debug.LogError("Link has no Rigidbosy");
             
-            if (savedHitchState && _Link.GetComponent<Rigidbody>() == null)
+			if (savedHitchState && Equals(_Link.GetComponent<Rigidbody>(), null))
             {
                 Debug.LogWarning("Was previously hitched at last save");
-                print("Taget flightID " + _flightID);
-                print("Compare ID with flight ID " + uint.Parse(_flightID));
+				print(string.Format("Taget flightID {0}", _flightID));
+				print(string.Format("Compare ID with flight ID {0}", uint.Parse(_flightID)));
                 foreach (Part pa in FindObjectsOfType(typeof(Part)) as Part[])
                 {
-                    print("found part with flight ID " + pa.flightID);
+					print(string.Format("found part with flight ID {0}", pa.flightID));
                     
-
                     if (pa.flightID.Equals(uint.Parse(_flightID)))
                     {
                         //UnHitch(); //just in case, by some miracle, we're hitched already
@@ -141,9 +139,9 @@ namespace KerbalFoundries
                         _rb = pa.rigidbody;
 
                         Debug.LogWarning("Found hitchObject from persistence");
-                        if(Vector3.Distance(_targetObject.transform.position, _hitchObject.transform.position) > 0.1f)
+						if (Vector3.Distance(_targetObject.transform.position, _hitchObject.transform.position) > 0.1f)
                         {
-                            
+                            // Empty!
                         }
                         _targetObject.transform.position = _hitchObject.transform.position;
                         Debug.LogWarning("Put objects in correct position");
@@ -154,7 +152,7 @@ namespace KerbalFoundries
                     }
                 }
             }
-            else //string is nullorempty 
+			else // String is nullorempty 
                 Debug.LogError("Not previously hitched or hitch already in place");
             isReady = true;
         }
@@ -179,7 +177,7 @@ namespace KerbalFoundries
         {
             warpRate = TimeWarp.CurrentRate;
             warpIndex = TimeWarp.CurrentRateIndex;
-            if (TimeWarp.CurrentRateIndex != 0)
+			if (!Equals(TimeWarp.CurrentRateIndex, 0))
             {/*
                 print("warp rate changed and greater than one");
                 //UnHitch();
@@ -196,7 +194,7 @@ namespace KerbalFoundries
 
                 CreateStaticJoint(coupledPart);
                 print("created static joint");
-              * */
+              */
                 //_targetVessel.flightIntegrator.enabled = false;
 
                 //FlightGlobals.overrideOrbit = true;
@@ -208,7 +206,7 @@ namespace KerbalFoundries
                     _trailerFix.transform.parent = this.part.transform;
                     FlightGlobals.overrideOrbit = true;
                     //_trailerPosition = _targetVessel.transform.position;
-                    // Debug.LogError("Relative position " + _trailerPosition);
+					//Debug.LogError("Relative position " + _trailerPosition);
                     DebugLine(_trailerFix.transform.position, _targetVessel.transform.right);
                 }
                 inWarp = true;
@@ -269,7 +267,7 @@ namespace KerbalFoundries
 
 				#if Debug
                 Debug.LogWarning("Configured linear...");
-				#endif //set up X limits
+				#endif // Set up X limits
                 SoftJointLimit sjl;
                 sjl = _HitchJoint.highAngularXLimit;
                 sjl.limit = xLimitHigh;
@@ -278,11 +276,11 @@ namespace KerbalFoundries
                 sjl.limit = -xLimitLow;
                 _HitchJoint.lowAngularXLimit = sjl;
 
-                //set up Y limits
+				// Set up Y limits
                 sjl = _HitchJoint.angularYLimit;
                 sjl.limit = yLimit;
                 _HitchJoint.angularYLimit = sjl;
-                //set up Z limitssssssa
+				// Set up Z limitssssssa
                 sjl = _HitchJoint.angularZLimit;
                 sjl.limit = zLimit;
                 _HitchJoint.angularZLimit = sjl;
@@ -505,7 +503,7 @@ namespace KerbalFoundries
             RayCast(rayDistance);
             bool brakesOn = FlightGlobals.ActiveVessel.ActionGroups[KSPActionGroup.Brakes];
 
-            if(isHitched)
+			if (isHitched)
             {
                 _targetVessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, brakesOn);
                 _trailerPosition = _targetVessel.transform.position;
@@ -569,7 +567,9 @@ namespace KerbalFoundries
                     //print("Hit " + hit.collider.gameObject.name);
                     //}
                 }
-                catch (NullReferenceException) { }
+				catch (NullReferenceException)
+				{
+				}
             }
             else
             {

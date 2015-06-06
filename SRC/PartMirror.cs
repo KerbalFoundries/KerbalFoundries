@@ -7,8 +7,6 @@ namespace KerbalFoundries
     public class PartMirror : PartModule
     {
         Transform rootObject;
-		// SharpDevelop wants me to turn these into "const" types.
-		// Unsure if that would change anything.  Local compile seemed okay with it. - Gaalidas
         const string right = "right";
         const string left = "left";
         const string swap = "swap";
@@ -45,23 +43,20 @@ namespace KerbalFoundries
 
             rootObject = transform.Search(rootObjectName);
             //rootObject = this.part.transform;
-            if(rootObject == null)
+			if (Equals(rootObject, null))
                 print("did not find root part");
             _scale = rootObject.transform.localScale;
             if (!alreadyConfigured)
-            {
-                
                 initialPosition = rootObject.transform.localPosition;
-            }
             alreadyConfigured = true;
 
-            if (flightSide == "") //check to see if we have a value in persistence
+			if (Equals(flightSide, "")) // Check to see if we have a value in persistence
             {
                 print("No flightSide value in persistence. Setting default");
                 //print(this.part.isClone);
                 SetSide(left);
             }
-            else //flightSide has a value, so set it.
+			else // FlightSide has a value, so set it.
             {
                 print("Setting value from persistence");
                 SetSide(flightSide);
@@ -89,17 +84,17 @@ namespace KerbalFoundries
 			if (!Equals(clone, null))
             {
                 print("Part is clone");
-                //FindClone(); //make sure we have the clone. No harm in checking again
+				//FindClone(); // Make sure we have the clone. No harm in checking again
                 SetSide(clone.cloneSide);
             }
 
-			if (Equals(flightSide, "")) //check to see if we have a value in persistence
+			if (Equals(flightSide, "")) // Check to see if we have a value in persistence
             {
                 print("No flightSide value in persistence. Sertting default");
                 //print(this.part.isClone);
                 LeftSide();
             }
-            else //flightSide has a value, so set it.
+			else // FlightSide has a value, so set it.
             {
                 print("Setting value from persistence");
                 SetSide(flightSide);
@@ -117,7 +112,7 @@ namespace KerbalFoundries
 
         public void FindClone()
         {
-            foreach (Part potentialMaster in this.part.symmetryCounterparts) //search for parts that might be my symmetry counterpart
+            foreach (Part potentialMaster in part.symmetryCounterparts) //search for parts that might be my symmetry counterpart
             {
 				if (!Equals(potentialMaster, null)) //or we'll get a null-ref
                 {
@@ -127,6 +122,7 @@ namespace KerbalFoundries
             }
         }
 
+        /// <summary>Sets this side to right and clone to left.</summary>
         [KSPEvent(guiName = "Right", guiActive = false, guiActiveEditor = true)]
         public void RightSide()
         {
@@ -136,8 +132,9 @@ namespace KerbalFoundries
                 clone.SetSide(left);
             }
 
+        /// <summary>Sets this side to left and clone to right.</summary>
         [KSPEvent(guiName = "Left", guiActive = false, guiActiveEditor = true)]
-        public void LeftSide() //sets this side to left and clone to right
+        public void LeftSide() // Sets this side to left and clone to right
         {
             FindClone();
             SetSide(left);
@@ -186,8 +183,10 @@ namespace KerbalFoundries
                 Events["RightSide"].active = false;
             }
         }
-    }//end class
-}//end namespace
+    }
+    // End class
+}
+// End namespace
 
 /*
 

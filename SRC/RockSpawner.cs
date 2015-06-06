@@ -12,7 +12,7 @@ namespace KerbalFoundries
         Transform _spawnPosition;
 
         [KSPField]
-        public string spawnObject;// "NASAmission/Parts/PotatoRoid/PotatoRoid"
+        public string spawnObject; // "NASAmission/Parts/PotatoRoid/PotatoRoid" (kinda obsolete now)
 
         [KSPField]
         public string spawnPoint;
@@ -23,6 +23,7 @@ namespace KerbalFoundries
         {
             if (HighLogic.LoadedSceneIsFlight)
             {
+            	//Nothing here?
             }
             base.OnStart(state);
         }
@@ -31,7 +32,7 @@ namespace KerbalFoundries
         public void SpawnRock()
         {
             _spawnPosition = this.part.FindModelTransform(spawnPoint);
-                Debug.LogWarning("RockSpawner");
+            Debug.LogWarning("RockSpawner");
 
             GameObject _rockPrefab = GameDatabase.Instance.GetModel(spawnObject);
             _rockPrefab.SetActive(true);
@@ -43,7 +44,7 @@ namespace KerbalFoundries
             rb.mass = 0.01f;
             rb.angularDrag = 5f;
             
-                Debug.LogWarning("rigidbody added");
+            Debug.LogWarning("rigidbody added");
             /*
             var _rockCollider = _rockPrefab.transform.Search("potatoroid");
             MeshCollider _meshC = _rockCollider.gameObject.AddComponent(typeof(MeshCollider)) as MeshCollider;
@@ -64,20 +65,20 @@ namespace KerbalFoundries
             */
  
             _rockPrefab.SetActive(false);
-                Debug.LogWarning("Friction set");
-                //Part rock = FlightIntegrator.Instantiate(_rockPrefab, _spawnPosition.transform.position, new Quaternion(0, 0, 0, 0)) as Part;
+            Debug.LogWarning("Friction set");
+            //Part rock = FlightIntegrator.Instantiate(_rockPrefab, _spawnPosition.transform.position, new Quaternion(0, 0, 0, 0)) as Part;
             var rock = (GameObject)Instantiate(_rockPrefab, _spawnPosition.transform.position, new Quaternion(0, 0, 0, 0));
-                Debug.LogWarning("Object instantiated");
+            Debug.LogWarning("Object instantiated");
             rock.gameObject.AddComponent<physicalObject>();
             //var _rockEnhancer = rock.gameObject.AddComponent<CollisionEnhancer>();
             //_rockEnhancer.part = rock.;
             Debug.LogWarning("rock set");
             
             rock.gameObject.SetActive(true);
-                //Debug.LogWarning("Object activated");
+            //Debug.LogWarning("Object activated");
 
-            GameObject.Destroy(_rockPrefab);
-                Debug.LogWarning("Prefab destroyed");
+            UnityEngine.Object.Destroy(_rockPrefab);
+            Debug.LogWarning("Prefab destroyed");
         }
     }
 }

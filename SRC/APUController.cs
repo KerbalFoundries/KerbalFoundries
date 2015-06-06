@@ -8,7 +8,7 @@ namespace KerbalFoundries
     class APUController : PartModule
     {
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Throttle"), UI_FloatRange(minValue = 0, maxValue = 100, stepIncrement = 5f)]
-        public float throttleSetting = 50;        //this is what's tweaked by the line above
+		public float throttleSetting = 50;
         public ModuleEngines thisEngine;
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Mode"), UI_Toggle(disabledText = "Manual", enabledText = "Auto")]
         public bool autoThrottle = true;

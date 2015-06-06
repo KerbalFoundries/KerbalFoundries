@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -13,7 +11,7 @@ namespace KerbalFoundries
         [KSPField]
         public float rotationSpeed;
         [KSPField]
-        public Vector3 rotationAxis = new Vector3(0,0,1);
+		public Vector3 rotationAxis = new Vector3(0, 0, 1);
         Transform _wheel;
         bool isReady;
         KFModuleWheel _ModuleWheel;
@@ -41,7 +39,7 @@ namespace KerbalFoundries
             if (!isReady)
                 return;
             float _steeringRatio = _ModuleWheel.steeringRatio;
-            var _rotate = (this.vessel.ctrlState.wheelThrottle * - _ModuleWheel.directionCorrector) + this.vessel.ctrlState.wheelSteer;
+			var _rotate = (this.vessel.ctrlState.wheelThrottle * -_ModuleWheel.directionCorrector) + this.vessel.ctrlState.wheelSteer;
             _wheel.transform.Rotate(rotationAxis, _rotate * rotationSpeed);
         }
     }

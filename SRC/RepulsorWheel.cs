@@ -37,29 +37,24 @@ namespace KerbalFoundries
         //ModuleWaterSlider mws;
         KFModuleWheel _moduletrack;
 
-        //begin start
-        public override void OnStart(PartModule.StartState state)  //when started
+		public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
             
             if (HighLogic.LoadedSceneIsEditor)
-            {
-                foreach (ModuleAnimateGeneric ma in this.part.FindModulesImplementing<ModuleAnimateGeneric>())
+				foreach (ModuleAnimateGeneric ma in part.FindModulesImplementing<ModuleAnimateGeneric>())
                 {
                     ma.Actions["ToggleAction"].active = false;
                     ma.Events["Toggle"].guiActive = false;
                     ma.Events["Toggle"].guiActiveEditor = false;
                 }
-            }
 
-            if(HighLogic.LoadedSceneIsFlight)
+			if (HighLogic.LoadedSceneIsFlight)
             {
                 print("Repulsor Wheel started");
 
-                foreach (ModuleAnimateGeneric ma in this.part.FindModulesImplementing<ModuleAnimateGeneric>())
-                {
+				foreach (ModuleAnimateGeneric ma in part.FindModulesImplementing<ModuleAnimateGeneric>())
                     ma.Events["Toggle"].guiActive = false;
-                }
 
                 _moduletrack = this.part.GetComponentInChildren<KFModuleWheel>();
                 _moduletrack.Events["ApplySettings"].guiActive = false;
@@ -75,10 +70,8 @@ namespace KerbalFoundries
                 //AR.wcList = rcList;
                 //AR.repulsorCount = rcList.Count();
 
-                foreach(WheelCollider wc in this.part.GetComponentsInChildren<WheelCollider>())
-                {
+				foreach (WheelCollider wc in part.GetComponentsInChildren<WheelCollider>())
                     wcList.Add(wc);
-                }
 
                 for (int i = 0; i < wcList.Count(); i++)
                 {
@@ -93,8 +86,10 @@ namespace KerbalFoundries
                     UpdateColliders("wheel");
                 effectPowerMax = 1 * chargeConsumptionRate * Time.deltaTime;
                 print(effectPowerMax);
-            }//end isInFlight
-        }//end start
+			}
+			// End isInFlight
+		}
+		// End start
 
         public override void OnUpdate()
         {
@@ -123,9 +118,8 @@ namespace KerbalFoundries
                 }
             }
             else
-            {
                 effectPower = 0;
-            }
+			
             RepulsorSound();
             effectPower = 0;    //reset to make sure it doesn't play when it shouldn't.
             //print(effectPower);
@@ -138,16 +132,15 @@ namespace KerbalFoundries
 
         public void UpdateColliders(string mode)
         {
-            if (mode == "repulsor")
+			switch (mode)
             {
-                //mws.colliderHeight = 3f;
-                if(lowEnergy)
+				case "repulsor":
+					if (lowEnergy)
                     return;
                 _moduletrack.UpdateColliders("retract");
                 _moduletrack.currentRideHeight = repulsorHeight * replusorHeightMultiplier;
                 repulsorMode = true;
-                
-                for(int i = 0; i < wcList.Count(); i++)
+					for (int i = 0; i < wcList.Count(); i++)
                 {
                     //wcList[i].suspensionDistance = wcList[i].suspensionDistance * 2f;
                     WheelFrictionCurve wf = wcList[i].forwardFriction;
@@ -157,16 +150,12 @@ namespace KerbalFoundries
                     wf.stiffness = 0;
                     wcList[i].sidewaysFriction = wf;
                 }
-            }
-            else if (mode == "wheel")
-            {
-                //mws.colliderHeight = 10;
+					break;
+				case "wheel":
                 _moduletrack.currentRideHeight = _moduletrack.rideHeight;
                 _moduletrack.smoothedRideHeight = _moduletrack.currentRideHeight;
                 _moduletrack.UpdateColliders("deploy");
-
                 repulsorMode = false;
- 
                 for (int i = 0; i < wcList.Count(); i++)
                 {
                     //wcList[i].suspensionDistance = susDistList[i];
@@ -179,35 +168,32 @@ namespace KerbalFoundries
                     //wcList[i].enabled = false;
                     //wcList[i].enabled = true;
                 }
-            }
-            
-            else
-            {
+					break;
+				default:
                 print("incorrect command passed to UpdateColliders");
+					break;
             }
         }
 
         [KSPEvent(guiActive = true, guiName = "Apply Repulsor Settings", active = true)]
         public void ApplySettings()
         {
-            foreach (KFModuleWheel mt in this.vessel.FindPartModulesImplementing<KFModuleWheel>())
+			foreach (KFModuleWheel mt in vessel.FindPartModulesImplementing<KFModuleWheel>())
             {
-                //if (!_moduletrack.isRetracted)   //normally the button would be disabled in the wheel is retracted.
+				//if (!_moduletrack.isRetracted)   // Normally the button would be disabled in the wheel is retracted.
                 //    _moduletrack.ApplySettings(); 
                 if (!Equals(_moduletrack.groupNumber, 0) && Equals(_moduletrack.groupNumber, mt.groupNumber))
                 {
-                    if (repulsorMode)               //similiarly, only apply settings when inreplusor mode.
+					if (repulsorMode) // Similiarly, only apply settings when inreplusor mode.
                     {
                         _moduletrack.currentRideHeight = repulsorHeight * replusorHeightMultiplier;
                         mt.currentRideHeight = repulsorHeight * replusorHeightMultiplier;
                     }
                 }
             }
-            foreach (RepulsorWheel rw in this.vessel.FindPartModulesImplementing<RepulsorWheel>())
-            {
+			foreach (RepulsorWheel rw in vessel.FindPartModulesImplementing<RepulsorWheel>())
                     rw.repulsorHeight = repulsorHeight;
             }
-        }
 
         [KSPAction("Toggle Modes")]
         public void AGToggleDeployed(KSPActionParam param)
@@ -216,15 +202,16 @@ namespace KerbalFoundries
                 toWheel(param);
             else
                 toRepulsor(param);
-        }//End Deploy toggle
+		}
+		// End Deploy toggle
        
         public void PlayAnimation()
         {
-            // note: assumes one ModuleAnimateGeneric (or derived version) for this part
-            // if this isn't the case, needs fixing
+			// Note: assumes one ModuleAnimateGeneric (or derived version) for this part.
+			// If this isn't the case, needs fixing
             ModuleAnimateGeneric myAnimation = part.FindModulesImplementing<ModuleAnimateGeneric>().SingleOrDefault();
             if (!myAnimation)
-                return; //the Log.Error line fails syntax check with 'The name 'Log' does not appear in the current context.
+				return; // The Log.Error line fails syntax check with 'The name 'Log' does not appear in the current context.
                     myAnimation.Toggle();
             }
 
@@ -237,8 +224,8 @@ namespace KerbalFoundries
                 repulsorMode = false;
                 UpdateColliders("wheel");
             }
-
-        }//end Deploy All
+		}
+		// End Deploy All
 
         [KSPAction("Repulsor Mode")]
         public void toRepulsor(KSPActionParam param)
@@ -251,6 +238,9 @@ namespace KerbalFoundries
                     repulsorMode = true;
                     UpdateColliders("repulsor");
                 }
-        }//end Deploy All
-    }//end class
-} //end namespace
+		}
+		// End Deploy All
+	}
+	// End class
+}
+// End namespace

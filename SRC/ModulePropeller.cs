@@ -15,19 +15,17 @@ namespace KerbalFoundries
             print("ModulePropeller called");
             base.OnStart(state);
             if (HighLogic.LoadedSceneIsFlight) 
-            {
-                master = this.part.GetComponentInChildren<KFModuleWheel>();
+				master = part.GetComponentInChildren<KFModuleWheel>();
             }
-        }
 
         public override void OnUpdate()
         {
             base.OnUpdate();
-            if (this.part.Splashed)
+			if (part.Splashed)
             {
-                float forwardPropellorForce = master.directionCorrector * propellerForce * this.vessel.ctrlState.wheelThrottle;
-                float turningPropellorForce = (propellerForce / 3) * this.vessel.ctrlState.wheelSteer;
-                part.rigidbody.AddForce(this.part.GetReferenceTransform().forward * (forwardPropellorForce - turningPropellorForce));
+				float forwardPropellorForce = master.directionCorrector * propellerForce * vessel.ctrlState.wheelThrottle;
+				float turningPropellorForce = (propellerForce / 3) * vessel.ctrlState.wheelSteer;
+				part.rigidbody.AddForce(part.GetReferenceTransform().forward * (forwardPropellorForce - turningPropellorForce));
             }
         }
     }

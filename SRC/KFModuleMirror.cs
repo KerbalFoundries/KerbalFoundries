@@ -37,8 +37,8 @@ namespace KerbalFoundries
 
             leftList = leftObjectName.Split(new[] { ',', ' ', '|' }, StringSplitOptions.RemoveEmptyEntries); //Thanks, Mihara!
             rightList = rightObjectName.Split(new[] { ',', ' ', '|' }, StringSplitOptions.RemoveEmptyEntries);
-            Debug.LogError(leftList[0] + " " + leftList.Count());
-            Debug.LogError(rightList[0]+ " " + rightList.Count());
+			Debug.LogError(string.Format("{0} {1}", leftList[0], leftList.Count()));
+			Debug.LogError(string.Format("{0} {1}", rightList[0], rightList.Count()));
 
             //some defaults
             //if (leftObjectName == "")
@@ -48,13 +48,13 @@ namespace KerbalFoundries
 
             for (int i = 0; i < leftList.Count(); i++)
             {
-                leftObject.Add (transform.Search(leftList[i]));
-                print("iterated left " + i);
+				leftObject.Add(transform.Search(leftList[i]));
+				print(string.Format("iterated left {0}", i));
             }
             for (int i = 0; i < rightList.Count(); i++)
             {
                 rightObject.Add(transform.Search(rightList[i]));
-                print("iterated right " + i);
+				print(string.Format("iterated right {0}", i));
             }
 
             /*
@@ -112,7 +112,8 @@ namespace KerbalFoundries
                 print("Setting value from persistence");
                 SetSide(flightSide);
             }
-        }//end OnStart
+		}
+		// End OnStart
 
         /// <summary>Sets this side to left and clone to right.</summary>
         [KSPEvent(guiName = "Left", guiActive = false, guiActiveEditor = true)]
@@ -133,7 +134,7 @@ namespace KerbalFoundries
                 clone.SetSide(left);
             }
 
-        public void SetSide(string side) //accepts the string value
+		public void SetSide(string side) // Accepts the string value
         {
 			if (Equals(side, left))
             {
@@ -163,14 +164,16 @@ namespace KerbalFoundries
 
         public void FindClone()
         {
-            foreach (Part potentialMaster in this.part.symmetryCounterparts) //search for parts that might be my symmetry counterpart
+			foreach (Part potentialMaster in this.part.symmetryCounterparts) // Search for parts that might be my symmetry counterpart
             {
-				if (!Equals(potentialMaster, null)) //or we'll get a null-ref
+				if (!Equals(potentialMaster, null)) // Or we'll get a null-ref
                 {
                     clone = potentialMaster.Modules.OfType<KFModuleMirror>().FirstOrDefault();
                     //print("found my clone");
                 }
             }
         }
-    }//end class
-}//end namespace
+	}
+	// End class
+}
+// End namespace

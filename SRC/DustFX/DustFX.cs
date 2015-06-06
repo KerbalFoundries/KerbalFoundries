@@ -18,7 +18,6 @@
 using System;
 using UnityEngine;
 using KerbalFoundries;
-using System.Collections.Generic;
 
 namespace KerbalFoundries
 {
@@ -36,14 +35,14 @@ namespace KerbalFoundries
 		// disable RedundantDefaultFieldInitializer
 		
 		/// <summary>Mostly unnecessary, since there is no other purpose to having the module active.</summary>
-		/// <remarks>Default is "true"</remarks>
+		/// <remarks>Set to false in order to temporarily disable the effect on a specific part.  Default is "true"</remarks>
 		[KSPField]
 		public bool dustEffects = true;
 		
 		/// <summary>Used to enable the impact audio effects.</summary>
 		/// <remarks>Default is "false"</remarks>
 		[KSPField]
-		public bool wheelImpact;
+		public bool wheelImpact = false;
 		
 		/// <summary>Minimum scrape speed.</summary>
 		/// <remarks>Default is 1.  Repulsors should have this extremely low.</remarks>
@@ -117,22 +116,22 @@ namespace KerbalFoundries
 		Color dustColor;
 		Color BiomeColor;
 
-		/// <summary>CollisionInfo class for the DustFX module.</summary>
+		/// <summary>CollisionInfo class for the KFDustFX module.</summary>
 		public class CollisionInfo
 		{
 			public KFDustFX KFDustFX;
-			public CollisionInfo (KFDustFX kfdustFX)
+			public CollisionInfo(KFDustFX kfdustFX)
 			{
 				KFDustFX = kfdustFX;
 			}
 		}
 		
-		public override string GetInfo ()
+		public override string GetInfo()
 		{
 			return partInfoString;
 		}
 		
-		public override void OnStart ( StartState state )
+		public override void OnStart(StartState state)
 		{
 			const string locallog = "OnStart(): ";
 			_KFModuleWheel = part.GetComponentInChildren<KFModuleWheel>();
@@ -151,7 +150,7 @@ namespace KerbalFoundries
 		}
 		
 		/// <summary>Defines the particle effects used in this module.</summary>
-		void SetupParticles ()
+		void SetupParticles()
 		{
 			const string locallog = "SetupParticles(): ";
 			if (!dustEffects)
@@ -170,19 +169,17 @@ namespace KerbalFoundries
 		
 		/// <summary>Contains information about what to do when the part enters a collided state.</summary>
 		/// <param name="col">The collider being referenced.</param>
-        /// 
-        /* I don't believe we're even using this...
-		public void OnCollisionEnter ( Collision col )
+		/// <remarks>This is related to the audio effect that is implemented, but not tested much. - Gaalidas</remarks>
+		// I don't believe we're even using this... - lo-fi
+		// Actually, I beleive this is related to my implementation of a "wheel hit sound." - Gaalidas
+		public void OnCollisionEnter(Collision col)
 		{
+			if (!wheelImpact || Equals(col.contacts.Length, 0))
+				return;
 			if (col.relativeVelocity.magnitude >= minVelocityMag)
 			{
-				if (Equals(col.contacts.Length, 0))
-					return;
-				//CollisionInfo cInfo = GetClosestChild(part, col.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
-
-                var collisions = new Vector3(0,0,0);
+				var collisions = new Vector3(0, 0, 0);
                 var collisionCount = 0;
-
                 foreach (ContactPoint cols in col.contacts)
                 {
                     collisions += cols.point;
@@ -194,15 +191,13 @@ namespace KerbalFoundries
 					cInfo.KFDustFX.DustImpact();
 			}
 		}
-         * */
 		
 		/// <summary>Contains information about what to do when the part stays in the collided state over a period of time.</summary>
 		/// <param name="col">The collider being referenced.</param>
-		public void OnCollisionStay ( Collision col )
+		public void OnCollisionStay(Collision col)
 		{
 			if (paused || Equals(col.contacts.Length, 0))
 				return;
-			//CollisionInfo cInfo = KFDustFX.GetClosestChild(part, col.contacts[0].point + part.rigidbody.velocity * Time.deltaTime);
 
             var collisions = new Vector3(0, 0, 0);
             var collisionCount = 0;
@@ -227,7 +222,7 @@ namespace KerbalFoundries
 		/// <param name="parent">The parent part whose children should be tested.</param>
 		/// <param name="point">The point to test the distance from.</param>
 		/// <returns>The nearest child part with a DustFX module, or null if the parent part is nearest.</returns>
-		static CollisionInfo GetClosestChild ( Part parent, Vector3 point )
+		static CollisionInfo GetClosestChild(Part parent, Vector3 point)
 		{
 			float parentDistance = Vector3.Distance(parent.transform.position, point);
 			float minDistance = parentDistance;
@@ -245,24 +240,25 @@ namespace KerbalFoundries
 					}
 				}
 			}
-			return new CollisionInfo (closestChild);
+			return new CollisionInfo(closestChild);
 		}
 		
 		/// <summary>Called when the part is scraping over a surface.</summary>
 		/// <param name="col">The collider being referenced.</param>
-		public void Scrape ( Collision col, Vector3 position )
+		/// <param name="position">The position of this collision event.</param>
+		public void Scrape(Collision col, Vector3 position)
 		{
 			if ((paused || Equals(part, null)) || Equals(part.rigidbody, null) || Equals(col.contacts.Length, 0))
 				return;
-			float m = col.relativeVelocity.magnitude;
-			DustParticles(m, position + (part.rigidbody.velocity * Time.deltaTime), col.collider);
+			float magnitude = col.relativeVelocity.magnitude;
+			DustParticles(magnitude, position + (part.rigidbody.velocity * Time.deltaTime), col.collider);
 		}
 		
 		/// <summary>This creates and maintains the dust particles and their body/biome specific colors.</summary>
 		/// <param name="speed">Speed of the part which is scraping.</param>
 		/// <param name="contactPoint">The point at which the collider and the scraped surface make contact.</param>
 		/// <param name="col">The collider being referenced.</param>
-		void DustParticles ( float speed, Vector3 contactPoint, Collider col )
+		void DustParticles(float speed, Vector3 contactPoint, Collider col)
 		{
 			const string locallog = "DustParticles(): ";
 			if (!dustEffects || speed < minScrapeSpeed || Equals(dustAnimator, null))
@@ -277,7 +273,7 @@ namespace KerbalFoundries
 			{
 				if (!Equals(BiomeColor, dustColor))
 				{
-					Color [] colors = dustAnimator.colorAnimation; 
+					Color[] colors = dustAnimator.colorAnimation;
 					colors[0] = BiomeColor;
 					colors[1] = BiomeColor;
 					colors[2] = BiomeColor;
@@ -295,7 +291,7 @@ namespace KerbalFoundries
 		}
 		
 		/// <summary>Called when the game enters a "paused" state.</summary>
-		void OnPause ()
+		void OnPause()
 		{
 			paused = true;
 			kfdustFx.particleEmitter.enabled = false;
@@ -304,14 +300,14 @@ namespace KerbalFoundries
 		}
 		
 		/// <summary>Called when the game leaves a "paused" state.</summary>
-		void OnUnpause ()
+		void OnUnpause()
 		{
 			paused = false;
 			kfdustFx.particleEmitter.enabled = true;
 		}
 		
 		/// <summary>Called when the object being referenced is destroyed, or when the module instance is deactivated.</summary>
-		void OnDestroy ()
+		void OnDestroy()
 		{
 			if (!Equals(WheelImpactSound, null) && !Equals(WheelImpactSound.audio, null))
 				WheelImpactSound.audio.Stop();
@@ -321,17 +317,17 @@ namespace KerbalFoundries
 
 		/// <summary>Gets the current volume setting for Ship sounds.</summary>
 		/// <returns>The volume value as a float.</returns>
-		static float GetShipVolume ()
+		static float GetShipVolume()
 		{
 			return GameSettings.SHIP_VOLUME;
 		}
 
 		/// <summary>Sets up and maintains the audio effect which is, currently, not widely used.</summary>
-		void DustAudio ()
+		void DustAudio()
 		{
 			if (Equals(wheelImpactSound, string.Empty))
 				return;
-			WheelImpactSound = new FXGroup ("WheelImpactSound");
+			WheelImpactSound = new FXGroup("WheelImpactSound");
 			part.fxGroups.Add(WheelImpactSound);
 			WheelImpactSound.audio = gameObject.AddComponent<AudioSource>();
 			WheelImpactSound.audio.clip = GameDatabase.Instance.GetAudioClip(wheelImpactSound);
@@ -343,7 +339,7 @@ namespace KerbalFoundries
 		}
 		
 		/// <summary>Called when the part impacts with a surface with enough magnitude to be audible.</summary>
-		public void DustImpact ()
+		public void DustImpact()
 		{
 			if (Equals(WheelImpactSound, null) || Equals(wheelImpactSound, string.Empty))
 			{

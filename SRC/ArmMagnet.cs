@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace KerbalFoundries
@@ -19,8 +17,10 @@ namespace KerbalFoundries
 
         GameObject _base;
         GameObject _arm;
-        Rigidbody _rb; // Reports that it is never used.
-        Rigidbody _targetRb; // Reports "Field 'KerbalFoundries.ArmMagnet._targetRb' is never assigned to, and will always have its default value null.
+		Rigidbody _rb;
+		// Reports that it is never used.
+		Rigidbody _targetRb;
+		// Reports "Field 'KerbalFoundries.ArmMagnet._targetRb' is never assigned to, and will always have its default value null.
         ConfigurableJoint _joint;
         bool isReady;
 
