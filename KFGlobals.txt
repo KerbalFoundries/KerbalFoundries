@@ -3,6 +3,7 @@ KFGlobals
 	isDustEnabled = True
 	isDustCameraEnabled = True
 	isMarkerEnabled = True
+	isRepLightEnabled = True
 	writeToLogFile = False
 	logFile = KF.log
 }
