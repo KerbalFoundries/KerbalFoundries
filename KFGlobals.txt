@@ -5,6 +5,7 @@ KFGlobals
 	isMarkerEnabled = True
 	isRepLightEnabled = True
 	dustAmount = 1
+	suspensionIncrement = 1
 	writeToLogFile = False
 	logFile = KF.log
 }
