@@ -4,8 +4,10 @@ KFGlobals
 	isDustCameraEnabled = True
 	isMarkerEnabled = True
 	isRepLightEnabled = True
-	dustAmount = 1
-	suspensionIncrement = 1
+	dustAmount = 1.5
+	suspensionIncrement = 5
+	isDebugEnabled = False
+	debugIsWaterColliderVisible = False
 	writeToLogFile = False
 	logFile = KF.log
 }
