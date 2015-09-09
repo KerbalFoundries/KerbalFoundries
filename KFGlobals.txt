@@ -10,4 +10,6 @@ KFGlobals
 	debugIsWaterColliderVisible = False
 	writeToLogFile = False
 	logFile = KF.log
+	cameraRes = 6
+	cameraFramerate = 10
 }
