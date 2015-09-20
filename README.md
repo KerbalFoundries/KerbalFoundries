@@ -37,4 +37,8 @@ Key: *   = Required for full functionality.
  \ Plugins
   \ "KF_plugin.dll"			-> Our main plugin.
  \ Sounds
-  \ "" -> .
+  \ "APU.ogg" 			-> Sound effect for a running APU.
+  \ "GroundSkid.ogg" 	-> Sound effect of skidding across a rough surface.
+  \ "repulsor2.ogg" 	-> Latest repulsor sound effect.
+  \ "tyreSqueel.ogg" 	-> Squeeling tires.
+  \ "wheel2.ogg" 		-> Latest edit of the wheel sound.
