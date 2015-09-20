@@ -36,5 +36,5 @@ Key: *   = Required for full functionality.
   \ "WheelTiny.cfg"			-> A set of two wheels which use track steering.  Not widely used, but suitable for small rovers.
  \ Plugins
   \ "KF_plugin.dll"			-> Our main plugin.
-  \ "textureAnimator.dll"	-> Our only supplementary plugin. (Soon to be phased out.)
  \ Sounds
+  \ "" -> .
